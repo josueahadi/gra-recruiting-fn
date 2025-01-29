@@ -21,8 +21,15 @@
     "rules": {
       "recommended": true,
       "correctness": {
-        "useExhaustiveDependencies": "off",
-        "noUnusedVariables": "off"
+        "noUnusedVariables": "error"
+      },
+      "suspicious": {
+        "noImplicitAnyLet": "error",
+        "noExplicitAny": "error"
+      },
+      "style": {
+        "noUnusedTemplateLiteral": "error",
+        "useImportType": "error"
       },
       "complexity": {
         "noForEach": "off"
