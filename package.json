@@ -8,7 +8,8 @@
 		"build": "next build",
 		"format": "biome format --write ./src",
 		"lint": "biome lint ./src",
-		"check": "biome check ./src --apply"
+		"check": "biome check ./src --apply",
+		"biome-check": "biome check --write --no-errors-on-unmatched --files-ignore-unknown=true"
 	},
 	"dependencies": {
 		"@heroicons/react": "^2.2.0",
