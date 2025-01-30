@@ -1,22 +1,22 @@
 export interface ApiResponse<T> {
-  data: T;
-  message: string;
-  status: number;
+	data: T;
+	message: string;
+	status: number;
 }
 
 export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: "USER" | "ADMIN";
+	id: string;
+	email: string;
+	name: string;
+	role: "USER" | "ADMIN";
 }
 
 export interface LoginResponse {
-  accessToken: string;
-  user: User;
+	accessToken: string;
+	user: User;
 }
 
 export interface AuthCredentials {
-  email: string;
-  password: string;
+	email: string;
+	password: string;
 }
