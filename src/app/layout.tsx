@@ -3,7 +3,7 @@ import { Raleway } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import Footer from "@/components/layout/footer/footer";
-import Header from "@/components/layout/header/header";
+import Header from "@/components/layout/header/Header";
 import { Toaster } from "@/components/ui/toaster";
 
 const raleway = Raleway({

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Logo } from "./Logo";
 import { AuthButtons } from "./auth-buttons";
-import { Logo } from "./logo";
 import { MobileMenu } from "./mobile-menu";
 import { NavItems } from "./nav-items";
 
