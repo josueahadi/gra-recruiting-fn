@@ -15,7 +15,7 @@ export const AuthButtons = ({
 		<Button
 			variant="ghost"
 			className={cn(
-				"px-6 py-5 bg-primary-base rounded-3xl text-white transition-colors duration-300 hover:bg-primary-light hover:text-white font-bold capitalize",
+				"px-6 py-5 bg-primary-base rounded-3xl text-white transition-colors duration-300 hover:bg-primary-base hover:text-white font-bold capitalize drop-shadow-md",
 				buttonClassName,
 			)}
 		>

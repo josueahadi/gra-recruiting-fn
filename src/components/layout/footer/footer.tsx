@@ -41,7 +41,7 @@ const Footer = () => {
 					backgroundSize: "cover",
 				}}
 			/>
-			<div className="container relative">
+			<div className="2xl:max-w-screen-2xl mx-auto  px-4 md:px-28 relative">
 				<div className="grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-4 py-10">
 					{/* Logo Section */}
 					<div className="md:col-span-2">

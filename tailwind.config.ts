@@ -10,7 +10,10 @@ export default {
 	theme: {
 		container: {
 			center: true,
-			padding: "1rem",
+			padding: {
+				DEFAULT: "1rem",
+				md: "2.5rem",
+			},
 			screens: {
 				"2xl": "1400px",
 			},
@@ -33,14 +36,16 @@ export default {
 				primary: {
 					DEFAULT: "hsl(var(--primary))",
 					foreground: "hsl(var(--primary-foreground))",
-					base: "#3b82f6",
-					light: "#39ade3",
+					base: "#00C2FF",
+					dark: "#3b82f6",
+					// light: "#39ade3",
 					"extra-light": "#B1DEF2",
 				},
 				secondary: {
 					DEFAULT: "hsl(var(--secondary))",
 					foreground: "hsl(var(--secondary-foreground))",
-					base: "#16a34a",
+					base: "#06B337",
+					dark: "#16a34a",
 					light: "#22c55e",
 				},
 				gray: {
