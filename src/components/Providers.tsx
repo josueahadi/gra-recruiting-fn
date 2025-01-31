@@ -7,12 +7,12 @@ import React, { type FC, type PropsWithChildren } from "react";
 const queryClient = new QueryClient();
 
 const Providers: FC<PropsWithChildren> = ({ children }) => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
-  );
+	return (
+		<QueryClientProvider client={queryClient}>
+			{children}
+			<ReactQueryDevtools initialIsOpen={false} />
+		</QueryClientProvider>
+	);
 };
 
 export default Providers;
