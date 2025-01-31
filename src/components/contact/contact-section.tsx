@@ -6,9 +6,9 @@ import Image from "next/image";
 
 const ContactSection = () => {
 	return (
-		<section className="bg-gray-300">
+		<section className="bg-gray-300 mb-16">
 			<div className="2xl:max-w-screen-2xl mx-auto px-4 md:px-10 py-16">
-				<div className="px-4 py-8 md:p-16 mb-20 shadow-2xl rounded-3xl bg-white">
+				<div className="px-4 py-8 md:p-16 shadow-2xl rounded-3xl bg-white">
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-8">
 						{/* Left Section */}
 						<div className="">
