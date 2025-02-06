@@ -13,10 +13,8 @@ const Header = () => {
 	useEffect(() => {
 		const handleScroll = () => {
 			if (window.scrollY > 0) {
-				headerRef.current?.classList.add("shadow-2xl");
 				setIsScrolled(true);
 			} else {
-				headerRef.current?.classList.remove("shadow-2xl");
 				setIsScrolled(false);
 			}
 		};
@@ -28,7 +26,9 @@ const Header = () => {
 	return (
 		<header
 			ref={headerRef}
-			className="top-0 w-full sticky transition-all bg-white backdrop-blur-sm border-b z-50"
+			className={`top-0 w-full sticky transition-all bg-white backdrop-blur-sm z-50 ${
+				isScrolled ? "shadow-2xl" : "shadow-sm"
+			}`}
 		>
 			<div
 				className={`2xl:max-w-screen-2xl mx-auto px-4 md:px-10 transition-all duration-200 ${
