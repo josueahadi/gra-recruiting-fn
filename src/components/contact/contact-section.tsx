@@ -8,17 +8,17 @@ const ContactSection = () => {
 	return (
 		<section className="bg-gray-200 mb-16">
 			<div className="2xl:max-w-screen-2xl mx-auto px-4 md:px-12 py-16">
-				<div className="p-6 shadow-md shadow-gray-400/55 rounded-3xl bg-white">
-					<div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+				<div className="p-6 shadow-2xl rounded-xl bg-white">
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-0">
 						{/* Left Section */}
-						<div className="md:col-span-5 pl-0 xl:pl-16">
-							<h2 className="text-2xl xl:text-3xl font-extrabold text-black uppercase mb-4">
-								CONTACT US NOW, FOR ANY QUESTION OR SUGGESTION!
+						<div className="md:px-8 md:py-8">
+							<h2 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-black uppercase mb-4">
+								CONTACT US NOW, FOR ANY QUESTIONS OR SUGGESTIONS!
 							</h2>
-							<p className="text-base font-medium text-black mb-8">
+							<p className="text-lg font-regular text-black mb-8">
 								Fill out this form, we will get back to you shortly!
 							</p>
-							<form className="space-y-6 md:max-w-md">
+							<form className="space-y-6 md:max-w-xl">
 								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 									<div>
 										<Label
@@ -31,8 +31,7 @@ const ContactSection = () => {
 											type="text"
 											id="first-name"
 											name="first-name"
-											className="mt-1 block w-full border border-gray-400/55  shadow-md shadow-gray-400/55 placeholder:text-gray-400/55 placeholder:font-semibold"
-											placeholder="First Name"
+											className="mt-1 block w-full"
 										/>
 									</div>
 									<div>
@@ -46,8 +45,7 @@ const ContactSection = () => {
 											type="text"
 											id="last-name"
 											name="last-name"
-											className="mt-1 block w-full border border-gray-400/55  shadow-md shadow-gray-400/55 placeholder:text-gray-400/55 placeholder:font-semibold"
-											placeholder="Last Name"
+											className="mt-1 block w-full  "
 										/>
 									</div>
 								</div>
@@ -62,8 +60,7 @@ const ContactSection = () => {
 										type="email"
 										id="email"
 										name="email"
-										className="mt-1 block w-full border border-gray-400/55  shadow-md shadow-gray-400/55 placeholder:text-gray-400/55 placeholder:font-semibold"
-										placeholder="you@company.com"
+										className="mt-1 block w-full  "
 									/>
 								</div>
 								<div>
@@ -76,28 +73,29 @@ const ContactSection = () => {
 									<Textarea
 										id="message"
 										name="message"
-										rows={6}
-										className="mt-1 block w-full border border-gray-400/55 shadow-md shadow-gray-400/55 placeholder:text-gray-400/55 placeholder:font-semibold resize-none"
-										placeholder="Leave us a message..."
+										rows={5}
+										className="mt-1 block w-full resize-none"
 									/>
 								</div>
 								<Button
 									type="submit"
-									className="px-6 py-3 rounded-3xl bg-secondary-base text-white transition-colors duration-300 hover:bg-secondary-light hover:text-white capitalize text-base font-bold"
+									className="px-6 py-5 rounded-3xl bg-secondary-base text-white transition-colors duration-300 hover:bg-secondary-light hover:text-white capitalize font-bold"
 								>
 									Submit
 								</Button>
 							</form>
 						</div>
 						{/* Right Section */}
-						<div className="md:col-span-7 h-[400px] md:!h-full relative rounded-3xl overflow-hidden">
-							<Image
-								src="/images/contact-img.svg"
-								alt="Contact Us"
-								fill
-								className="rounded-3xl object-cover"
-								priority
-							/>
+						<div className="rounded-3xl flex items-center justify-center w-full">
+							<div className="rounded-3xl overflow-hidden w-full h-full">
+								<Image
+									src="/images/contact-img.svg"
+									alt="Contact Us"
+									width={400}
+									height={400}
+									className="w-full h-full object-cover object-center"
+								/>
+							</div>
 						</div>
 					</div>
 				</div>

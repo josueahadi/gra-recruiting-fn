@@ -39,8 +39,8 @@ const categories = [
 
 const JobOpportunitiesSection = () => {
 	return (
-		<section className="mb-10 px-4 md:px-12 w-full 2xl:max-w-screen-2xl mx-auto">
-			<div className="px-4 py-8 md:p-16 bg-primary-light rounded-3xl">
+		<section className="mb-10 px-0 md:px-12 w-full 2xl:max-w-screen-2xl mx-auto">
+			<div className="px-4 py-8 md:p-16 bg-primary-extra-light rounded-none md:rounded-3xl">
 				<div className="mx-auto text-center mb-12 sm:max-w-xl">
 					<h2 className="text-2xl sm:text-3xl md:text-4l text-[#215C75] font-extrabold mb-4 uppercase">
 						Ready to Take the Next Step in Your Career?
