@@ -1,13 +1,46 @@
-import { Button } from "@/components/ui/button";
+"use client";
+
+import PrimaryActionButton from "@/components/primary-action-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
+import { useState } from "react";
 
 const ContactSection = () => {
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const { toast } = useToast();
+
+	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		setIsSubmitting(true);
+
+		try {
+			// Add your contact form submission logic here
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+
+			toast({
+				title: "Success!",
+				description: "Your message has been sent successfully.",
+			});
+
+			// Reset form
+			(e.target as HTMLFormElement).reset();
+		} catch {
+			toast({
+				title: "Error",
+				description: "Failed to send message. Please try again.",
+				variant: "destructive",
+			});
+		} finally {
+			setIsSubmitting(false);
+		}
+	};
+
 	return (
 		<section className="bg-gray-200 mb-16">
-			<div className="2xl:max-w-screen-2xl mx-auto px-4 md:px-12 py-16">
+			<div className="2xl:max-w-screen-2xl mx-auto px-4 md:px-10 xl:px-20 py-16">
 				<div className="p-6 shadow-2xl rounded-xl bg-white">
 					<div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-0">
 						{/* Left Section */}
@@ -18,7 +51,7 @@ const ContactSection = () => {
 							<p className="text-lg font-regular text-black mb-8">
 								Fill out this form, we will get back to you shortly!
 							</p>
-							<form className="space-y-6 md:max-w-xl">
+							<form onSubmit={handleSubmit} className="space-y-6 md:max-w-xl">
 								<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 									<div>
 										<Label
@@ -77,12 +110,13 @@ const ContactSection = () => {
 										className="mt-1 block w-full resize-none"
 									/>
 								</div>
-								<Button
+								<PrimaryActionButton
+									className="text-base"
 									type="submit"
-									className="px-6 py-5 rounded-3xl bg-secondary-base text-white transition-colors duration-300 hover:bg-secondary-light hover:text-white capitalize font-bold"
+									disabled={isSubmitting}
 								>
-									Submit
-								</Button>
+									{isSubmitting ? "Submitting..." : "Submit"}
+								</PrimaryActionButton>
 							</form>
 						</div>
 						{/* Right Section */}

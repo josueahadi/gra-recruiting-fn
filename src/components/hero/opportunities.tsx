@@ -39,13 +39,13 @@ const categories = [
 
 const JobOpportunitiesSection = () => {
 	return (
-		<section className="mb-10 px-0 md:px-12 w-full 2xl:max-w-screen-2xl mx-auto">
-			<div className="px-4 py-8 md:p-16 bg-primary-extra-light rounded-none md:rounded-3xl">
+		<section className="mb-10 px-0 md:px-10 xl:px-20 w-full 2xl:max-w-screen-2xl mx-auto">
+			<div className="px-4 py-8 md:px-8 md:py-16 bg-primary-extra-light rounded-none md:rounded-3xl">
 				<div className="mx-auto text-center mb-12 sm:max-w-xl">
-					<h2 className="text-2xl sm:text-3xl md:text-4l text-[#215C75] font-extrabold mb-4 uppercase">
+					<h2 className="text-2xl sm:text-3xl md:text-[32px] text-[#215C75] font-extrabold mb-4 uppercase">
 						Ready to Take the Next Step in Your Career?
 					</h2>
-					<p className="text-base font-medium text-gray-600 mx-auto max-w-sm">
+					<p className="text-base font-medium text-gray-600 mx-auto max-w-sm drop-shadow-sm">
 						Join our network of talented professionals and explore exciting job
 						opportunities today!
 					</p>

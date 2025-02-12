@@ -29,7 +29,7 @@ export const NavItems = ({ className = "", isMobile = false }) => {
 			{isMobile && (
 				<>
 					<div className="h-px bg-gray-200 my-4" />
-					<AuthButtons className="flex-col" buttonClassName="w-full" />
+					<AuthButtons className="flex-col" buttonClassName="!w-full" />
 				</>
 			)}
 		</nav>

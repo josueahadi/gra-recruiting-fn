@@ -31,7 +31,7 @@ const Header = () => {
 			}`}
 		>
 			<div
-				className={`2xl:max-w-screen-2xl mx-auto px-4 md:px-10 transition-all duration-200 ${
+				className={`2xl:max-w-screen-2xl mx-auto px-4 md:px-10 xl:px-20 transition-all duration-200 ${
 					isScrolled ? "py-1" : "py-3"
 				}`}
 			>
