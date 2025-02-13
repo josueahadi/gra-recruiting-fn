@@ -1,6 +1,11 @@
+"use client";
+
+import PrimaryActionButton from "@/components/primary-action-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { useState } from "react";
+import { AuthModal } from "@/components/auth/auth-modal";
+import type { AuthMode } from "@/components/auth/auth-modal";
 
 interface AuthButtonsProps {
 	className?: string;
@@ -10,25 +15,50 @@ interface AuthButtonsProps {
 export const AuthButtons = ({
 	className,
 	buttonClassName,
-}: AuthButtonsProps) => (
-	<div className={cn("flex items-center gap-4 text-base", className)}>
-		<Button
-			variant="ghost"
-			className={cn(
-				"px-6 py-5 bg-primary-base rounded-3xl text-white transition-colors duration-300 hover:bg-primary-light hover:text-white font-bold capitalize",
-				buttonClassName,
-			)}
-		>
-			<Link href="/login">Login</Link>
-		</Button>
+}: AuthButtonsProps) => {
+	const [isOpen, setIsOpen] = useState(false);
+	const [authMode, setAuthMode] = useState<AuthMode>("login");
 
-		<Button
-			className={cn(
-				"px-6 py-5 rounded-3xl bg-secondary-base text-white transition-colors duration-300 hover:bg-secondary-light hover:text-white uppercase font-bold",
-				buttonClassName,
-			)}
-		>
-			<Link href="/apply">Apply Now</Link>
-		</Button>
-	</div>
-);
+	const handleAuth = (mode: AuthMode) => {
+		setAuthMode(mode);
+		setIsOpen(true);
+	};
+
+	return (
+		<>
+			<div className={cn("flex items-center gap-4 text-base", className)}>
+				<Button
+					variant="ghost"
+					className={cn(
+						"px-6 py-5 bg-sky-500 rounded-3xl text-white transition-colors duration-300 hover:bg-primary-base hover:text-white font-bold capitalize drop-shadow-md",
+						buttonClassName,
+					)}
+					onClick={() => handleAuth("login")}
+				>
+					Login
+				</Button>
+
+				<PrimaryActionButton
+					className={cn("uppercase", buttonClassName)}
+					onClick={() => handleAuth("signup")}
+				>
+					Apply Now
+				</PrimaryActionButton>
+			</div>
+
+			<AuthModal
+				mode={authMode}
+				open={isOpen}
+				onOpenChange={setIsOpen}
+				onSuccess={() => {
+					setIsOpen(false);
+					// Add any additional success handling
+				}}
+				onError={(error) => {
+					console.error("Auth error:", error);
+					// Add any additional error handling
+				}}
+			/>
+		</>
+	);
+};
