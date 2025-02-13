@@ -2,12 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-	Dialog,
-	DialogContent,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
 	Select,
@@ -16,9 +10,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { VisuallyHidden } from "@/components/ui/visually-hidden";
-import { useRegisterForm } from "@/hooks/use-register-form";
-import type { RegisterFormProps } from "@/types/auth";
+
+import { useAuth } from "@/hooks/use-auth";
+import type { SignUpFormProps } from "@/types/auth";
 import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -51,26 +45,21 @@ const GRADUATION_YEARS = Array.from({ length: 30 }, (_, i) =>
 	(new Date().getFullYear() - i).toString(),
 );
 
-const RegisterForm = ({
-	trigger,
-	open,
-	onOpenChange,
+const SignUpForm = ({
 	onSuccess,
 	onError,
-}: RegisterFormProps) => {
+	onOpenChange,
+	onModeChange,
+}: SignUpFormProps) => {
 	const [mounted, setMounted] = useState(false);
 	const [currentStep, setCurrentStep] = useState(1);
-	const {
-		isLoading,
-		showPassword,
-		setShowPassword,
-		handleSubmit,
-		handleGoogleSignIn,
-	} = useRegisterForm({
-		onSuccess,
-		onError,
-		onOpenChange,
-	});
+
+	const { isLoading, showPassword, setShowPassword, signup, handleGoogleAuth } =
+		useAuth({
+			onSuccess,
+			onError,
+			onOpenChange,
+		});
 
 	useEffect(() => {
 		setMounted(true);
@@ -79,6 +68,28 @@ const RegisterForm = ({
 	if (!mounted) {
 		return null;
 	}
+
+	const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+		e.preventDefault();
+		const formData = new FormData(e.currentTarget);
+
+		if (currentStep === 1) {
+			setCurrentStep(2);
+			return;
+		}
+
+		// On final step, submit all data
+		await signup({
+			name: formData.get("fullName") as string,
+			email: formData.get("email") as string,
+			password: formData.get("password") as string,
+			department: formData.get("department") as string,
+			institution: formData.get("institution") as string,
+			educationLevel: formData.get("educationLevel") as string,
+			program: formData.get("program") as string,
+			graduationYear: formData.get("graduationYear") as string,
+		});
+	};
 
 	const ContactInfo = (
 		<div className="space-y-6">
@@ -155,11 +166,22 @@ const RegisterForm = ({
 					type="button"
 					variant="outline"
 					className="w-full h-12 rounded-xl border border-green-100 bg-green-50 hover:bg-green-100 text-gray-700 font-medium"
-					onClick={handleGoogleSignIn}
+					onClick={handleGoogleAuth}
 				>
 					<FcGoogle className="mr-2" />
 					Sign up with Google
 				</Button>
+
+				<p className="text-center text-sm text-gray-600">
+					Already have an account?{" "}
+					<button
+						type="button"
+						onClick={onModeChange}
+						className="text-green-500 hover:text-green-600 font-semibold"
+					>
+						Sign in
+					</button>
+				</p>
 			</div>
 		</div>
 	);
@@ -344,56 +366,30 @@ const RegisterForm = ({
 	);
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
-			{trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-			<DialogContent
-				className="max-w-5xl px-16 overflow-y-auto max-h-[100vh]"
-				aria-labelledby="registration-title"
-			>
-				<VisuallyHidden>
-					<DialogTitle />
-				</VisuallyHidden>
+		<div className="h-full">
+			<ProgressIndicator currentStep={currentStep} steps={REGISTRATION_STEPS} />
 
-				<div className="h-full">
-					<ProgressIndicator
-						currentStep={currentStep}
-						steps={REGISTRATION_STEPS}
+			<div className="flex !rounded-3xl overflow-hidden">
+				<div className="w-1/3 bg-gradient-to-b from-[#D1D9D1] via-[#ECEAEA] to-[#ECEAEA] flex items-center justify-center">
+					<Image
+						width={500}
+						height={400}
+						src="/images/registration-01.svg"
+						alt="Registration illustration"
+						className="w-full h-auto"
 					/>
+				</div>
 
-					<div className="flex !rounded-3xl overflow-hidden">
-						<div className="w-1/3 bg-gradient-to-b from-[#D1D9D1] via-[#ECEAEA] to-[#ECEAEA] flex items-center justify-center">
-							<Image
-								width={500}
-								height={400}
-								src="/images/registration-01.svg"
-								alt="Registration illustration"
-								className="w-full h-auto"
-							/>
-						</div>
-
-						<div className="w-2/3 p-12 bg-gray-400/15">
-							<div className="max-w-md mx-auto">
-								<form
-									onSubmit={(e) => {
-										e.preventDefault();
-										const formData = new FormData(e.currentTarget);
-										handleSubmit({
-											fullName: formData.get("fullName") as string,
-											email: formData.get("email") as string,
-											password: formData.get("password") as string,
-											terms: formData.get("terms") === "on",
-										});
-									}}
-								>
-									{currentStep === 1 ? ContactInfo : EducationBackground}
-								</form>
-							</div>
-						</div>
+				<div className="w-2/3 p-12 bg-gray-400/15">
+					<div className="max-w-md mx-auto">
+						<form onSubmit={handleFormSubmit}>
+							{currentStep === 1 ? ContactInfo : EducationBackground}
+						</form>
 					</div>
 				</div>
-			</DialogContent>
-		</Dialog>
+			</div>
+		</div>
 	);
 };
 
-export default RegisterForm;
+export default SignUpForm;

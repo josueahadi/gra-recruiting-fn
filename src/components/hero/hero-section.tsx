@@ -32,7 +32,8 @@ const HeroSection = () => {
 							By joining our team
 						</p>
 						<PrimaryActionButton
-							showRegisterModal
+							showAuthModal
+							authMode="signup"
 							className="mt-5 inline-flex items-center text-xs lg:text-sm uppercase"
 						>
 							APPLY NOW

@@ -1,25 +1,116 @@
-// import { useQuery, useMutation } from "@tanstack/react-query";
-// import { api } from "@/lib/api";
-// import type { LoginResponse, User } from "@/types/api";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
+import { api } from "@/services/api";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import type { User, AuthResponse } from "@/types/api";
+import type { AuthCredentials } from "@/types/auth";
 
-// export const useLogin = () => {
-//   return useMutation({
-//     mutationFn: async (credentials: { email: string; password: string }) => {
-//       const { data } = await api.post<LoginResponse>(
-//         "/auth/login",
-//         credentials
-//       );
-//       return data;
-//     },
-//   });
-// };
+interface UseAuthOptions {
+	onSuccess?: () => void;
+	onError?: (error: Error) => void;
+	onOpenChange?: (open: boolean) => void;
+}
 
-// export const useUser = () => {
-//   return useQuery({
-//     queryKey: ["user"],
-//     queryFn: async () => {
-//       const { data } = await api.get<User>("/auth/me");
-//       return data;
-//     },
-//   });
-// };
+interface AuthState {
+	isLoading: boolean;
+	showPassword: boolean;
+}
+
+export const useAuth = (options?: UseAuthOptions) => {
+	const [state, setState] = useState<AuthState>({
+		isLoading: false,
+		showPassword: false,
+	});
+	const { toast } = useToast();
+
+	const loginMutation = useMutation({
+		mutationFn: async (credentials: AuthCredentials) => {
+			const { data } = await api.post<AuthResponse>("/auth/login", credentials);
+			return data;
+		},
+		onSuccess: (data) => {
+			console.log(data);
+			toast({
+				title: "Success!",
+				description: "Successfully logged in.",
+			});
+			options?.onSuccess?.();
+			options?.onOpenChange?.(false);
+		},
+		onError: (error: Error) => {
+			toast({
+				title: "Error",
+				description: "Invalid credentials. Please try again.",
+				variant: "destructive",
+			});
+			options?.onError?.(error);
+		},
+	});
+
+	const signUpMutation = useMutation({
+		mutationFn: async (data: AuthCredentials & { name: string }) => {
+			const response = await api.post<AuthResponse>("/auth/signup", data);
+			return response.data;
+		},
+		onSuccess: (data) => {
+			console.log(data);
+			toast({
+				title: "Success!",
+				description: "Your account has been created successfully.",
+			});
+			options?.onSuccess?.();
+			options?.onOpenChange?.(false);
+		},
+		onError: (error: Error) => {
+			toast({
+				title: "Error",
+				description: "Something went wrong. Please try again.",
+				variant: "destructive",
+			});
+			options?.onError?.(error);
+		},
+	});
+
+	const userQuery = useQuery({
+		queryKey: ["user"],
+		queryFn: async () => {
+			const { data } = await api.get<User>("/auth/me");
+			return data;
+		},
+	});
+
+	const handleGoogleAuth = async () => {
+		try {
+			// Implement Google authentication logic
+			await api.get("/auth/google");
+			toast({
+				title: "Success!",
+				description: "Successfully authenticated with Google.",
+			});
+			options?.onSuccess?.();
+		} catch (error) {
+			const err = error as Error;
+			console.error("Google auth error:", err);
+			toast({
+				title: "Error",
+				description: "Failed to authenticate with Google. Please try again.",
+				variant: "destructive",
+			});
+			options?.onError?.(err);
+		}
+	};
+
+	return {
+		login: loginMutation.mutateAsync,
+		signup: signUpMutation.mutateAsync,
+		user: userQuery.data,
+		isLoading:
+			state.isLoading || loginMutation.isPending || signUpMutation.isPending,
+		showPassword: state.showPassword,
+		setShowPassword: (show: boolean) =>
+			setState((prev) => ({ ...prev, showPassword: show })),
+		handleGoogleAuth,
+		isAuthenticated: !!userQuery.data,
+		isUserLoading: userQuery.isLoading,
+	};
+};

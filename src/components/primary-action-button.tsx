@@ -1,28 +1,39 @@
 "use client";
 
-import RegisterForm from "@/components/auth/register-form";
-import ErrorBoundary from "@/components/error-boundary";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useState } from "react";
+import { AuthModal } from "@/components/auth/auth-modal";
+import type { AuthMode } from "@/components/auth/auth-modal";
 
 interface PrimaryActionButtonProps
 	extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 	className?: string;
 	href?: string;
 	children: React.ReactNode;
-	showRegisterModal?: boolean;
+	showAuthModal?: boolean;
+	authMode?: AuthMode;
 }
 
 const PrimaryActionButton = ({
 	className,
 	href,
 	children,
-	showRegisterModal = false,
+	showAuthModal = false,
+	authMode = "signup",
 	...props
 }: PrimaryActionButtonProps) => {
 	const [isOpen, setIsOpen] = useState(false);
+
+	const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+		if (showAuthModal) {
+			e.preventDefault();
+			setIsOpen(true);
+		}
+		props.onClick?.(e);
+	};
+
 	const baseStyles =
 		"px-6 py-5 rounded-3xl bg-secondary-base text-white transition-colors duration-300 hover:bg-secondary-light hover:text-white font-bold";
 
@@ -31,32 +42,36 @@ const PrimaryActionButton = ({
 			<Link href={href}>{children}</Link>
 		</Button>
 	) : (
-		<Button className={cn(baseStyles, className)} {...props}>
+		<Button
+			className={cn(baseStyles, className)}
+			{...props}
+			onClick={handleClick}
+		>
 			{children}
 		</Button>
 	);
 
-	if (showRegisterModal) {
-		return (
-			<ErrorBoundary>
-				<RegisterForm
-					trigger={button}
+	return (
+		<>
+			{button}
+			{showAuthModal && (
+				<AuthModal
+					mode={authMode}
 					open={isOpen}
 					onOpenChange={setIsOpen}
 					onSuccess={() => {
+						setIsOpen(false);
 						// Add your success handling logic here
-						console.log("Registration successful");
+						console.log("Authentication successful");
 					}}
 					onError={(error) => {
 						// Add your error handling logic here
-						console.error("Registration failed:", error);
+						console.error("Authentication failed:", error);
 					}}
 				/>
-			</ErrorBoundary>
-		);
-	}
-
-	return button;
+			)}
+		</>
+	);
 };
 
 export default PrimaryActionButton;
