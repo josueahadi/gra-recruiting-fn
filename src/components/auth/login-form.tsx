@@ -5,7 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import GoogleAuthButton from "./google-auth-button";
 import Image from "next/image";
 import Link from "next/link";
-import { AUTH_CONSTANTS, authStyles } from "@/constants";
+import { AUTH_CONSTANTS } from "@/constants";
 
 interface LoginFormProps {
 	onSuccess?: () => void;
@@ -38,32 +38,32 @@ const LoginForm = ({
 	};
 
 	return (
-		<div className={authStyles.wrapper}>
-			<div className={authStyles.imageSection}>
+		<div className="flex !rounded-xl overflow-hidden">
+			<div className="w-1/2 bg-gradient-to-b from-[#D1D9D1] via-[#ECEAEA] to-[#D1D9D1] flex items-center justify-center">
 				<Image
 					width={500}
 					height={500}
 					src="/images/freepik-11-2000.webp"
 					alt="Login illustration"
-					className={authStyles.image}
+					className="w-full h-full object-cover"
 				/>
 			</div>
 
-			<div className={authStyles.formSection}>
-				<div className={authStyles.formWrapper}>
-					<div className={authStyles.header}>
-						<h1 className={authStyles.headerTitle}>Welcome Back</h1>
-						<p className={authStyles.headerSubtitle}>
-							{AUTH_CONSTANTS.LOGIN.title}
+			<div className="w-1/2 p-12 bg-gray-400/15">
+				<div className="max-w-md mx-auto space-y-6">
+					<div className="text-center mb-8">
+						<h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
+						<p className="mt-2 text-gray-600">
+							{AUTH_CONSTANTS.LOGIN.subtitle}
 						</p>
 					</div>
 
-					<form onSubmit={handleSubmit} className={authStyles.form}>
+					<form onSubmit={handleSubmit} className="space-y-6">
 						<Input
 							type="email"
 							name="email"
 							placeholder="Email Address"
-							className={authStyles.input}
+							className="w-full h-12 rounded-xl border-gray-400 bg-white"
 							required
 							autoComplete="email"
 						/>
@@ -73,7 +73,7 @@ const LoginForm = ({
 								type={showPassword ? "text" : "password"}
 								name="password"
 								placeholder="Password"
-								className={authStyles.inputWithIcon}
+								className="w-full h-12 rounded-xl border-gray-400 bg-white pr-10"
 								required
 								autoComplete="current-password"
 							/>
@@ -97,27 +97,29 @@ const LoginForm = ({
 
 						<Button
 							type="submit"
-							className={authStyles.button}
+							className="w-full h-12 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold"
 							disabled={isLoading}
 						>
 							Sign In
 						</Button>
 					</form>
 
-					<div className={authStyles.divider}>
-						<div className={authStyles.dividerLine} />
-						<span className={authStyles.dividerText}>Or</span>
-						<div className={authStyles.dividerLine} />
+					<div className="flex items-center">
+						<div className="flex-grow border-t border-gray-400/75" />
+						<span className="mx-4 text-sm font-bold text-gray-700 uppercase">
+							Or
+						</span>
+						<div className="flex-grow border-t border-gray-400/75" />
 					</div>
 
 					<GoogleAuthButton onClick={handleGoogleAuth} />
 
-					<p className={authStyles.modeToggle}>
+					<p className="text-center text-sm text-gray-600">
 						Don&apos;t have an account?{" "}
 						<button
 							type="button"
 							onClick={onModeChange}
-							className={authStyles.modeToggleButton}
+							className="text-green-500 hover:text-green-600 font-semibold"
 						>
 							Sign up
 						</button>

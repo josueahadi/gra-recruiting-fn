@@ -1,12 +1,13 @@
+"use client";
+
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
-import SignUpForm from "./signup-form";
-import LoginForm from "./login-form";
-import { VisuallyHidden } from "@/components/ui/visually-hidden";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Suspense } from "react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import ErrorBoundary from "@/components/error-boundary";
 export type AuthMode = "login" | "signup";
+import AuthForm from "./auth-form";
 
 interface AuthModalProps {
 	mode: AuthMode;
@@ -36,8 +37,10 @@ export const AuthModal = ({
 				aria-labelledby="auth-title"
 			>
 				<ErrorBoundary>
-					<VisuallyHidden>
-						<DialogTitle id="auth-title" />
+					<VisuallyHidden asChild>
+						<DialogTitle id="auth-title">
+							{currentMode === "login" ? "Login" : "Sign Up"}
+						</DialogTitle>
 					</VisuallyHidden>
 					<Suspense fallback={<LoadingSpinner />} />
 					<VisuallyHidden>
@@ -46,21 +49,13 @@ export const AuthModal = ({
 						</h2>
 					</VisuallyHidden>
 
-					{currentMode === "login" ? (
-						<LoginForm
-							onSuccess={onSuccess}
-							onError={onError}
-							onOpenChange={onOpenChange}
-							onModeChange={toggleMode}
-						/>
-					) : (
-						<SignUpForm
-							onSuccess={onSuccess}
-							onError={onError}
-							onOpenChange={onOpenChange}
-							onModeChange={toggleMode}
-						/>
-					)}
+					<AuthForm
+						mode={currentMode}
+						onSuccess={onSuccess}
+						onError={onError}
+						onOpenChange={onOpenChange}
+						onModeChange={toggleMode}
+					/>
 				</ErrorBoundary>
 			</DialogContent>
 		</Dialog>

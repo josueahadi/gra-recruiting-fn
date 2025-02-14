@@ -15,11 +15,11 @@ import { useAuth } from "@/hooks/use-auth";
 import type { SignUpFormProps } from "@/types/auth";
 import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BsGithub, BsLinkedin } from "react-icons/bs";
 import GoogleAuthButton from "./google-auth-button";
 import ProgressIndicator from "./progress-indicator";
-import { AUTH_CONSTANTS, authStyles } from "@/constants";
+import { AUTH_CONSTANTS } from "@/constants";
 
 const REGISTRATION_STEPS = [
 	{ number: 1, label: "Contact Info" },
@@ -36,7 +36,6 @@ const SignUpForm = ({
 	onOpenChange,
 	onModeChange,
 }: SignUpFormProps) => {
-	const [mounted, setMounted] = useState(false);
 	const [currentStep, setCurrentStep] = useState(1);
 
 	const { isLoading, showPassword, setShowPassword, signup, handleGoogleAuth } =
@@ -45,14 +44,6 @@ const SignUpForm = ({
 			onError,
 			onOpenChange,
 		});
-
-	useEffect(() => {
-		setMounted(true);
-	}, []);
-
-	if (!mounted) {
-		return null;
-	}
 
 	const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -77,12 +68,12 @@ const SignUpForm = ({
 	};
 
 	const ContactInfo = (
-		<div className={authStyles.formWrapper}>
-			<div className={authStyles.header}>
-				<h1 className={authStyles.headerTitle}>
+		<div className="max-w-md mx-auto space-y-6">
+			<div className="text-center mb-8">
+				<h1 className="text-3xl font-bold text-gray-900">
 					{AUTH_CONSTANTS.SIGNUP.steps.contact.title}
 				</h1>
-				<p className={authStyles.headerSubtitle}>
+				<p className="mt-2 text-gray-600">
 					{AUTH_CONSTANTS.SIGNUP.steps.contact.subtitle}
 				</p>
 			</div>
@@ -92,7 +83,7 @@ const SignUpForm = ({
 					type="text"
 					name="fullName"
 					placeholder="Full Names"
-					className={authStyles.input}
+					className="w-full h-12 rounded-xl border-gray-400 bg-white"
 					required
 					aria-label="Full name"
 					autoComplete="name"
@@ -102,7 +93,7 @@ const SignUpForm = ({
 					type="email"
 					name="email"
 					placeholder="Email Address"
-					className={authStyles.input}
+					className="w-full h-12 rounded-xl border-gray-400 bg-white"
 					required
 					aria-label="Email address"
 					autoComplete="email"
@@ -113,7 +104,7 @@ const SignUpForm = ({
 						type={showPassword ? "text" : "password"}
 						name="password"
 						placeholder="Password"
-						className={authStyles.inputWithIcon}
+						className="w-full h-12 rounded-xl border-gray-400 bg-white pr-10"
 						required
 						minLength={8}
 						aria-label="Password"
@@ -133,7 +124,7 @@ const SignUpForm = ({
 						type={showPassword ? "text" : "password"}
 						name="confirm-password"
 						placeholder="Confirm Password"
-						className={authStyles.inputWithIcon}
+						className="w-full h-12 rounded-xl border-gray-400 bg-white pr-10"
 						required
 						minLength={8}
 						aria-label="Confirm Password"
@@ -156,26 +147,28 @@ const SignUpForm = ({
 
 				<Button
 					type="button"
-					className={authStyles.button}
+					className="w-full h-12 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold"
 					onClick={() => setCurrentStep(2)}
 				>
 					{AUTH_CONSTANTS.SIGNUP.buttons.next}
 				</Button>
 
-				<div className={authStyles.divider}>
-					<div className={authStyles.dividerLine} />
-					<span className={authStyles.dividerText}>Or</span>
-					<div className={authStyles.dividerLine} />
+				<div className="flex items-center">
+					<div className="flex-grow border-t border-gray-400/75" />
+					<span className="mx-4 text-sm font-bold text-gray-700 uppercase">
+						Or
+					</span>
+					<div className="flex-grow border-t border-gray-400/75" />
 				</div>
 
 				<GoogleAuthButton onClick={handleGoogleAuth} />
 
-				<p className={authStyles.modeToggle}>
+				<p className="text-center text-sm text-gray-600">
 					{AUTH_CONSTANTS.SIGNUP.hasAccount}{" "}
 					<button
 						type="button"
 						onClick={onModeChange}
-						className={authStyles.modeToggleButton}
+						className="text-green-500 hover:text-green-600 font-semibold"
 					>
 						{AUTH_CONSTANTS.SIGNUP.signInLink}
 					</button>
@@ -185,9 +178,9 @@ const SignUpForm = ({
 	);
 
 	const EducationBackground = (
-		<div className={authStyles.formWrapper}>
-			<div className={authStyles.header}>
-				<h1 className={authStyles.headerTitle}>
+		<div className="max-w-md mx-auto space-y-6">
+			<div className="text-center mb-8">
+				<h1 className="text-3xl font-bold text-gray-900">
 					{AUTH_CONSTANTS.SIGNUP.steps.education.title}
 				</h1>
 			</div>
@@ -369,18 +362,18 @@ const SignUpForm = ({
 		<div className="h-full">
 			<ProgressIndicator currentStep={currentStep} steps={REGISTRATION_STEPS} />
 
-			<div className={authStyles.wrapper}>
-				<div className={authStyles.imageSection}>
+			<div className="flex !rounded-xl overflow-hidden">
+				<div className="w-1/2 bg-gradient-to-b from-[#D1D9D1] via-[#ECEAEA] to-[#D1D9D1] flex items-center justify-center">
 					<Image
 						width={400}
 						height={400}
 						src="/images/registration-01.svg"
 						alt="Registration illustration"
-						className={authStyles.image}
+						className="w-full h-full object-cover"
 					/>
 				</div>
 
-				<div className={authStyles.formSection}>
+				<div className="w-1/2 p-12 bg-gray-400/15">
 					<div className="max-w-md mx-auto">
 						<form onSubmit={handleFormSubmit}>
 							{currentStep === 1 ? ContactInfo : EducationBackground}

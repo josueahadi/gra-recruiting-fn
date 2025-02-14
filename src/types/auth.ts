@@ -26,12 +26,10 @@ export interface SignUpCredentials extends AuthCredentials {
 }
 
 export interface SignUpFormProps {
-	trigger?: React.ReactNode;
-	open?: boolean;
-	onOpenChange?: (open: boolean) => void;
 	onSuccess?: () => void;
 	onError?: (error: Error) => void;
 	onModeChange?: () => void;
+	onOpenChange?: (open: boolean) => void;
 }
 
 export interface FormStepProps {

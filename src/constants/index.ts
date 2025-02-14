@@ -1,17 +1,8 @@
-import cn from "classnames";
-
 // auth
 export const AUTH_CONSTANTS = {
-	COLORS: {
-		gradient: {
-			from: "#D1D9D1",
-			via: "#ECEAEA",
-			to: "#D1D9D1",
-		},
-	},
 	LOGIN: {
-		title: "Login",
-		subtitle: "Please Enter Your Details to login to your account",
+		title: "Welcome Back!",
+		subtitle: "Please Enter Your Credentials to login to your account",
 		forgotPassword: "Forgot Password?",
 		noAccount: "Don't have an account?",
 		signUpLink: "Sign up",
@@ -82,33 +73,6 @@ export const AUTH_CONSTANTS = {
 			graduationYear: "2018",
 		},
 	},
-} as const;
-
-// authStyles
-export const authStyles = {
-	wrapper: "flex !rounded-xl overflow-hidden",
-	imageSection: cn(
-		"w-1/2 bg-gradient-to-b flex items-center justify-center",
-		`from-[${AUTH_CONSTANTS.COLORS.gradient.from}]`,
-		`via-[${AUTH_CONSTANTS.COLORS.gradient.via}]`,
-		`to-[${AUTH_CONSTANTS.COLORS.gradient.to}]`,
-	),
-	image: "w-full h-full object-cover",
-	formSection: "w-1/2 p-12 bg-gray-400/15",
-	formWrapper: "max-w-md mx-auto space-y-6",
-	header: "text-center mb-8",
-	headerTitle: "text-3xl font-bold text-gray-900",
-	headerSubtitle: "mt-2 text-gray-600",
-	form: "space-y-6",
-	input: "w-full h-12 rounded-xl border-gray-400 bg-white",
-	inputWithIcon: "w-full h-12 rounded-xl border-gray-400 bg-white pr-10",
-	button:
-		"w-full h-12 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold",
-	divider: "flex items-center",
-	dividerLine: "flex-grow border-t border-gray-400/75",
-	dividerText: "mx-4 text-sm font-bold text-gray-700 uppercase",
-	modeToggle: "text-center text-sm text-gray-600",
-	modeToggleButton: "text-green-500 hover:text-green-600 font-semibold",
 } as const;
 
 // errors
