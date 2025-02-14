@@ -2,8 +2,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 import { Eye, EyeOff } from "lucide-react";
-import { FcGoogle } from "react-icons/fc";
+import GoogleAuthButton from "./google-auth-button";
 import Image from "next/image";
+import Link from "next/link";
+import { AUTH_CONSTANTS, authStyles } from "@/constants";
 
 interface LoginFormProps {
 	onSuccess?: () => void;
@@ -36,32 +38,32 @@ const LoginForm = ({
 	};
 
 	return (
-		<div className="flex !rounded-3xl overflow-hidden">
-			<div className="w-1/3 bg-gradient-to-b from-[#D1D9D1] via-[#ECEAEA] to-[#ECEAEA] flex items-center justify-center">
+		<div className={authStyles.wrapper}>
+			<div className={authStyles.imageSection}>
 				<Image
 					width={500}
-					height={400}
-					src="/images/login-illustration.png"
+					height={500}
+					src="/images/freepik-11-2000.webp"
 					alt="Login illustration"
-					className="w-full h-auto"
+					className={authStyles.image}
 				/>
 			</div>
 
-			<div className="w-2/3 p-12 bg-gray-400/15">
-				<div className="max-w-md mx-auto space-y-6">
-					<div className="text-center mb-8">
-						<h1 className="text-3xl font-bold text-gray-900">Welcome Back</h1>
-						<p className="mt-2 text-gray-600">
-							Please Enter Your Details to login to your account
+			<div className={authStyles.formSection}>
+				<div className={authStyles.formWrapper}>
+					<div className={authStyles.header}>
+						<h1 className={authStyles.headerTitle}>Welcome Back</h1>
+						<p className={authStyles.headerSubtitle}>
+							{AUTH_CONSTANTS.LOGIN.title}
 						</p>
 					</div>
 
-					<form onSubmit={handleSubmit} className="space-y-6">
+					<form onSubmit={handleSubmit} className={authStyles.form}>
 						<Input
 							type="email"
 							name="email"
 							placeholder="Email Address"
-							className="w-full h-12 rounded-xl border-gray-400 bg-white"
+							className={authStyles.input}
 							required
 							autoComplete="email"
 						/>
@@ -71,7 +73,7 @@ const LoginForm = ({
 								type={showPassword ? "text" : "password"}
 								name="password"
 								placeholder="Password"
-								className="w-full h-12 rounded-xl border-gray-400 bg-white pr-10"
+								className={authStyles.inputWithIcon}
 								required
 								autoComplete="current-password"
 							/>
@@ -84,39 +86,38 @@ const LoginForm = ({
 							</button>
 						</div>
 
+						<div className="flex justify-end">
+							<Link
+								href="/forgot-password"
+								className="text-sm text-gray-600 hover:text-sky-500"
+							>
+								Forgot Password?
+							</Link>
+						</div>
+
 						<Button
 							type="submit"
-							className="w-full h-12 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold"
+							className={authStyles.button}
 							disabled={isLoading}
 						>
 							Sign In
 						</Button>
 					</form>
 
-					<div className="flex items-center">
-						<div className="flex-grow border-t border-gray-400/75" />
-						<span className="mx-4 text-sm font-bold text-gray-700 uppercase">
-							Or
-						</span>
-						<div className="flex-grow border-t border-gray-400/75" />
+					<div className={authStyles.divider}>
+						<div className={authStyles.dividerLine} />
+						<span className={authStyles.dividerText}>Or</span>
+						<div className={authStyles.dividerLine} />
 					</div>
 
-					<Button
-						type="button"
-						variant="outline"
-						className="w-full h-12 rounded-xl border border-green-100 bg-green-50 hover:bg-green-100 text-gray-700 font-medium"
-						onClick={handleGoogleAuth}
-					>
-						<FcGoogle className="mr-2" />
-						Sign in with Google
-					</Button>
+					<GoogleAuthButton onClick={handleGoogleAuth} />
 
-					<p className="text-center text-sm text-gray-600">
+					<p className={authStyles.modeToggle}>
 						Don&apos;t have an account?{" "}
 						<button
 							type="button"
 							onClick={onModeChange}
-							className="text-green-500 hover:text-green-600 font-semibold"
+							className={authStyles.modeToggleButton}
 						>
 							Sign up
 						</button>
