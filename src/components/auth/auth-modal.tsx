@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useState } from "react";
 import SignUpForm from "./signup-form";
 import LoginForm from "./login-form";
@@ -36,6 +36,9 @@ export const AuthModal = ({
 				aria-labelledby="auth-title"
 			>
 				<ErrorBoundary>
+					<VisuallyHidden>
+						<DialogTitle id="auth-title" />
+					</VisuallyHidden>
 					<Suspense fallback={<LoadingSpinner />} />
 					<VisuallyHidden>
 						<h2 id="auth-title">

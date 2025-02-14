@@ -17,28 +17,13 @@ import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { BsGithub, BsLinkedin } from "react-icons/bs";
-import { FcGoogle } from "react-icons/fc";
+import GoogleAuthButton from "./google-auth-button";
 import ProgressIndicator from "./progress-indicator";
+import { AUTH_CONSTANTS, authStyles } from "@/constants";
 
 const REGISTRATION_STEPS = [
 	{ number: 1, label: "Contact Info" },
 	{ number: 2, label: "Education Background" },
-];
-
-const DEPARTMENTS = [
-	"Software Development",
-	"Digital Marketing",
-	"Business Development",
-	"Finance",
-	"Human Resources",
-];
-
-const EDUCATION_LEVELS = [
-	"High School",
-	"Bachelor's Degree",
-	"Master's Degree",
-	"PhD",
-	"Other",
 ];
 
 const GRADUATION_YEARS = Array.from({ length: 30 }, (_, i) =>
@@ -92,10 +77,14 @@ const SignUpForm = ({
 	};
 
 	const ContactInfo = (
-		<div className="space-y-6">
-			<div className="text-center mb-8">
-				<h1 className="text-3xl font-bold text-gray-900">Create Account</h1>
-				<p className="mt-2 text-gray-600">Fill in your details</p>
+		<div className={authStyles.formWrapper}>
+			<div className={authStyles.header}>
+				<h1 className={authStyles.headerTitle}>
+					{AUTH_CONSTANTS.SIGNUP.steps.contact.title}
+				</h1>
+				<p className={authStyles.headerSubtitle}>
+					{AUTH_CONSTANTS.SIGNUP.steps.contact.subtitle}
+				</p>
 			</div>
 
 			<div className="space-y-6">
@@ -103,7 +92,7 @@ const SignUpForm = ({
 					type="text"
 					name="fullName"
 					placeholder="Full Names"
-					className="w-full h-12 rounded-xl border-gray-400 bg-white"
+					className={authStyles.input}
 					required
 					aria-label="Full name"
 					autoComplete="name"
@@ -113,7 +102,7 @@ const SignUpForm = ({
 					type="email"
 					name="email"
 					placeholder="Email Address"
-					className="w-full h-12 rounded-xl border-gray-400 bg-white"
+					className={authStyles.input}
 					required
 					aria-label="Email address"
 					autoComplete="email"
@@ -124,11 +113,30 @@ const SignUpForm = ({
 						type={showPassword ? "text" : "password"}
 						name="password"
 						placeholder="Password"
-						className="w-full h-12 rounded-xl border-gray-400 bg-white pr-10"
+						className={authStyles.inputWithIcon}
 						required
 						minLength={8}
 						aria-label="Password"
 						autoComplete="new-password"
+					/>
+					<button
+						type="button"
+						className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+						onClick={() => setShowPassword(!showPassword)}
+					>
+						{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+					</button>
+				</div>
+
+				<div className="relative">
+					<Input
+						type={showPassword ? "text" : "password"}
+						name="confirm-password"
+						placeholder="Confirm Password"
+						className={authStyles.inputWithIcon}
+						required
+						minLength={8}
+						aria-label="Confirm Password"
 					/>
 					<button
 						type="button"
@@ -148,38 +156,28 @@ const SignUpForm = ({
 
 				<Button
 					type="button"
-					className="w-full h-12 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold"
+					className={authStyles.button}
 					onClick={() => setCurrentStep(2)}
 				>
-					Next Step
+					{AUTH_CONSTANTS.SIGNUP.buttons.next}
 				</Button>
 
-				<div className="flex items-center">
-					<div className="flex-grow border-t border-gray-400/75" />
-					<span className="mx-4 text-sm font-bold text-gray-700 uppercase">
-						Or
-					</span>
-					<div className="flex-grow border-t border-gray-400/75" />
+				<div className={authStyles.divider}>
+					<div className={authStyles.dividerLine} />
+					<span className={authStyles.dividerText}>Or</span>
+					<div className={authStyles.dividerLine} />
 				</div>
 
-				<Button
-					type="button"
-					variant="outline"
-					className="w-full h-12 rounded-xl border border-green-100 bg-green-50 hover:bg-green-100 text-gray-700 font-medium"
-					onClick={handleGoogleAuth}
-				>
-					<FcGoogle className="mr-2" />
-					Sign up with Google
-				</Button>
+				<GoogleAuthButton onClick={handleGoogleAuth} />
 
-				<p className="text-center text-sm text-gray-600">
-					Already have an account?{" "}
+				<p className={authStyles.modeToggle}>
+					{AUTH_CONSTANTS.SIGNUP.hasAccount}{" "}
 					<button
 						type="button"
 						onClick={onModeChange}
-						className="text-green-500 hover:text-green-600 font-semibold"
+						className={authStyles.modeToggleButton}
 					>
-						Sign in
+						{AUTH_CONSTANTS.SIGNUP.signInLink}
 					</button>
 				</p>
 			</div>
@@ -187,10 +185,10 @@ const SignUpForm = ({
 	);
 
 	const EducationBackground = (
-		<div className="space-y-6">
-			<div className="text-center mb-8">
-				<h1 className="text-3xl font-bold text-gray-900">
-					Complete Your Profile
+		<div className={authStyles.formWrapper}>
+			<div className={authStyles.header}>
+				<h1 className={authStyles.headerTitle}>
+					{AUTH_CONSTANTS.SIGNUP.steps.education.title}
 				</h1>
 			</div>
 
@@ -207,7 +205,7 @@ const SignUpForm = ({
 							<SelectValue placeholder="Department" />
 						</SelectTrigger>
 						<SelectContent>
-							{DEPARTMENTS.map((dept) => (
+							{AUTH_CONSTANTS.SIGNUP.steps.education.departments.map((dept) => (
 								<SelectItem key={dept} value={dept.toLowerCase()}>
 									{dept}
 								</SelectItem>
@@ -246,11 +244,13 @@ const SignUpForm = ({
 							<SelectValue placeholder="Select your Education Level" />
 						</SelectTrigger>
 						<SelectContent>
-							{EDUCATION_LEVELS.map((level) => (
-								<SelectItem key={level} value={level.toLowerCase()}>
-									{level}
-								</SelectItem>
-							))}
+							{AUTH_CONSTANTS.SIGNUP.steps.education.education_levels.map(
+								(level) => (
+									<SelectItem key={level} value={level.toLowerCase()}>
+										{level}
+									</SelectItem>
+								),
+							)}
 						</SelectContent>
 					</Select>
 				</div>
@@ -369,18 +369,18 @@ const SignUpForm = ({
 		<div className="h-full">
 			<ProgressIndicator currentStep={currentStep} steps={REGISTRATION_STEPS} />
 
-			<div className="flex !rounded-3xl overflow-hidden">
-				<div className="w-1/3 bg-gradient-to-b from-[#D1D9D1] via-[#ECEAEA] to-[#ECEAEA] flex items-center justify-center">
+			<div className={authStyles.wrapper}>
+				<div className={authStyles.imageSection}>
 					<Image
-						width={500}
+						width={400}
 						height={400}
 						src="/images/registration-01.svg"
 						alt="Registration illustration"
-						className="w-full h-auto"
+						className={authStyles.image}
 					/>
 				</div>
 
-				<div className="w-2/3 p-12 bg-gray-400/15">
+				<div className={authStyles.formSection}>
 					<div className="max-w-md mx-auto">
 						<form onSubmit={handleFormSubmit}>
 							{currentStep === 1 ? ContactInfo : EducationBackground}
