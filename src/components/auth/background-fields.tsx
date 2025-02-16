@@ -7,8 +7,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { BsGithub, BsLinkedin } from "react-icons/bs";
 import { AUTH_CONSTANTS } from "@/constants";
+import { BsGithub, BsLinkedin } from "react-icons/bs";
 
 const GRADUATION_YEARS = Array.from({ length: 30 }, (_, i) =>
 	(new Date().getFullYear() - i).toString(),

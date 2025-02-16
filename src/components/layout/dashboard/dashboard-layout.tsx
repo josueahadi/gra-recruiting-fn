@@ -1,5 +1,5 @@
-import { Toaster } from "@/components/ui/toaster";
 import ErrorBoundary from "@/components/error-boundary";
+import { Toaster } from "@/components/ui/toaster";
 // import AdminHeader from "./admin-header";
 // import ApplicantHeader from "./admin-header";
 

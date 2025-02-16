@@ -1,7 +1,7 @@
-import { Input } from "@/components/ui/input";
-import { Eye, EyeOff } from "lucide-react";
-import { AUTH_CONSTANTS } from "@/constants";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { AUTH_CONSTANTS } from "@/constants";
+import { Eye, EyeOff } from "lucide-react";
 
 export const ContactInfoFields = ({
 	showPassword,

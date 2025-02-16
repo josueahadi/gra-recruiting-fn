@@ -1,11 +1,11 @@
 "use client";
 
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { useState } from "react";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Suspense } from "react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import ErrorBoundary from "@/components/error-boundary";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useState } from "react";
+import { Suspense } from "react";
 export type AuthMode = "login" | "signup";
 import AuthForm from "./auth-form";
 

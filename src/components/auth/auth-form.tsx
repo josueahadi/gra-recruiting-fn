@@ -1,15 +1,15 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import GoogleAuthButton from "./google-auth-button";
 import { AUTH_CONSTANTS } from "@/constants";
 import { useAuth } from "@/hooks/use-auth";
-import { useState } from "react";
 import Image from "next/image";
+import { useState } from "react";
+import { EducationBackgroundFields } from "./background-fields";
+import { ContactInfoFields } from "./contact-info-fields";
+import GoogleAuthButton from "./google-auth-button";
 import { LoginFields } from "./login-fields";
 import ProgressIndicator from "./progress-indicator";
-import { ContactInfoFields } from "./contact-info-fields";
-import { EducationBackgroundFields } from "./background-fields";
 
 const REGISTRATION_STEPS = [
 	{ number: 1, label: "Contact Info" },
