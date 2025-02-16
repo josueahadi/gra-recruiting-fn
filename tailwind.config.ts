@@ -59,18 +59,6 @@ export default {
 					dark: "#16a34a",
 					light: "#22c55e",
 				},
-				gray: {
-					950: "#161614",
-					900: "#272727",
-					800: "#2d3748",
-					600: "#575D66",
-					500: "#847E7E",
-					400: "#878787",
-					300: "#e2e8f0",
-					200: "#EFEFEF",
-					100: "#f7fafc",
-					50: "#FFFCFC",
-				},
 				muted: {
 					DEFAULT: "hsl(var(--muted))",
 					foreground: "hsl(var(--muted-foreground))",
