@@ -1,10 +1,10 @@
 "use client";
 
-import EmailSection from "@/components/dashboard/applicant/email-section";
-import NotificationSection from "@/components/dashboard/applicant/notification-section";
-import ProfileSection from "@/components/dashboard/applicant/profile-section";
-import { ApplicantHeader } from "@/components/layout/dashboard/applicant-header";
-import DashboardLayout from "@/components/layout/dashboard/dashboard-layout";
+import EmailSection from "@/components/applicant/email-section";
+import NotificationSection from "@/components/applicant/notification-section";
+import ProfileSection from "@/components/applicant/profile-section";
+import { ApplicantHeader } from "@/components/layout/applicant/applicant-header";
+import DashboardLayout from "@/components/layout/dashboard-layout";
 import React, { useState } from "react";
 
 const ApplicantDashboard = () => {

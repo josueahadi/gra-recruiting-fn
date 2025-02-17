@@ -46,7 +46,7 @@ const Footer = () => {
 					{/* Logo Section */}
 					<div className="md:col-span-2">
 						<Image
-							src="/icons/growrwanda-logo-horizontal-orientation_white.svg"
+							src="/brand/growrwanda-logo-horizontal-orientation_white.svg"
 							alt="Grow Rwanda Logo"
 							width={296}
 							height={53}

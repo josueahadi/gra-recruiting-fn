@@ -84,7 +84,7 @@ const AuthForm = ({
 			)}
 
 			<div className="flex !rounded-xl overflow-hidden">
-				<div className="w-1/2 bg-gradient-to-b from-[#D1D9D1] to-[#ECEAEA] flex items-center justify-center">
+				<div className="hidden md:flex w-1/2 bg-gradient-to-b from-[#D1D9D1] to-[#ECEAEA] items-center justify-center">
 					<Image
 						width={500}
 						height={500}
@@ -102,7 +102,7 @@ const AuthForm = ({
 					/>
 				</div>
 
-				<div className="w-1/2 p-12 bg-gray-400/15">
+				<div className="w-full md:w-1/2 p-12 bg-gray-400/15">
 					<div className="max-w-md mx-auto space-y-6">
 						<FormHeader mode={mode} currentStep={currentStep} />
 
