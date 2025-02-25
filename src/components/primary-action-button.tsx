@@ -1,11 +1,11 @@
 "use client";
 
+import { AuthModal } from "@/components/auth/auth-modal";
+import type { AuthMode } from "@/components/auth/auth-modal";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useState } from "react";
-import { AuthModal } from "@/components/auth/auth-modal";
-import type { AuthMode } from "@/components/auth/auth-modal";
 
 interface PrimaryActionButtonProps
 	extends React.ButtonHTMLAttributes<HTMLButtonElement> {

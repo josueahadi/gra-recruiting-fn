@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Logo } from "./Logo";
+import { Brand } from "@/components/ui/brand";
 import { AuthButtons } from "./auth-buttons";
 import { MobileMenu } from "./mobile-menu";
 import { NavItems } from "./nav-items";
@@ -36,7 +36,7 @@ const Header = () => {
 				}`}
 			>
 				<div className="flex h-16 items-center justify-between">
-					<Logo />
+					<Brand />
 					<NavItems className="hidden lg:flex items-center gap-8" />
 					<div className="flex items-center gap-4">
 						<div className="hidden lg:block">

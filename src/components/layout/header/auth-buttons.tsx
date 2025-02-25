@@ -1,11 +1,11 @@
 "use client";
 
+import { AuthModal } from "@/components/auth/auth-modal";
+import type { AuthMode } from "@/components/auth/auth-modal";
 import PrimaryActionButton from "@/components/primary-action-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { AuthModal } from "@/components/auth/auth-modal";
-import type { AuthMode } from "@/components/auth/auth-modal";
 
 interface AuthButtonsProps {
 	className?: string;

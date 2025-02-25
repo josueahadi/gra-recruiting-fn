@@ -1,9 +1,9 @@
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 import { api } from "@/services/api";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import type { User, AuthResponse } from "@/types/api";
+import type { AuthResponse, User } from "@/types/api";
 import type { AuthCredentials } from "@/types/auth";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 
 interface UseAuthOptions {
 	onSuccess?: () => void;
