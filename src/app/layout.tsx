@@ -3,6 +3,7 @@ import { Raleway } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
 import { Toaster } from "@/components/ui/toaster";
+import { BackgroundGradient } from "@/components/layout/background-gradient";
 
 const raleway = Raleway({
 	subsets: ["latin"],
@@ -22,6 +23,7 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<body className={`${raleway.variable} font-sans antialiased`}>
+				<BackgroundGradient />
 				<Providers>
 					{children}
 					<Toaster />

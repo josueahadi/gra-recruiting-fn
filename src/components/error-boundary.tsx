@@ -49,7 +49,7 @@ class ErrorBoundary extends React.Component<
 						onClick={this.handleReset}
 						className="bg-green-500 hover:bg-green-600 text-white"
 					>
-						Try again
+						Refresh
 					</Button>
 				</div>
 			);

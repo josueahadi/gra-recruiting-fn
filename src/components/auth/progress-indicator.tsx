@@ -55,7 +55,7 @@ const ProgressIndicator = ({ currentStep, steps }: ProgressIndicatorProps) => {
 					/>
 					{index < steps.length - 1 && (
 						<div
-							className="w-32 md:w-52 h-[0.5px] bg-gray-400"
+							className="w-12 md:w-32 lg:w-52 h-[0.5px] bg-gray-400"
 							role="separator"
 						/>
 					)}

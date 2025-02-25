@@ -7,7 +7,7 @@ const HeroSection = () => {
 	return (
 		<ErrorBoundary>
 			<section className="relative flex flex-col-reverse md:flex-row mx-auto 2xl:max-w-screen-2xl container px-5 pt-0 md:pt-10 xl:pt-0 mb-0 md:mb-10 xl:mb-auto">
-				<div className="absolute top-0 left-0 w-full h-full">
+				{/* <div className="absolute top-0 left-0 w-full h-full">
 					<Image
 						src="/ellipses/ellipse-1.svg"
 						alt="Ellipse 1"
@@ -22,7 +22,7 @@ const HeroSection = () => {
 						objectFit="cover"
 						className="opacity-100"
 					/>
-				</div>
+				</div> */}
 				<div className="inset-0 xl:absolute flex items-center max-w-sm:max-w-sm md:max-w-md lg:max-w-2xl xl:max-w-4xl order-2 md:order-1 mt-10 md:mt-0">
 					<div className="sm:pl-5 md:pl-10 lg:pl-28 xl:pl-40">
 						<h1 className="text-[#3F3F3F] uppercase font-black text-3xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl">
