@@ -25,7 +25,7 @@ export const AuthButtons = ({
 			<Button
 				variant="ghost"
 				className={cn(
-					"text-gray-900 hover:text-primary-600 font-medium",
+					"text-primary-base border-2 border-primary-base !rounded-50 px-8 py-5 hover:text-primary-base font-bold text-base",
 					buttonClassName,
 				)}
 				onClick={() => handleAuth("login")}

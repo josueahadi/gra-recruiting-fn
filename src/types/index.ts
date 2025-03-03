@@ -20,3 +20,14 @@ export interface AuthCredentials {
 	email: string;
 	password: string;
 }
+
+export interface BackgroundShapeProps {
+	className?: string;
+	fill?: string;
+	fillOpacity?: number;
+	stroke?: string;
+	strokeWidth?: number;
+	variant?: "filled" | "outlined";
+	width?: number | string;
+	height?: number | string;
+}

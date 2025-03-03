@@ -37,7 +37,7 @@ const PrimaryActionButton = ({
 		<Button
 			asChild
 			className={cn(
-				"px-8 py-5 !rounded-50 bg-primary-base text-white transition-colors duration-300 hover:bg-primary-light hover:text-white font-medium text-base",
+				"px-8 py-5 !rounded-50 bg-primary-base text-white transition-colors duration-300 hover:bg-primary-light hover:text-white font-bold text-base",
 				className,
 			)}
 			{...props}

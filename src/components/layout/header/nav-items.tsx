@@ -19,8 +19,8 @@ export const NavItems = ({ className = "", isMobile = false }) => {
 					href={link.href}
 					className={`text-base font-medium transition-colors duration-200 ${
 						pathname === link.href
-							? "text-primary-600"
-							: "text-gray-900 hover:text-primary-600"
+							? "text-primary-base"
+							: "text-gray-900 hover:text-primary-base"
 					}`}
 				>
 					{link.label}
