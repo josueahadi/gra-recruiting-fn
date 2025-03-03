@@ -10,7 +10,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Edit2, Loader2, Plus, X, LogOut } from "lucide-react";
+import { Edit2, Loader2, LogOut, Plus, X } from "lucide-react";
 import { useState } from "react";
 
 interface InfoCardProps {

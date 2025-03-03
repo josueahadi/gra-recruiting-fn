@@ -1,6 +1,6 @@
+import AdminHeader from "@/components/layout/admin/header/admin-header";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import AdminHeader from "@/components/layout/admin/header/admin-header";
 
 export default function Page() {
 	return (

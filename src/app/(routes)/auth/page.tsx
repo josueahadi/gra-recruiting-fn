@@ -1,8 +1,8 @@
 "use client";
 
 import AuthForm from "@/components/auth/auth-form";
-import { useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 
 export default function AuthPage() {
 	const searchParams = useSearchParams();

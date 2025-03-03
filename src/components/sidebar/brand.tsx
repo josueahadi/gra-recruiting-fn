@@ -1,12 +1,12 @@
 "use client";
 
-import * as React from "react";
-import Image from "next/image";
 import {
 	SidebarMenu,
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import Image from "next/image";
+import * as React from "react";
 
 const Brand = () => {
 	return (

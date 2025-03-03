@@ -3,13 +3,13 @@
 import { Button } from "@/components/ui/button";
 import { AUTH_CONSTANTS } from "@/constants";
 import { useAuth } from "@/hooks/use-auth";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { EducationBackgroundFields } from "./background-fields";
 import { ContactInfoFields } from "./contact-info-fields";
 import GoogleAuthButton from "./google-auth-button";
 import { LoginFields } from "./login-fields";
 import ProgressIndicator from "./progress-indicator";
-import { useRouter } from "next/navigation";
 
 const REGISTRATION_STEPS = [
 	{ number: 1, label: "Contact Info" },

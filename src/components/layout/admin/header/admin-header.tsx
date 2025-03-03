@@ -10,9 +10,9 @@ import {
 } from "@/components/ui/breadcrumb";
 
 import { Notifications } from "@/components/layout/admin/header/notifications";
+import { Separator } from "@/components/ui/separator";
 // import { ProfileDropdown } from "@/components/layout/admin/header/profile";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 
 const AdminHeader = () => {
 	return (

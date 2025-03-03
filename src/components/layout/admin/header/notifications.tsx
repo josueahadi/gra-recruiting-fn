@@ -1,5 +1,3 @@
-// src/components/layout/admin/header/NotificationBell.tsx
-import { Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -7,6 +5,8 @@ import {
 	// DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+// src/components/layout/admin/header/NotificationBell.tsx
+import { Bell } from "lucide-react";
 
 export const Notifications = () => {
 	return (

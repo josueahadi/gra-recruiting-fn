@@ -1,12 +1,6 @@
 "use client";
 
-import {
-	Settings2,
-	LayoutDashboard,
-	UsersRound,
-	ShieldQuestion,
-	CircleEllipsis,
-} from "lucide-react";
+import Brand from "@/components/sidebar/brand";
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavUser } from "@/components/sidebar/nav-user";
 import {
@@ -16,7 +10,13 @@ import {
 	SidebarHeader,
 	SidebarRail,
 } from "@/components/ui/sidebar";
-import Brand from "@/components/sidebar/brand";
+import {
+	CircleEllipsis,
+	LayoutDashboard,
+	Settings2,
+	ShieldQuestion,
+	UsersRound,
+} from "lucide-react";
 
 // This is sample data.
 const data = {

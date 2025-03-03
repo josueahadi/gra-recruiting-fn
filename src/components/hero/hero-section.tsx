@@ -1,7 +1,7 @@
 import ErrorBoundary from "@/components/error-boundary";
-import Image from "next/image";
 import PrimaryActionButton from "@/components/primary-action-button";
 import { BackgroundShape } from "@/components/ui/background-shape";
+import Image from "next/image";
 
 const HeroSection = () => {
 	return (

@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Raleway } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/Providers";
-import { Toaster } from "@/components/ui/toaster";
 import { BackgroundGradient } from "@/components/layout/background-gradient";
+import { Toaster } from "@/components/ui/toaster";
 
 const raleway = Raleway({
 	subsets: ["latin"],
