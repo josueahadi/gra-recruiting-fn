@@ -31,11 +31,7 @@ const OpportunityCard = ({ icon, title, description }: CardProps) => {
 					</CardDescription>
 				</CardContent>
 				<CardFooter className="mt-auto">
-					<PrimaryActionButton
-						showAuthModal
-						authMode="signup"
-						className="capitalize"
-					>
+					<PrimaryActionButton className="capitalize">
 						Apply
 					</PrimaryActionButton>
 				</CardFooter>

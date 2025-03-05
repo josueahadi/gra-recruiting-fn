@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
 	poweredByHeader: false,
 	compress: true,
 	images: {
-		domains: ["localhost"],
 		remotePatterns: [
 			{
 				protocol: "https",

@@ -1,6 +1,5 @@
 "use client";
 
-import type { AuthMode } from "@/components/auth/auth-modal";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -11,24 +10,20 @@ interface PrimaryActionButtonProps
 	className?: string;
 	href?: string;
 	children: React.ReactNode;
-	showAuthModal?: boolean;
-	authMode?: AuthMode;
 }
 
 const PrimaryActionButton = ({
 	className,
 	href,
 	children,
-	showAuthModal = false,
-	authMode = "signup",
 	...props
 }: PrimaryActionButtonProps) => {
 	const router = useRouter();
 
 	const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-		if (showAuthModal) {
+		if (href) {
 			e.preventDefault();
-			router.push(`/auth?mode=${authMode}`);
+			router.push(href);
 		}
 		props.onClick?.(e);
 	};

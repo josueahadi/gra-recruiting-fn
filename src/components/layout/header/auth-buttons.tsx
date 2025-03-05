@@ -3,7 +3,7 @@
 import PrimaryActionButton from "@/components/primary-action-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/use-auth";
 
 interface AuthButtonsProps {
 	className?: string;
@@ -14,12 +14,7 @@ export const AuthButtons = ({
 	className,
 	buttonClassName,
 }: AuthButtonsProps) => {
-	const router = useRouter();
-
-	const handleAuth = (mode: "login" | "signup") => {
-		router.push(`/auth?mode=${mode}`);
-	};
-
+	const { handleAuth } = useAuth();
 	return (
 		<div className={cn("flex items-center gap-4", className)}>
 			<Button
@@ -33,7 +28,10 @@ export const AuthButtons = ({
 				Sign In
 			</Button>
 
-			<PrimaryActionButton onClick={() => handleAuth("signup")}>
+			<PrimaryActionButton
+				className={cn(buttonClassName)}
+				onClick={() => handleAuth("signup")}
+			>
 				Apply
 			</PrimaryActionButton>
 		</div>

@@ -12,6 +12,7 @@ export const Brand = () => {
 				width={193}
 				height={35}
 				priority
+				className="w-32 h-10 md:w-[193px] md:h-[35px]"
 			/>
 		</Link>
 	);

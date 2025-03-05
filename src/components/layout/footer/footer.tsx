@@ -33,7 +33,7 @@ const navigationlinks = {
 
 const Footer = () => {
 	return (
-		<footer className="relative bg-[#205B76] text-gray-50">
+		<footer className="relative bg-gradient-to-r from-[#0F658A] to-[#041A24] text-gray-50 py-2 md:py-8 mt-4 md:mt-10">
 			<div
 				className="absolute inset-0 opacity-100"
 				style={{
@@ -42,9 +42,9 @@ const Footer = () => {
 				}}
 			/>
 			<div className="2xl:max-w-screen-2xl mx-auto  px-4 md:px-28 xl:px-32 relative">
-				<div className="grid grid-cols-1 md:grid-cols-5 gap-8 md:gap-4 py-10">
-					{/* Logo Section */}
-					<div className="md:col-span-2">
+				<div className="grid grid-cols-1 md:grid-cols-5 gap-8 py-10">
+					{/* Brand Section */}
+					<div className="md:col-span-2 order-4 md:order-1">
 						<Image
 							src="/brand/growrwanda-logo-horizontal-orientation_white.svg"
 							alt="Grow Rwanda Logo"
@@ -74,7 +74,7 @@ const Footer = () => {
 					</div>
 
 					{/* Links Section */}
-					<div className="">
+					<div className="order-3 md:order-2">
 						<h3 className="font-bold text-xl mb-4">Links</h3>
 						<span className="space-y-2">
 							{navigationlinks.main.map((link) => (
@@ -90,7 +90,7 @@ const Footer = () => {
 					</div>
 
 					{/* Resources Section */}
-					<div className="">
+					<div className="order-2 md:order-3">
 						<h3 className="font-bold text-xl mb-4">Resources</h3>
 						<span className="space-y-2">
 							{navigationlinks.resources.map((link) => (
@@ -106,7 +106,7 @@ const Footer = () => {
 					</div>
 
 					{/* Contact Section */}
-					<div>
+					<div className="order-1 md:order-4">
 						<h3 className="font-bold text-xl mb-4">Contact Us</h3>
 						<div className="space-y-2 text-sm">
 							<p className="flex flex-row items-center gap-2">
