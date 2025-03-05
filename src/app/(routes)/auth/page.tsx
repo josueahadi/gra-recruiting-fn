@@ -11,7 +11,7 @@ export default function AuthPage() {
 	return (
 		<div className="min-h-screen flex">
 			{/* Image Section - Added fixed positioning */}
-			<div className="hidden lg:block lg:fixed lg:w-1/2 h-screen bg-primary-50">
+			<div className="hidden lg:block lg:fixed lg:w-1/2 h-screen bg-primary-shades-50">
 				<Image
 					width={500}
 					height={500}

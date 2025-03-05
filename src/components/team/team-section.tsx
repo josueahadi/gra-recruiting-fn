@@ -35,7 +35,7 @@ const TeamSection = () => {
 						<div className="">
 							<Link
 								href="/careers"
-								className="inline-flex items-center gap-2 bg-white text-primary-base rounded-full px-6 py-3 hover:bg-gray-100 transition-colors text-sm md:text-2xl font-medium"
+								className="inline-flex items-center gap-2 bg-white text-primary-base rounded-full px-6 py-3 hover:bg-gray-100 transition-colors text-sm md:text-base font-medium"
 							>
 								Learn More
 								<ExternalLink />
