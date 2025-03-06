@@ -8,9 +8,8 @@ import {
 	EffectCoverflow,
 	Autoplay,
 } from "swiper/modules";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
-// Import Swiper styles
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -68,13 +67,12 @@ export const JobCarousel = () => {
 		},
 	];
 
-	// Custom navigation references
-	const [swiper, setSwiper] = useState(null);
+	const [swiper, setSwiper] = useState<any>(null);
 	const [activeIndex, setActiveIndex] = useState(0);
 
 	return (
-		<div className="relative py-10 overflow-hidden">
-			<div className="max-w-screen-2xl mx-auto">
+		<div className="relative py-0">
+			<div className="mx-auto">
 				<div className="relative">
 					<Swiper
 						modules={[Navigation, Pagination, EffectCoverflow, Autoplay]}
@@ -85,26 +83,29 @@ export const JobCarousel = () => {
 						slidesPerView="auto"
 						coverflowEffect={{
 							rotate: 0,
-							stretch: 0,
-							depth: 150,
-							modifier: 2.5,
+							stretch: 50,
+							depth: 80,
+							modifier: 3,
 							slideShadows: true,
 						}}
 						pagination={{
 							clickable: true,
 							el: ".swiper-pagination",
-							bulletActiveClass: "bg-green-500",
+							bulletActiveClass: "bg-secondary-base !w-5 !h-5",
 							bulletClass:
-								"inline-block w-2 h-2 rounded-full bg-gray-300 mx-1 cursor-pointer transition-colors",
+								"inline-block w-4 h-4 rounded-full bg-gray-300 mx-1 cursor-pointer transition-colors",
 						}}
 						onSwiper={(swiperInstance) => setSwiper(swiperInstance)}
 						onSlideChange={(swiperInstance) =>
 							setActiveIndex(swiperInstance.activeIndex)
 						}
-						className="w-full"
+						className="w-full !overflow-hidden"
 					>
 						{jobs.map((job) => (
-							<SwiperSlide key={job.id} className="w-full max-w-[467px]">
+							<SwiperSlide
+								key={job.id}
+								className="w-full max-w-xs md:max-w-[467px]"
+							>
 								<div className="bg-gradient-to-r from-primary-base to-primary-dark rounded-lg shadow-xl text-white px-8 py-9 h-full">
 									<div className="flex justify-between gap-4">
 										<div>
@@ -134,28 +135,28 @@ export const JobCarousel = () => {
 				</div>
 
 				{/* Navigation controls and pagination grouped together */}
-				<div className="flex items-center justify-between mt-2 space-x-4">
+				<div className="flex items-center justify-center mt-10 gap-2">
 					{/* Left navigation button */}
 					<button
 						type="button"
 						onClick={() => swiper?.slidePrev()}
-						className="z-40 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors focus:outline-none"
+						className="z-40 p-2 focus:outline-none"
 						aria-label="Previous slide"
 					>
-						<ChevronLeft className="h-5 w-5 text-gray-700" />
+						<ArrowLeft className="h-5 w-5 text-primary-base" />
 					</button>
 
 					{/* Pagination dots */}
-					<div className="swiper-pagination" />
+					<div className="swiper-pagination !w-fit !flex !items-center" />
 
 					{/* Right navigation button */}
 					<button
 						type="button"
 						onClick={() => swiper?.slideNext()}
-						className="z-40 bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors focus:outline-none"
+						className="z-40 p-2 focus:outline-none"
 						aria-label="Next slide"
 					>
-						<ChevronRight className="h-5 w-5 text-gray-700" />
+						<ArrowRight className="h-5 w-5 text-primary-base" />
 					</button>
 				</div>
 			</div>
