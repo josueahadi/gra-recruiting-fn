@@ -7,7 +7,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import PrimaryActionButton from "@/components/primary-action-button";
+import PrimaryCTAButton from "@/components/common/primary-cta-button";
 
 interface CardProps {
 	icon: React.ReactNode;
@@ -31,9 +31,9 @@ const DepartmentCard = ({ icon, title, description }: CardProps) => {
 					</CardDescription>
 				</CardContent>
 				<CardFooter className="mt-auto w-full">
-					<PrimaryActionButton className="capitalize w-full bg-white text-black text-sm font-medium hover:text-black focus:outline-none">
+					<PrimaryCTAButton className="capitalize w-full bg-white text-black text-sm font-medium hover:text-black focus:outline-none">
 						Learn More
-					</PrimaryActionButton>
+					</PrimaryCTAButton>
 				</CardFooter>
 			</Card>
 		</ErrorBoundary>

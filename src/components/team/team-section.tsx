@@ -1,6 +1,7 @@
-import { ExternalLink } from "lucide-react";
+// import { ExternalLink } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+// import Link from "next/link";
+import LearnMoreCTA from "@/components/common/learn-more-cta";
 
 const TeamSection = () => {
 	return (
@@ -33,13 +34,14 @@ const TeamSection = () => {
 						</p>
 
 						<div className="">
-							<Link
+							{/* <Link
 								href="/careers"
 								className="inline-flex items-center gap-2 bg-white text-primary-base rounded-full px-6 py-3 hover:bg-gray-100 transition-colors text-sm md:text-base font-medium"
 							>
 								Learn More
 								<ExternalLink />
-							</Link>
+							</Link> */}
+							<LearnMoreCTA href="/careers" />
 						</div>
 					</div>
 				</div>

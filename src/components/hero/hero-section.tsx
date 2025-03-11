@@ -2,7 +2,7 @@
 
 import ErrorBoundary from "@/components/error-boundary";
 import { useAuth } from "@/hooks/use-auth";
-import PrimaryActionButton from "@/components/primary-action-button";
+import PrimaryCTAButton from "@/components/common/primary-cta-button";
 import { BackgroundShape } from "@/components/ui/background-shape";
 import Image from "next/image";
 
@@ -23,12 +23,12 @@ const HeroSection = () => {
 								accounting, development, design, and marketing.
 							</p>
 							<div className="flex justify-center lg:justify-start mt-1">
-								<PrimaryActionButton
+								<PrimaryCTAButton
 									onClick={() => handleAuth("signup")}
 									className="inline-flex items-center text-xs lg:text-sm uppercase"
 								>
 									APPLY NOW
-								</PrimaryActionButton>
+								</PrimaryCTAButton>
 							</div>
 						</div>
 					</div>

@@ -1,6 +1,6 @@
 "use client";
 
-import PrimaryActionButton from "@/components/primary-action-button";
+import PrimaryCTAButton from "@/components/common/primary-cta-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,7 +39,7 @@ const ContactSection = () => {
 	};
 
 	return (
-		<section className="max-w-screen-2xl px-5 md:px-20 py-16 mb-8">
+		<section className="max-w-screen-2xl px-5 md:px-20 py-16 mb-8 flex justify-center items-center">
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
 				{/* Left Section */}
 				<div className="rounded-2xl flex items-center justify-center w-full">
@@ -103,13 +103,13 @@ const ContactSection = () => {
 								placeholder="Enter Message"
 							/>
 						</div>
-						<PrimaryActionButton
+						<PrimaryCTAButton
 							className="text-base w-full"
 							type="submit"
 							disabled={isSubmitting}
 						>
 							{isSubmitting ? "Submitting..." : "Submit"}
-						</PrimaryActionButton>
+						</PrimaryCTAButton>
 					</form>
 				</div>
 			</div>

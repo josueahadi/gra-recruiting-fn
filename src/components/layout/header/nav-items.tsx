@@ -4,7 +4,7 @@ import { AuthButtons } from "./auth-buttons";
 
 const navLinks = [
 	{ href: "/", label: "Home" },
-	{ href: "/about-us", label: "About Us" },
+	{ href: "/about", label: "About Us" },
 	{ href: "/job-portal", label: "Job Portal" },
 ];
 

@@ -1,6 +1,6 @@
 "use client";
 
-import PrimaryActionButton from "@/components/primary-action-button";
+import PrimaryCTAButton from "@/components/common/primary-cta-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -28,12 +28,12 @@ export const AuthButtons = ({
 				Sign In
 			</Button>
 
-			<PrimaryActionButton
+			<PrimaryCTAButton
 				className={cn(buttonClassName)}
 				onClick={() => handleAuth("signup")}
 			>
 				Apply
-			</PrimaryActionButton>
+			</PrimaryCTAButton>
 		</div>
 	);
 };

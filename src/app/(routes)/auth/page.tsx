@@ -11,13 +11,13 @@ export default function AuthPage() {
 	return (
 		<div className="min-h-screen flex">
 			{/* Image Section - Added fixed positioning */}
-			<div className="hidden lg:block lg:fixed lg:w-1/2 h-screen bg-primary-shades-50">
+			<div className="hidden lg:block lg:fixed lg:w-1/2 h-screen">
 				<Image
 					width={500}
 					height={500}
 					src={
 						mode === "login"
-							? "/images/freepik-11-2000.webp"
+							? "/images/placeholder.svg"
 							: "/images/registration-01.svg"
 					}
 					alt="Grow Rwanda"
