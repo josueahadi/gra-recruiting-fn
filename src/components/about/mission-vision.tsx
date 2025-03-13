@@ -11,7 +11,7 @@ const MissionVision = () => {
 			imageSrc="/images/mission-vision.png"
 			imageAlt="Grow Rwanda Team"
 		>
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 				<InfoCard
 					title="Mission"
 					description="To Empower Rwandan Professionals By Connecting Them With Global Job Opportunities While Providing U.S. Businesses With Top-Tier Competitive Rates."

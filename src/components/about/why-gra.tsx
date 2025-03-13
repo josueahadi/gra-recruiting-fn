@@ -17,7 +17,6 @@ const WhyGRA = () => {
 			imageSrc="/images/why-gra.png"
 			imageAlt="Professional Team"
 			imageOnRight={true}
-			bgColor="bg-white"
 			textColor="text-black"
 			contentClassName="md:pl-20"
 		>
