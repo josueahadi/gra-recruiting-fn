@@ -8,7 +8,7 @@ import LearnMoreCTA from "@/components/common/learn-more-cta";
 
 const JoinUs = () => {
 	return (
-		<section className="w-full max-w-screen-2xl mx-auto px-5 md:px-20 py-8 md:py-16">
+		<section className="w-full max-w-screen-2xl mx-auto px-5 md:px-20 py-8 md:pb-16 md:pt-10">
 			<div className="relative overflow-visible rounded-32 w-full bg-gradient-to-r from-primary-base to-primary-dark">
 				<div className="relative z-10 flex flex-col md:flex-row gap-0">
 					{/* Text Content */}

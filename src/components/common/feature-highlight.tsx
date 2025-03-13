@@ -48,7 +48,7 @@ const FeatureHighlight = ({
 				<div
 					className={cn(
 						"relative z-10 flex flex-col gap-6 md:gap-12",
-						imageOnRight ? "md:flex-row" : "md:flex-row-reverse",
+						imageOnRight ? "md:flex-row gap-6 md:gap-0" : "md:flex-row-reverse",
 					)}
 				>
 					{/* Text Content */}
@@ -63,7 +63,11 @@ const FeatureHighlight = ({
 						</h2>
 
 						{description && (
-							<p className="text-sm md:text-base !mb-6 text-black max-w-lg text-center md:text-left">
+							<p
+								className={cn(
+									`text-sm md:text-base !mb-6 ${imageOnRight ? "!mb-0" : ""} text-black max-w-lg text-center md:text-left`,
+								)}
+							>
 								{description}
 							</p>
 						)}

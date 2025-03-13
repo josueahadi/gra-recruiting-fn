@@ -3,8 +3,9 @@
 import ErrorBoundary from "@/components/error-boundary";
 import { useAuth } from "@/hooks/use-auth";
 import PrimaryCTAButton from "@/components/common/primary-cta-button";
-import { BackgroundShape } from "@/components/ui/background-shape";
-import Image from "next/image";
+// import { BackgroundShape } from "@/components/ui/background-shape";
+// import Image from "next/image";
+import ImageWithShape from "@/components/common/image-with-shape";
 
 const HeroSection = () => {
 	const { handleAuth } = useAuth();
@@ -33,7 +34,7 @@ const HeroSection = () => {
 						</div>
 					</div>
 					<div className="lg:w-[38%] order-1 lg:order-2 flex justify-items-end items-end">
-						<div className="relative w-full aspect-[4/5] flex items-end">
+						{/* <div className="relative w-full aspect-[4/5] flex items-end">
 							<BackgroundShape
 								variant="filled"
 								className="absolute bottom-0 left-0 right-0 w-full"
@@ -61,7 +62,13 @@ const HeroSection = () => {
 									priority
 								/>
 							</div>
-						</div>
+						</div> */}
+						<ImageWithShape
+							imageSrc="/images/vecteezy_photo-of-smart-african-woman-with-black-business-suit-at-big_28125952 1.png"
+							imageAlt="GrowRwanda - Hero"
+							variant="square"
+							priority={true}
+						/>
 					</div>
 				</div>
 			</section>
