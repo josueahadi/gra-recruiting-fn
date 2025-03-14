@@ -10,7 +10,7 @@ export default function LandingPage() {
 	return (
 		<>
 			<Header />
-			<main className="mt-8 lg:mt-16">
+			<main className="">
 				<HeroSection />
 				<TeamSection />
 				<OpeningsSection />

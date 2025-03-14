@@ -1,5 +1,5 @@
 import CallToAction from "@/components/about/CTA";
-import FAQ from "@/components/about/faq";
+import FAQ from "@/components/about/FAQ";
 import JoinUs from "@/components/about/join-us";
 import MissionVision from "@/components/about/mission-vision";
 import WhyGRA from "@/components/about/why-gra";
@@ -10,7 +10,7 @@ export default function AboutPage() {
 	return (
 		<>
 			<Header />
-			<main className="mt-10 lg:mt-14">
+			<main className="">
 				<JoinUs />
 				<MissionVision />
 				<WhyGRA />
