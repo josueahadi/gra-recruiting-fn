@@ -1,3 +1,4 @@
+import PrimaryCTAButton from "@/components/common/primary-cta-button";
 import ErrorBoundary from "@/components/error-boundary";
 import {
 	Card,
@@ -7,7 +8,6 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import PrimaryCTAButton from "@/components/common/primary-cta-button";
 
 interface CardProps {
 	icon: React.ReactNode;

@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+// import { Plus, Minus } from "lucide-react";
+import ImageWithShape from "@/components/common/image-with-shape";
 import SectionWrapper from "@/components/common/section-wrapper";
 import {
 	Accordion,
@@ -8,8 +9,7 @@ import {
 	AccordionItem,
 	AccordionTrigger,
 } from "@/components/ui/accordion";
-// import { Plus, Minus } from "lucide-react";
-import ImageWithShape from "@/components/common/image-with-shape";
+import React from "react";
 // import { cn } from "@/lib/utils";
 
 const faqItems = [
@@ -74,15 +74,15 @@ const FAQ = () => {
 		>
 			<div className="flex flex-col md:flex-row items-center gap-10">
 				{/* Image Side */}
-				<div className="w-full md:w-1/2 flex justify-center ">
-					{/* <div className="w-[300px] h-[400px] md:w-[350px] md:h-[450px]"> */}
-					<ImageWithShape
-						imageSrc="/images/faq.png"
-						imageAlt="Professional thinking"
-						variant="square"
-						className="h-full"
-					/>
-					{/* </div> */}
+				<div className="w-full md:w-1/2 lg:w-[38%] flex justify-center ">
+					<div className="w-[300px] h-[400px] md:w-[350px] md:h-[450px]">
+						<ImageWithShape
+							imageSrc="/images/faq.png"
+							imageAlt="Professional thinking"
+							variant="square"
+							className="h-full"
+						/>
+					</div>
 				</div>
 
 				{/* FAQ Side */}
@@ -103,7 +103,7 @@ const FAQ = () => {
 						))}
 					</Accordion>
 				</div> */}
-				<div className="w-full md:w-1/2">
+				<div className="w-full md:w-1/2 lg:w-[62%]">
 					<Accordion type="single" collapsible className="space-y-4">
 						{faqItems.map((item, index) => (
 							<AccordionItem

@@ -1,7 +1,7 @@
-// import { ExternalLink } from "lucide-react";
-import Image from "next/image";
 // import Link from "next/link";
 import LearnMoreCTA from "@/components/common/learn-more-cta";
+// import { ExternalLink } from "lucide-react";
+import Image from "next/image";
 
 const TeamSection = () => {
 	return (

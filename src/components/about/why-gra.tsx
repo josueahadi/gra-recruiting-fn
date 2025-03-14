@@ -1,7 +1,7 @@
 "use client";
 
-import LearnMoreCTA from "@/components/common/learn-more-cta";
 import FeatureHighlight from "@/components/common/feature-highlight";
+import LearnMoreCTA from "@/components/common/learn-more-cta";
 import { Check } from "lucide-react";
 
 const WhyGRA = () => {

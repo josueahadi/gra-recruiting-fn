@@ -1,14 +1,14 @@
 "use client";
 
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import React, { useState } from "react";
-import { Swiper, SwiperSlide } from "swiper/react";
 import {
+	Autoplay,
+	EffectCoverflow,
 	Navigation,
 	Pagination,
-	EffectCoverflow,
-	Autoplay,
 } from "swiper/modules";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Swiper, SwiperSlide } from "swiper/react";
 
 import "swiper/css";
 import "swiper/css/navigation";

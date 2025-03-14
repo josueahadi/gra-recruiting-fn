@@ -1,10 +1,10 @@
-import Header from "@/components/layout/header/header";
-import Footer from "@/components/layout/footer/footer";
+import CallToAction from "@/components/about/CTA";
+import FAQ from "@/components/about/faq";
 import JoinUs from "@/components/about/join-us";
 import MissionVision from "@/components/about/mission-vision";
 import WhyGRA from "@/components/about/why-gra";
-import CallToAction from "@/components/about/CTA";
-import FAQ from "@/components/about/faq";
+import Footer from "@/components/layout/footer/footer";
+import Header from "@/components/layout/header/header";
 
 export default function AboutPage() {
 	return (

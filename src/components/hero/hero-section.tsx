@@ -1,11 +1,11 @@
 "use client";
 
-import ErrorBoundary from "@/components/error-boundary";
-import { useAuth } from "@/hooks/use-auth";
-import PrimaryCTAButton from "@/components/common/primary-cta-button";
 // import { BackgroundShape } from "@/components/ui/background-shape";
 // import Image from "next/image";
 import ImageWithShape from "@/components/common/image-with-shape";
+import PrimaryCTAButton from "@/components/common/primary-cta-button";
+import ErrorBoundary from "@/components/error-boundary";
+import { useAuth } from "@/hooks/use-auth";
 
 const HeroSection = () => {
 	const { handleAuth } = useAuth();

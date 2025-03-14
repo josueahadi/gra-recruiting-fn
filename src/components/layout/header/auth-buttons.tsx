@@ -2,8 +2,8 @@
 
 import PrimaryCTAButton from "@/components/common/primary-cta-button";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
 
 interface AuthButtonsProps {
 	className?: string;

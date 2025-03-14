@@ -1,8 +1,8 @@
 "use client";
 
 import { BackgroundShape } from "@/components/ui/background-shape";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 interface ImageWithShapeProps {

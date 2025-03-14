@@ -1,13 +1,13 @@
 "use client";
 
+import SectionWrapper from "@/components/common/section-wrapper";
+import DepartmentCard from "@/components/departments/department-card";
 import {
 	FaCalculator,
 	FaGlobe,
 	FaPaintBrush,
 	FaShareAlt,
 } from "react-icons/fa";
-import SectionWrapper from "@/components/common/section-wrapper";
-import DepartmentCard from "@/components/departments/department-card";
 
 const departments = [
 	{

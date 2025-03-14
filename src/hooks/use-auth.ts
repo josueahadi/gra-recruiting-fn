@@ -3,8 +3,8 @@ import { api } from "@/services/api";
 import type { AuthResponse, User } from "@/types/api";
 import type { AuthCredentials } from "@/types/auth";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 interface UseAuthOptions {
 	onSuccess?: () => void;
 	onError?: (error: Error) => void;

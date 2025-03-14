@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
 // import Link from "next/link";
 // import { ExternalLink } from "lucide-react";
 import LearnMoreCTA from "@/components/common/learn-more-cta";
+import Image from "next/image";
+import React from "react";
 
 const JoinUs = () => {
 	return (

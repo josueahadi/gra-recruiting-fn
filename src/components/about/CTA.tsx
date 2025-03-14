@@ -1,5 +1,5 @@
-import { ArrowUpRight } from "lucide-react";
 import PrimaryActionButton from "@/components/common/primary-cta-button";
+import { ArrowUpRight } from "lucide-react";
 
 const CallToAction = () => {
 	return (

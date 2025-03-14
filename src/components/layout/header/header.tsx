@@ -1,10 +1,10 @@
 "use client";
 
 import { Brand } from "@/components/ui/brand";
+import { useEffect, useState } from "react";
 import { AuthButtons } from "./auth-buttons";
 import { MobileMenu } from "./mobile-menu";
 import { NavItems } from "./nav-items";
-import { useEffect, useState } from "react";
 
 const Header = () => {
 	const [isScrolled, setIsScrolled] = useState(false);
