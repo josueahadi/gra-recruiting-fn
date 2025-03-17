@@ -4,8 +4,8 @@ import { AuthButtons } from "./auth-buttons";
 
 const navLinks = [
 	{ href: "/", label: "Home" },
-	{ href: "/solutions", label: "Solutions" },
-	{ href: "/contact", label: "Contact Us" },
+	{ href: "/about", label: "About Us" },
+	{ href: "/job-portal", label: "Job Portal" },
 ];
 
 export const NavItems = ({ className = "", isMobile = false }) => {
@@ -17,10 +17,10 @@ export const NavItems = ({ className = "", isMobile = false }) => {
 				<Link
 					key={link.href}
 					href={link.href}
-					className={`text-base font-medium transition-colors duration-300 ${
+					className={`text-base font-medium transition-colors duration-200 ${
 						pathname === link.href
 							? "text-primary-base"
-							: "text-black hover:text-gray-900"
+							: "text-gray-900 hover:text-primary-base"
 					}`}
 				>
 					{link.label}

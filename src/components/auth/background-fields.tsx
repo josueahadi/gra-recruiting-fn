@@ -124,10 +124,10 @@ export const EducationBackgroundFields = ({
 			>
 				Your CV
 			</label>
-			<div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-green-500 transition-colors cursor-pointer">
+			<div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary-shades-500 transition-colors cursor-pointer">
 				<div className="flex flex-col items-center">
 					<svg
-						className="w-8 h-8 text-green-500 mb-2"
+						className="w-8 h-8 text-primary-shades-500 mb-2"
 						fill="none"
 						stroke="currentColor"
 						viewBox="0 0 24 24"
@@ -181,7 +181,7 @@ export const EducationBackgroundFields = ({
 			</Button>
 			<Button
 				type="submit"
-				className="flex-1 h-12 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold"
+				className="flex-1 h-12 rounded-xl bg-primary-base hover:bg-primary-base text-white font-semibold"
 				disabled={isLoading}
 			>
 				Create Account

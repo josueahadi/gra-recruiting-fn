@@ -1,11 +1,9 @@
 "use client";
 
-import { AuthModal } from "@/components/auth/auth-modal";
-import type { AuthMode } from "@/components/auth/auth-modal";
-import PrimaryActionButton from "@/components/primary-action-button";
+import PrimaryCTAButton from "@/components/common/primary-cta-button";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 
 interface AuthButtonsProps {
 	className?: string;
@@ -16,49 +14,26 @@ export const AuthButtons = ({
 	className,
 	buttonClassName,
 }: AuthButtonsProps) => {
-	const [isOpen, setIsOpen] = useState(false);
-	const [authMode, setAuthMode] = useState<AuthMode>("login");
-
-	const handleAuth = (mode: AuthMode) => {
-		setAuthMode(mode);
-		setIsOpen(true);
-	};
-
+	const { handleAuth } = useAuth();
 	return (
-		<>
-			<div className={cn("flex items-center gap-4 text-base", className)}>
-				<Button
-					variant="ghost"
-					className={cn(
-						"px-6 py-5 bg-sky-500 rounded-3xl text-white transition-colors duration-300 hover:bg-primary-base hover:text-white font-bold capitalize drop-shadow-md",
-						buttonClassName,
-					)}
-					onClick={() => handleAuth("login")}
-				>
-					Login
-				</Button>
+		<div className={cn("flex items-center gap-4", className)}>
+			<Button
+				variant="ghost"
+				className={cn(
+					"text-primary-base border-2 border-primary-base !rounded-50 px-8 py-5 hover:text-primary-base font-bold text-base",
+					buttonClassName,
+				)}
+				onClick={() => handleAuth("login")}
+			>
+				Sign In
+			</Button>
 
-				<PrimaryActionButton
-					className={cn("uppercase", buttonClassName)}
-					onClick={() => handleAuth("signup")}
-				>
-					Apply Now
-				</PrimaryActionButton>
-			</div>
-
-			<AuthModal
-				mode={authMode}
-				open={isOpen}
-				onOpenChange={setIsOpen}
-				onSuccess={() => {
-					setIsOpen(false);
-					// Add any additional success handling
-				}}
-				onError={(error) => {
-					console.error("Auth error:", error);
-					// Add any additional error handling
-				}}
-			/>
-		</>
+			<PrimaryCTAButton
+				className={cn(buttonClassName)}
+				onClick={() => handleAuth("signup")}
+			>
+				Apply
+			</PrimaryCTAButton>
+		</div>
 	);
 };

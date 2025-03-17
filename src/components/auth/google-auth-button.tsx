@@ -10,7 +10,7 @@ const GoogleAuthButton = ({ onClick }: GoogleAuthButtonProps) => {
 		<Button
 			type="button"
 			variant="outline"
-			className="w-full h-12 rounded-xl border border-green-100 bg-green-50 hover:bg-green-100 text-gray-700 font-medium"
+			className="w-full h-12 rounded-xl border border-primary-shades-100 bg-primary-shades-50 hover:bg-primary-shades-50 text-gray-700 font-medium"
 			onClick={onClick}
 		>
 			<FcGoogle className="mr-2" />

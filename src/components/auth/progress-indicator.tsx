@@ -40,9 +40,8 @@ const FormStep = ({
 
 const ProgressIndicator = ({ currentStep, steps }: ProgressIndicatorProps) => {
 	return (
-		<div
+		<nav
 			className="flex items-center justify-center gap-4 pb-8"
-			role="navigation"
 			aria-label="Registration progress"
 		>
 			{steps.map((step, index) => (
@@ -55,13 +54,13 @@ const ProgressIndicator = ({ currentStep, steps }: ProgressIndicatorProps) => {
 					/>
 					{index < steps.length - 1 && (
 						<div
-							className="w-32 md:w-52 h-[0.5px] bg-gray-400"
-							role="separator"
+							className="w-12 md:w-32 lg:w-52 h-[0.5px] bg-gray-400"
+							aria-hidden="true"
 						/>
 					)}
 				</React.Fragment>
 			))}
-		</div>
+		</nav>
 	);
 };
 

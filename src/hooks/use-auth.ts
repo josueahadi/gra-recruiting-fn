@@ -3,8 +3,8 @@ import { api } from "@/services/api";
 import type { AuthResponse, User } from "@/types/api";
 import type { AuthCredentials } from "@/types/auth";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-
 interface UseAuthOptions {
 	onSuccess?: () => void;
 	onError?: (error: Error) => void;
@@ -22,6 +22,11 @@ export const useAuth = (options?: UseAuthOptions) => {
 		showPassword: false,
 	});
 	const { toast } = useToast();
+	const router = useRouter();
+
+	const handleAuth = (mode: "login" | "signup") => {
+		router.push(`/auth?mode=${mode}`);
+	};
 
 	const loginMutation = useMutation({
 		mutationFn: async (credentials: AuthCredentials) => {
@@ -81,7 +86,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 	const handleGoogleAuth = async () => {
 		try {
-			// Implement Google authentication logic
 			await api.get("/auth/google");
 			toast({
 				title: "Success!",
@@ -112,5 +116,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 		handleGoogleAuth,
 		isAuthenticated: !!userQuery.data,
 		isUserLoading: userQuery.isLoading,
+		handleAuth,
 	};
 };
