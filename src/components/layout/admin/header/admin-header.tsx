@@ -9,7 +9,7 @@ import {
 	BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 
-import { Notifications } from "@/components/layout/admin/header/notifications";
+import { Notifications } from "@/components/common/notifications";
 import { Separator } from "@/components/ui/separator";
 // import { ProfileDropdown } from "@/components/layout/admin/header/profile";
 import { SidebarTrigger } from "@/components/ui/sidebar";

@@ -5,10 +5,10 @@ import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Pencil, Check, LogOut } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { Check } from "lucide-react";
+import SectionLayout, {
+	SectionItem,
+} from "@/components/layout/applicant/section-layout";
 
 const ProfileSection = () => {
 	const [personalInfo, setPersonalInfo] = useState({
@@ -49,249 +49,195 @@ const ProfileSection = () => {
 		setIsEditingAddress(false);
 	};
 
-	return (
-		<div className="p-6 max-w-4xl mx-auto">
-			<div className="mb-8">
-				<h1 className="text-3xl font-semibold text-primary-600 mb-6">
-					User Profile
-				</h1>
+	// User profile top section with avatar and name
+	const userProfileTop = (
+		<div className="flex flex-col items-center md:flex-row md:gap-6">
+			<Avatar className="h-24 w-24 mb-4 md:mb-0">
+				<AvatarImage src="/images/avatar.jpg" alt="John Doe" />
+				<AvatarFallback className="text-xl">JD</AvatarFallback>
+			</Avatar>
 
-				<div className="flex flex-col md:flex-row items-center md:items-start gap-6 mb-8">
-					<Avatar className="h-24 w-24 border-4 border-primary-100">
-						<AvatarImage src="/images/avatar.jpg" alt="John Doe" />
-						<AvatarFallback className="text-xl">JD</AvatarFallback>
-					</Avatar>
-
-					<div>
-						<h2 className="text-2xl font-bold">
-							{personalInfo.firstName} {personalInfo.lastName}
-						</h2>
-						<p className="text-gray-600">Kigali/Rwanda</p>
-					</div>
-				</div>
-			</div>
-
-			<div className="space-y-8">
-				{/* Personal Information */}
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between">
-						<CardTitle className="text-xl text-primary-500">
-							Personal Information
-						</CardTitle>
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={() => setIsEditingPersonal(!isEditingPersonal)}
-						>
-							<Pencil className="h-5 w-5 text-primary-500" />
-						</Button>
-					</CardHeader>
-
-					<Separator className="mb-4" />
-
-					<CardContent>
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-							<div>
-								<Label className="text-sm text-gray-500 mb-1 block">
-									First Name
-								</Label>
-								{isEditingPersonal ? (
-									<Input
-										name="firstName"
-										value={personalInfo.firstName}
-										onChange={handlePersonalInfoChange}
-										className="mb-4"
-									/>
-								) : (
-									<p className="font-medium">{personalInfo.firstName}</p>
-								)}
-							</div>
-
-							<div>
-								<Label className="text-sm text-gray-500 mb-1 block">
-									Last Name
-								</Label>
-								{isEditingPersonal ? (
-									<Input
-										name="lastName"
-										value={personalInfo.lastName}
-										onChange={handlePersonalInfoChange}
-										className="mb-4"
-									/>
-								) : (
-									<p className="font-medium">{personalInfo.lastName}</p>
-								)}
-							</div>
-
-							<div>
-								<Label className="text-sm text-gray-500 mb-1 block">
-									Email Address
-								</Label>
-								{isEditingPersonal ? (
-									<Input
-										name="email"
-										value={personalInfo.email}
-										onChange={handlePersonalInfoChange}
-										className="mb-4"
-									/>
-								) : (
-									<p className="font-medium">{personalInfo.email}</p>
-								)}
-							</div>
-
-							<div>
-								<Label className="text-sm text-gray-500 mb-1 block">
-									Phone Number
-								</Label>
-								{isEditingPersonal ? (
-									<Input
-										name="phone"
-										value={personalInfo.phone}
-										onChange={handlePersonalInfoChange}
-										className="mb-4"
-									/>
-								) : (
-									<p className="font-medium">{personalInfo.phone}</p>
-								)}
-							</div>
-
-							<div className="md:col-span-2">
-								<Label className="text-sm text-gray-500 mb-1 block">Bio</Label>
-								{isEditingPersonal ? (
-									<Input
-										name="bio"
-										value={personalInfo.bio}
-										onChange={handlePersonalInfoChange}
-										className="mb-4"
-									/>
-								) : (
-									<p className="font-medium">{personalInfo.bio}</p>
-								)}
-							</div>
-
-							{isEditingPersonal && (
-								<div className="md:col-span-2 flex justify-end">
-									<Button
-										onClick={handleSavePersonal}
-										className="bg-primary-base hover:bg-primary-dark"
-									>
-										<Check className="h-4 w-4 mr-2" />
-										Save Changes
-									</Button>
-								</div>
-							)}
-						</div>
-					</CardContent>
-				</Card>
-
-				{/* Address Information */}
-				<Card>
-					<CardHeader className="flex flex-row items-center justify-between">
-						<CardTitle className="text-xl text-primary-500">Address</CardTitle>
-						<Button
-							variant="ghost"
-							size="icon"
-							onClick={() => setIsEditingAddress(!isEditingAddress)}
-						>
-							<Pencil className="h-5 w-5 text-primary-500" />
-						</Button>
-					</CardHeader>
-
-					<Separator className="mb-4" />
-
-					<CardContent>
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-							<div>
-								<Label className="text-sm text-gray-500 mb-1 block">
-									Country
-								</Label>
-								{isEditingAddress ? (
-									<Input
-										name="country"
-										value={addressInfo.country}
-										onChange={handleAddressInfoChange}
-										className="mb-4"
-									/>
-								) : (
-									<p className="font-medium">{addressInfo.country}</p>
-								)}
-							</div>
-
-							<div>
-								<Label className="text-sm text-gray-500 mb-1 block">
-									City/State
-								</Label>
-								{isEditingAddress ? (
-									<Input
-										name="city"
-										value={addressInfo.city}
-										onChange={handleAddressInfoChange}
-										className="mb-4"
-									/>
-								) : (
-									<p className="font-medium">{addressInfo.city}</p>
-								)}
-							</div>
-
-							<div>
-								<Label className="text-sm text-gray-500 mb-1 block">
-									Postal Code
-								</Label>
-								{isEditingAddress ? (
-									<Input
-										name="postalCode"
-										value={addressInfo.postalCode}
-										onChange={handleAddressInfoChange}
-										className="mb-4"
-									/>
-								) : (
-									<p className="font-medium">{addressInfo.postalCode}</p>
-								)}
-							</div>
-
-							<div>
-								<Label className="text-sm text-gray-500 mb-1 block">
-									TAX ID
-								</Label>
-								{isEditingAddress ? (
-									<Input
-										name="taxId"
-										value={addressInfo.taxId}
-										onChange={handleAddressInfoChange}
-										className="mb-4"
-									/>
-								) : (
-									<p className="font-medium">{addressInfo.taxId}</p>
-								)}
-							</div>
-
-							{isEditingAddress && (
-								<div className="md:col-span-2 flex justify-end">
-									<Button
-										onClick={handleSaveAddress}
-										className="bg-primary-base hover:bg-primary-dark"
-									>
-										<Check className="h-4 w-4 mr-2" />
-										Save Changes
-									</Button>
-								</div>
-							)}
-						</div>
-					</CardContent>
-				</Card>
-			</div>
-
-			<div className="mt-8">
-				<Button
-					variant="outline"
-					className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-					onClick={() => console.log("Logging out...")}
-				>
-					<LogOut className="h-4 w-4 mr-2" />
-					Logout
-				</Button>
+			<div className="text-center md:text-left">
+				<h2 className="text-xl font-semibold">
+					{personalInfo.firstName} {personalInfo.lastName}
+				</h2>
+				<p className="text-custom-darkGray font-regular text-base">
+					Kigali/Rwanda
+				</p>
 			</div>
 		</div>
+	);
+
+	return (
+		<SectionLayout title="User Profile" topSection={userProfileTop}>
+			{/* Personal Information Section */}
+			<SectionItem
+				title="Personal Information"
+				showEditButton={true}
+				onEdit={() => setIsEditingPersonal(!isEditingPersonal)}
+			>
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-8">
+					<div>
+						<h3 className="text-sm text-custom-darkGray mb-1">First Name</h3>
+						{isEditingPersonal ? (
+							<Input
+								name="firstName"
+								value={personalInfo.firstName}
+								onChange={handlePersonalInfoChange}
+								className="mt-1"
+							/>
+						) : (
+							<p className="font-medium">{personalInfo.firstName}</p>
+						)}
+					</div>
+
+					<div>
+						<h3 className="text-sm text-custom-darkGray mb-1">Last Name</h3>
+						{isEditingPersonal ? (
+							<Input
+								name="lastName"
+								value={personalInfo.lastName}
+								onChange={handlePersonalInfoChange}
+								className="mt-1"
+							/>
+						) : (
+							<p className="font-medium">{personalInfo.lastName}</p>
+						)}
+					</div>
+
+					<div>
+						<h3 className="text-sm text-custom-darkGray mb-1">Email Address</h3>
+						{isEditingPersonal ? (
+							<Input
+								name="email"
+								value={personalInfo.email}
+								onChange={handlePersonalInfoChange}
+								className="mt-1"
+							/>
+						) : (
+							<p className="font-medium">{personalInfo.email}</p>
+						)}
+					</div>
+
+					<div>
+						<h3 className="text-sm text-custom-darkGray mb-1">Phone Number</h3>
+						{isEditingPersonal ? (
+							<Input
+								name="phone"
+								value={personalInfo.phone}
+								onChange={handlePersonalInfoChange}
+								className="mt-1"
+							/>
+						) : (
+							<p className="font-medium">{personalInfo.phone}</p>
+						)}
+					</div>
+
+					<div className="md:col-span-2">
+						<h3 className="text-sm text-custom-darkGray mb-1">Bio</h3>
+						{isEditingPersonal ? (
+							<Input
+								name="bio"
+								value={personalInfo.bio}
+								onChange={handlePersonalInfoChange}
+								className="mt-1"
+							/>
+						) : (
+							<p className="font-medium">{personalInfo.bio}</p>
+						)}
+					</div>
+
+					{isEditingPersonal && (
+						<div className="md:col-span-2 flex justify-end mt-4">
+							<Button
+								onClick={handleSavePersonal}
+								className="bg-primary-base hover:bg-primary-dark"
+							>
+								<Check className="h-4 w-4 mr-2" />
+								Save Changes
+							</Button>
+						</div>
+					)}
+				</div>
+			</SectionItem>
+
+			{/* Address Section */}
+			<SectionItem
+				title="Address"
+				showEditButton={true}
+				onEdit={() => setIsEditingAddress(!isEditingAddress)}
+			>
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-8">
+					<div>
+						<h3 className="text-sm text-custom-darkGray mb-1">Country</h3>
+						{isEditingAddress ? (
+							<Input
+								name="country"
+								value={addressInfo.country}
+								onChange={handleAddressInfoChange}
+								className="mt-1"
+							/>
+						) : (
+							<p className="font-medium">{addressInfo.country}</p>
+						)}
+					</div>
+
+					<div>
+						<h3 className="text-sm text-custom-darkGray mb-1">City/State</h3>
+						{isEditingAddress ? (
+							<Input
+								name="city"
+								value={addressInfo.city}
+								onChange={handleAddressInfoChange}
+								className="mt-1"
+							/>
+						) : (
+							<p className="font-medium">{addressInfo.city}</p>
+						)}
+					</div>
+
+					<div>
+						<h3 className="text-sm text-custom-darkGray mb-1">Postal Code</h3>
+						{isEditingAddress ? (
+							<Input
+								name="postalCode"
+								value={addressInfo.postalCode}
+								onChange={handleAddressInfoChange}
+								className="mt-1"
+							/>
+						) : (
+							<p className="font-medium">{addressInfo.postalCode}</p>
+						)}
+					</div>
+
+					<div>
+						<h3 className="text-sm text-custom-darkGray mb-1">TAX ID</h3>
+						{isEditingAddress ? (
+							<Input
+								name="taxId"
+								value={addressInfo.taxId}
+								onChange={handleAddressInfoChange}
+								className="mt-1"
+							/>
+						) : (
+							<p className="font-medium">{addressInfo.taxId}</p>
+						)}
+					</div>
+
+					{isEditingAddress && (
+						<div className="md:col-span-2 flex justify-end mt-4">
+							<Button
+								onClick={handleSaveAddress}
+								className="bg-primary-base hover:bg-primary-dark"
+							>
+								<Check className="h-4 w-4 mr-2" />
+								Save Changes
+							</Button>
+						</div>
+					)}
+				</div>
+			</SectionItem>
+		</SectionLayout>
 	);
 };
 

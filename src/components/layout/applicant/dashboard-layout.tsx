@@ -4,10 +4,20 @@ import type React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Brand } from "@/components/ui/brand";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { Notifications } from "@/components/common/notifications";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { User, LogOut } from "lucide-react";
+import Footer from "@/components/layout/footer/footer";
 
 interface DashboardLayoutProps {
 	children: React.ReactNode;
@@ -49,8 +59,12 @@ const DashboardLayout = ({ children, userType }: DashboardLayoutProps) => {
 	const links = userType === "applicant" ? applicantLinks : [];
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+	const handleLogout = () => {
+		console.log("Logging out...");
+	};
+
 	return (
-		<div className="min-h-screen flex flex-col bg-[#f0f1fb]">
+		<div className="min-h-screen flex flex-col">
 			{/* Top Navigation - Fixed position, no sticky behavior */}
 			<header className="max-w-screen-2xl mx-auto px-3 lg:px-20 w-full py-4">
 				<div className="bg-white shadow-md rounded-50 w-full">
@@ -79,17 +93,40 @@ const DashboardLayout = ({ children, userType }: DashboardLayoutProps) => {
 						</div>
 
 						<div className="flex items-center gap-4">
-							<button type="button" className="relative">
+							{/* <button type="button" className="relative">
 								<Bell className="h-5 w-5 text-gray-600" />
 								<span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
 									1
 								</span>
-							</button>
+							</button> */}
+							<Notifications />
 
-							<Avatar className="h-10 w-10 border-2 border-primary-light">
-								<AvatarImage src="/images/avatar.jpg" alt="User" />
-								<AvatarFallback>JD</AvatarFallback>
-							</Avatar>
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button variant="ghost" className="p-0 h-auto">
+										<Avatar className="h-10 w-10 border-2 border-primary-light cursor-pointer">
+											<AvatarImage src="/images/avatar.jpg" alt="User" />
+											<AvatarFallback>JD</AvatarFallback>
+										</Avatar>
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent align="end" className="w-56">
+									<DropdownMenuItem asChild>
+										<Link href="/applicant" className="cursor-pointer">
+											<User className="mr-2 h-4 w-4" />
+											<span>Account</span>
+										</Link>
+									</DropdownMenuItem>
+									<DropdownMenuSeparator />
+									<DropdownMenuItem
+										onClick={handleLogout}
+										className="cursor-pointer"
+									>
+										<LogOut className="mr-2 h-4 w-4" />
+										<span>Logout</span>
+									</DropdownMenuItem>
+								</DropdownMenuContent>
+							</DropdownMenu>
 
 							{/* Mobile menu button */}
 							<button
@@ -196,11 +233,13 @@ const DashboardLayout = ({ children, userType }: DashboardLayoutProps) => {
 
 				{/* Main content */}
 				<main className="flex-1">
-					<div className="bg-white rounded-xl p-4 md:p-8 shadow-sm w-full">
+					<div className="bg-white rounded-xl p-4 md:p-16 shadow-sm w-full">
 						{children}
 					</div>
 				</main>
 			</div>
+
+			<Footer />
 		</div>
 	);
 };

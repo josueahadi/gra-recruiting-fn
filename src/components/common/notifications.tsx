@@ -12,12 +12,12 @@ export const Notifications = () => {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
-				<Button variant="ghost" size="icon" className="relative">
+				<button className="relative" type="button">
 					<Bell className="h-5 w-5" />
-					<div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[10px] font-medium text-white flex items-center justify-center">
-						3
-					</div>
-				</Button>
+					<span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white">
+						1
+					</span>
+				</button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-80">
 				<div className="flex items-center justify-between p-4">

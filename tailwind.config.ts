@@ -47,7 +47,7 @@ export default {
 						"900": "#0c4a6e",
 						"950": "#082f49",
 					},
-					base: "#2B9AC9",
+					base: "#39ade3",
 					dark: "#154C63",
 					DEFAULT: "hsl(var(--primary))",
 					foreground: "hsl(var(--primary-foreground))",

@@ -5,9 +5,11 @@ import ProfileSection from "@/components/applicant/user-profile";
 
 export default function ApplicantProfilePage() {
 	return (
-		<DashboardLayout userType="applicant">
-			<ProfileSection />
-		</DashboardLayout>
+		<>
+			<DashboardLayout userType="applicant">
+				<ProfileSection />
+			</DashboardLayout>
+		</>
 	);
 }
 

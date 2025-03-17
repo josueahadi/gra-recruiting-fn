@@ -1,3 +1,5 @@
+import type { SVGProps } from "react";
+
 export interface ApiResponse<T> {
 	data: T;
 	message: string;
@@ -30,4 +32,9 @@ export interface BackgroundShapeProps {
 	variant?: "filled" | "outlined";
 	width?: number | string;
 	height?: number | string;
+}
+
+export interface IconProps extends SVGProps<SVGSVGElement> {
+	size?: number;
+	color?: string;
 }
