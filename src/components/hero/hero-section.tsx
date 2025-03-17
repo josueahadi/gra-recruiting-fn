@@ -1,7 +1,5 @@
 "use client";
 
-// import { BackgroundShape } from "@/components/ui/background-shape";
-// import Image from "next/image";
 import ImageWithShape from "@/components/common/image-with-shape";
 import PrimaryCTAButton from "@/components/common/primary-cta-button";
 import ErrorBoundary from "@/components/error-boundary";
@@ -34,35 +32,6 @@ const HeroSection = () => {
 						</div>
 					</div>
 					<div className="lg:w-[38%] order-1 lg:order-2 flex justify-items-end items-end">
-						{/* <div className="relative w-full aspect-[4/5] flex items-end">
-							<BackgroundShape
-								variant="filled"
-								className="absolute bottom-0 left-0 right-0 w-full"
-								fill="#2B9AC9"
-								fillOpacity={0.99}
-								width="100%"
-								height="100%"
-							/>
-							<BackgroundShape
-								variant="outlined"
-								className="absolute bottom-0 left-0 right-0 w-full translate-x-3 translate-y-2"
-								stroke="#2B9AC9"
-								strokeWidth={1}
-								width="100%"
-								height="100%"
-							/>
-
-							<div className="relative z-10 flex items-end justify-center w-full h-full">
-								<Image
-									src="/images/vecteezy_photo-of-smart-african-woman-with-black-business-suit-at-big_28125952 1.png"
-									alt="GrowRwanda - Hero"
-									fill
-									className="object-cover object-bottom"
-									sizes="(max-width: 768px) 100vw, 33vw"
-									priority
-								/>
-							</div>
-						</div> */}
 						<ImageWithShape
 							imageSrc="/images/vecteezy_photo-of-smart-african-woman-with-black-business-suit-at-big_28125952 1.png"
 							imageAlt="GrowRwanda - Hero"
