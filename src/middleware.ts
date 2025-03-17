@@ -13,7 +13,7 @@
 //   "/favicon.ico",
 // ];
 
-// export async function middleware( NextRequest) {
+// export async function middleware(req:NextRequest) {
 // Authentication logic would go here when needed
 // Uncomment and implement when ready to use authentication
 // const { pathname } = req.nextUrl;
@@ -31,3 +31,5 @@
 // export const config = {
 // 	matcher: ["/dashboard/:path*"],
 // };
+
+export async function middleware() {}
