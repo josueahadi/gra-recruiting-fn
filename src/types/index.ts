@@ -1,3 +1,5 @@
+import type { SVGProps } from "react";
+
 export interface ApiResponse<T> {
 	data: T;
 	message: string;
@@ -19,4 +21,20 @@ export interface LoginResponse {
 export interface AuthCredentials {
 	email: string;
 	password: string;
+}
+
+export interface BackgroundShapeProps {
+	className?: string;
+	fill?: string;
+	fillOpacity?: number;
+	stroke?: string;
+	strokeWidth?: number;
+	variant?: "filled" | "outlined";
+	width?: number | string;
+	height?: number | string;
+}
+
+export interface IconProps extends SVGProps<SVGSVGElement> {
+	size?: number;
+	color?: string;
 }

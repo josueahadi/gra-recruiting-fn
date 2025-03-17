@@ -1,12 +1,15 @@
+"use client";
+
+import SectionWrapper from "@/components/common/section-wrapper";
+import DepartmentCard from "@/components/departments/department-card";
 import {
 	FaCalculator,
 	FaGlobe,
 	FaPaintBrush,
 	FaShareAlt,
 } from "react-icons/fa";
-import OpportunityCard from "./opportunity-card";
 
-const categories = [
+const departments = [
 	{
 		id: 1,
 		icon: <FaCalculator size={32} />,
@@ -37,27 +40,23 @@ const categories = [
 	},
 ];
 
-const JobOpportunitiesSection = () => {
+const DepartmentsSection = () => {
 	return (
-		<section className="mb-10 px-4 md:px-10 w-full 2xl:max-w-screen-2xl mx-auto">
-			<div className="px-4 py-8 md:p-16 bg-primary-light rounded-3xl">
-				<div className="mx-auto text-center mb-12 sm:max-w-xl">
-					<h2 className="text-3xl md:text-4l text-[#215C75] font-extrabold mb-4 uppercase">
-						Ready to Take the Next Step in Your Career?
-					</h2>
-					<p className="text-base text-gray-600 mx-auto max-w-sm">
-						Join our network of talented professionals and explore exciting job
-						opportunities today!
-					</p>
-				</div>
-				<div className="mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-					{categories.map((category) => (
-						<OpportunityCard key={category.id} {...category} />
-					))}
-				</div>
+		<SectionWrapper
+			title="Departments"
+			subtitle={[
+				"Join our network of talented professionals and explore",
+				"exciting job opportunities today!",
+			]}
+			className=""
+		>
+			<div className="flex flex-wrap justify-center gap-8">
+				{departments.map((department) => (
+					<DepartmentCard key={department.id} {...department} />
+				))}
 			</div>
-		</section>
+		</SectionWrapper>
 	);
 };
 
-export default JobOpportunitiesSection;
+export default DepartmentsSection;
