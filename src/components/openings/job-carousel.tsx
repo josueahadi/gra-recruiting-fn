@@ -9,6 +9,7 @@ import {
 	Pagination,
 } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
+import type { Swiper as SwiperType } from "swiper";
 
 import "swiper/css";
 import "swiper/css/navigation";
@@ -67,8 +68,10 @@ export const JobCarousel = () => {
 		},
 	];
 
-	const [swiper, setSwiper] = useState<any>(null);
-	const [activeIndex, setActiveIndex] = useState(0);
+	const [swiper, setSwiper] = useState<SwiperType | null>(null);
+	// We're keeping the activeIndex for potential future use but we're not using it now
+	// If truly unused, you could remove this state entirely
+	const [, setActiveIndex] = useState(0);
 
 	return (
 		<div className="relative py-0">
