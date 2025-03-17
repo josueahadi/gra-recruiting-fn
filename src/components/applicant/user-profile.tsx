@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Check } from "lucide-react";
 import SectionLayout, {
 	SectionItem,
 } from "@/components/layout/applicant/section-layout";
+import { Edit1 } from "../icons/edit-1";
 
 const ProfileSection = () => {
 	const [personalInfo, setPersonalInfo] = useState({
@@ -28,6 +29,10 @@ const ProfileSection = () => {
 
 	const [isEditingPersonal, setIsEditingPersonal] = useState(false);
 	const [isEditingAddress, setIsEditingAddress] = useState(false);
+	const [avatarSrc, setAvatarSrc] = useState("/images/avatar.jpg");
+	const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+
+	const fileInputRef = useRef<HTMLInputElement>(null);
 
 	const handlePersonalInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
@@ -49,20 +54,66 @@ const ProfileSection = () => {
 		setIsEditingAddress(false);
 	};
 
+	const handleAvatarClick = () => {
+		fileInputRef.current?.click();
+	};
+
+	const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (file) {
+			setIsUploadingAvatar(true);
+
+			// Create a URL for the selected image
+			const reader = new FileReader();
+			reader.onload = (event) => {
+				// Simulate upload delay
+				setTimeout(() => {
+					setAvatarSrc(event.target?.result as string);
+					setIsUploadingAvatar(false);
+				}, 1000);
+			};
+			reader.readAsDataURL(file);
+		}
+	};
+
 	// User profile top section with avatar and name
 	const userProfileTop = (
 		<div className="flex flex-col items-center md:flex-row md:gap-6">
-			<Avatar className="h-24 w-24 mb-4 md:mb-0">
-				<AvatarImage src="/images/avatar.jpg" alt="John Doe" />
-				<AvatarFallback className="text-xl">JD</AvatarFallback>
-			</Avatar>
+			<div className="relative group">
+				<Avatar className="h-24 w-24 mb-4 md:mb-0">
+					<AvatarImage src={avatarSrc} alt="John Doe" />
+					<AvatarFallback className="text-xl">
+						{isUploadingAvatar
+							? "..."
+							: personalInfo.firstName[0] + personalInfo.lastName[0]}
+					</AvatarFallback>
+				</Avatar>
+
+				{/* Edit overlay with icon */}
+				{/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
+				<div
+					className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+					onClick={handleAvatarClick}
+				>
+					<Edit1 className="h-8 w-8 text-white" />
+				</div>
+
+				{/* Hidden file input */}
+				<input
+					type="file"
+					ref={fileInputRef}
+					onChange={handleAvatarChange}
+					accept="image/*"
+					className="hidden"
+				/>
+			</div>
 
 			<div className="text-center md:text-left">
 				<h2 className="text-xl font-semibold">
 					{personalInfo.firstName} {personalInfo.lastName}
 				</h2>
 				<p className="text-custom-darkGray font-regular text-base">
-					Kigali/Rwanda
+					{addressInfo.city}/{addressInfo.country}
 				</p>
 			</div>
 		</div>
@@ -113,6 +164,7 @@ const ProfileSection = () => {
 								value={personalInfo.email}
 								onChange={handlePersonalInfoChange}
 								className="mt-1"
+								type="email"
 							/>
 						) : (
 							<p className="font-medium">{personalInfo.email}</p>
@@ -127,6 +179,7 @@ const ProfileSection = () => {
 								value={personalInfo.phone}
 								onChange={handlePersonalInfoChange}
 								className="mt-1"
+								type="tel"
 							/>
 						) : (
 							<p className="font-medium">{personalInfo.phone}</p>
