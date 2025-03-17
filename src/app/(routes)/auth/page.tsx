@@ -18,11 +18,11 @@ export default function AuthPage() {
 					src={
 						mode === "login"
 							? "/images/placeholder.svg"
-							: "/images/registration-01.svg"
+							: "/images/placeholder.svg"
 					}
 					alt="Grow Rwanda"
 					className={`w-full h-full ${
-						mode === "login" ? "object-cover" : "object-contain"
+						mode === "login" ? "object-cover" : "object-cover"
 					}`}
 					priority
 				/>

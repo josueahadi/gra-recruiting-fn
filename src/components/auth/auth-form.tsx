@@ -25,6 +25,14 @@ interface AuthFormProps {
 const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 	const router = useRouter();
 
+	const handleSuccess = () => {
+		if (onSuccess) {
+			onSuccess();
+		}
+
+		router.push("/applicant");
+	};
+
 	const {
 		isLoading,
 		showPassword,
@@ -33,7 +41,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		signup,
 		handleGoogleAuth,
 	} = useAuth({
-		onSuccess,
+		onSuccess: handleSuccess,
 		onError,
 	});
 
@@ -126,7 +134,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 					<button
 						onClick={toggleMode}
 						type="button"
-						className="text-green-500 hover:text-green-600 font-semibold"
+						className="text-primary-base hover:text-primary-base font-semibold"
 					>
 						{mode === "login"
 							? AUTH_CONSTANTS.LOGIN.signUpLink
@@ -171,7 +179,7 @@ const SubmitButton = ({
 }) => (
 	<Button
 		type="submit"
-		className={`w-full h-12 rounded-xl bg-green-500 hover:bg-green-600 text-white font-semibold ${mode === "signup" && currentStep === 2 ? "hidden" : ""}`}
+		className={`w-full h-12 rounded-xl bg-primary-base hover:bg-primary-base text-white font-semibold ${mode === "signup" && currentStep === 2 ? "hidden" : ""}`}
 		disabled={isLoading}
 	>
 		{mode === "login"
