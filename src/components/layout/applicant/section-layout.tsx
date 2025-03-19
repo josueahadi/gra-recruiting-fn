@@ -24,9 +24,14 @@ const SectionLayout: React.FC<SectionLayoutProps> = ({
 	contentClassName,
 }) => {
 	return (
-		<div className={cn("", className)}>
+		<div
+			className={cn(
+				"bg-white px-2 py-6 md:px-10 md:py-6 rounded-lg shadow-md",
+				className,
+			)}
+		>
 			{/* Header with title */}
-			<div className="mb-6 px-4">
+			<div className="mb-6">
 				<h1 className="text-2xl font-bold text-primary-base">{title}</h1>
 			</div>
 

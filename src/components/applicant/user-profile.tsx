@@ -127,7 +127,7 @@ const ProfileSection = () => {
 				showEditButton={true}
 				onEdit={() => setIsEditingPersonal(!isEditingPersonal)}
 			>
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-8">
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-8 ">
 					<div>
 						<h3 className="text-sm text-custom-darkGray mb-1">First Name</h3>
 						{isEditingPersonal ? (

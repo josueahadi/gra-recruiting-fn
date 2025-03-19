@@ -1,14 +1,14 @@
 "use client";
 
-import DashboardLayout from "@/components/layout/applicant/dashboard-layout";
+import AppLayout from "@/components/layout/app-layout";
 import ProfileSection from "@/components/applicant/user-profile";
 
 export default function ApplicantProfilePage() {
 	return (
 		<>
-			<DashboardLayout userType="applicant">
+			<AppLayout userType="applicant">
 				<ProfileSection />
-			</DashboardLayout>
+			</AppLayout>
 		</>
 	);
 }
