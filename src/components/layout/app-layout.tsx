@@ -27,6 +27,7 @@ import {
 	BarChart,
 	CircleUserRound,
 } from "lucide-react";
+import { ProfileNavigation } from "@/components/applicant/profile-tabs";
 
 export type UserType = "applicant" | "admin";
 
@@ -48,6 +49,14 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, userType }) => {
 
 	// Determine navigation links based on user type
 	const navigationLinks = getSidebarLinks(userType);
+
+	// Determine if we should show the profile navigation tabs
+	const shouldShowProfileNav =
+		userType === "applicant" &&
+		(pathname === "/applicant" ||
+			pathname === "/applicant/skills" ||
+			pathname === "/applicant/education" ||
+			pathname === "/applicant/documents");
 
 	const handleLogout = () => {
 		console.log("Logging out...");
@@ -202,6 +211,12 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, userType }) => {
 
 				{/* Main Content */}
 				<main className="flex-1 p-4 md:p-12">
+					{/* Profile Navigation Tabs - Only shown on profile pages */}
+					{shouldShowProfileNav && (
+						<div className=" mb-5">
+							<ProfileNavigation />
+						</div>
+					)}
 					<div className="mx-auto  max-w-screen-2xl">{children}</div>
 				</main>
 			</div>
