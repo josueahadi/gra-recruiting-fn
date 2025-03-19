@@ -1,10 +1,10 @@
 "use client";
 
-import type React from "react";
 import { Button } from "@/components/ui/button";
 // import { Circle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import type React from "react";
 
 interface ProfileCompletionProps {
 	percentage: number;

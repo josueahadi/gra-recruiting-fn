@@ -1,13 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Check, Plus, X } from "lucide-react";
 import SectionLayout, {
 	SectionItem,
 } from "@/components/layout/applicant/section-layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Check, Plus, X } from "lucide-react";
+import React, { useState } from "react";
 
 interface Skill {
 	id: string;

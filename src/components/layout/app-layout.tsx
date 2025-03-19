@@ -1,13 +1,10 @@
 "use client";
 
-import type React from "react";
-import { type ReactNode, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { Brand } from "@/components/ui/brand";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ProfileNavigation } from "@/components/applicant/profile-tabs";
 import { Notifications } from "@/components/common/notifications";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Brand } from "@/components/ui/brand";
+import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -15,19 +12,23 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
-	User,
-	LogOut,
-	MenuIcon,
-	LayoutDashboard,
-	FileText,
-	Users,
-	HelpCircle,
 	BarChart,
 	CircleUserRound,
+	FileText,
+	HelpCircle,
+	LayoutDashboard,
+	LogOut,
+	Menu,
+	User,
+	Users,
+	X,
 } from "lucide-react";
-import { ProfileNavigation } from "@/components/applicant/profile-tabs";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 export type UserType = "applicant" | "admin";
 
@@ -66,7 +67,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, userType }) => {
 	return (
 		<div className="flex min-h-screen bg-[#E0F5FF]">
 			{/* Sidebar - Desktop */}
-			<aside className="hidden md:block w-60 bg-white shadow-md">
+			<aside className="hidden md:block w-60 bg-white shadow-md fixed h-screen overflow-y-auto">
 				<div className="pt-5 px-5 flex flex-col gap-20 justify-center items-center">
 					<div className="">
 						<Brand />
@@ -107,21 +108,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, userType }) => {
 									className="text-gray-700"
 									onClick={() => setIsMobileMenuOpen(false)}
 								>
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										className="h-6 w-6"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke="currentColor"
-									>
-										<title>Close Menu</title>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M6 18L18 6M6 6l12 12"
-										/>
-									</svg>
+									<X className="h-6 w-6" />
 								</Button>
 							</div>
 						</div>
@@ -151,7 +138,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, userType }) => {
 			)}
 
 			{/* Main Content Container */}
-			<div className="flex-1 flex flex-col pb-32">
+			<div className="flex-1 flex flex-col pb-32 md:ml-60">
 				{/* Top Header */}
 				<header className="pt-5 px-4 md:px-12">
 					<div className=" mx-auto flex justify-between items-center">
@@ -162,7 +149,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, userType }) => {
 								className="text-gray-700 md:hidden mr-2"
 								onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
 							>
-								<MenuIcon className="h-6 w-6" />
+								<Menu className="h-6 w-6" />
 							</Button>
 							<h1 className="text-xl font-medium text-gray-600">
 								{getPageTitle(pathname, userType)}
@@ -217,7 +204,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, userType }) => {
 							<ProfileNavigation />
 						</div>
 					)}
-					<div className="mx-auto  max-w-screen-2xl">{children}</div>
+					<div className="mx-auto ">{children}</div>
 				</main>
 			</div>
 		</div>
@@ -226,10 +213,21 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, userType }) => {
 
 // Helper function to determine if a link is active
 function isLinkActive(pathname: string, link: SidebarLink): boolean {
-	if (link.activeSection) {
-		return pathname.includes(link.activeSection);
+	// Exact match for paths
+	if (pathname === link.href) return true;
+
+	// For dashboard links, don't match with other sections
+	if (link.href.includes("dashboard") && pathname !== link.href) return false;
+
+	// For profile links, check the active section
+	if (link.activeSection && pathname.includes(link.activeSection)) {
+		// Don't mark profile as active when viewing dashboard
+		if (pathname.includes("dashboard")) return false;
+
+		return true;
 	}
-	return pathname === link.href;
+
+	return false;
 }
 
 // Get page title from pathname
@@ -240,11 +238,14 @@ function getPageTitle(pathname: string, userType: UserType): string {
 		if (pathname.includes("/questions")) return "Questions";
 		if (pathname.includes("/results")) return "Results";
 		return "Dashboard";
+		// biome-ignore lint/style/noUselessElse: <explanation>
 	} else {
 		if (pathname.includes("/dashboard")) return "Dashboard";
 		if (pathname.includes("/exam")) return "Exam";
 		if (pathname === "/applicant") return "Profile";
-		if (pathname.includes("/profile")) return "Profile";
+		if (pathname.includes("/skills")) return "Skills & Competence";
+		if (pathname.includes("/education")) return "Work & Education";
+		if (pathname.includes("/documents")) return "Documents & Portfolio";
 		return (
 			pathname.split("/").pop()?.charAt(0).toUpperCase() +
 				pathname.split("/").pop()?.slice(1) || "Dashboard"

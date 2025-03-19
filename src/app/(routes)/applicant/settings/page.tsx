@@ -1,7 +1,7 @@
 "use client";
 
-import AppLayout from "@/components/layout/app-layout";
 import SettingsSection from "@/components/applicant/settings";
+import AppLayout from "@/components/layout/app-layout";
 
 export default function ApplicantSettingsPage() {
 	return (

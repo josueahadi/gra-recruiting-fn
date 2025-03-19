@@ -1,12 +1,13 @@
 "use client";
 
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 
 export type ProfileTab = {
 	label: string;
 	href: string;
+	shortLabel?: string; // Optional shorter label for mobile
 };
 
 interface ProfileNavigationProps {
@@ -21,18 +22,22 @@ export const ProfileNavigation: React.FC<ProfileNavigationProps> = ({
 	const tabs: ProfileTab[] = [
 		{
 			label: "User Profile",
+			shortLabel: "Profile",
 			href: "/applicant",
 		},
 		{
 			label: "Skills & Competence",
+			shortLabel: "Skills",
 			href: "/applicant/skills",
 		},
 		{
 			label: "Work & Education",
+			shortLabel: "Work/Edu",
 			href: "/applicant/education",
 		},
 		{
 			label: "Documents",
+			shortLabel: "Docs",
 			href: "/applicant/documents",
 		},
 	];
@@ -62,7 +67,11 @@ export const ProfileNavigation: React.FC<ProfileNavigationProps> = ({
 								: "bg-white text-gray-700 hover:bg-gray-50",
 						)}
 					>
-						{tab.label}
+						{/* Show short label on small screens, full label on larger screens */}
+						<span className="hidden sm:block">{tab.label}</span>
+						<span className="block sm:hidden">
+							{tab.shortLabel || tab.label}
+						</span>
 					</Link>
 				))}
 			</div>

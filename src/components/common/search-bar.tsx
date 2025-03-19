@@ -1,11 +1,11 @@
 "use client";
 
-import type React from "react";
-import { useState, useEffect } from "react";
-import { Search, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Search, X } from "lucide-react";
+import type React from "react";
+import { useEffect, useState } from "react";
 
 interface SearchBarProps {
 	onSearch: (value: string) => void;

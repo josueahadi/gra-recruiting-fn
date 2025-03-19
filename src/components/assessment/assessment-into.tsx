@@ -1,9 +1,9 @@
 "use client";
 
-import type React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AlertTriangle } from "lucide-react";
+import type React from "react";
 
 interface AssessmentIntroProps {
 	userName?: string;

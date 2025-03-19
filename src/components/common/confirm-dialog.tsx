@@ -1,15 +1,15 @@
 "use client";
 
-import type React from "react";
-import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-	DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { AlertCircle } from "lucide-react";
+import type React from "react";
 
 interface ConfirmationDialogProps {
 	isOpen: boolean;

@@ -1,7 +1,7 @@
 "use client";
 
-import AppLayout from "@/components/layout/app-layout";
 import DocumentsSection from "@/components/applicant/documents";
+import AppLayout from "@/components/layout/app-layout";
 
 export default function ApplicantDocumentsPage() {
 	return (

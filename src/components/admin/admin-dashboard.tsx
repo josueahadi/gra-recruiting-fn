@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
-import StatCard from "@/components/common/stat-card";
 import DataTable from "@/components/common/data-table";
 import SearchBar from "@/components/common/data-table";
+import DateRangePicker from "@/components/common/date-range-picker";
 import FilterDropdown, {
 	type FilterOption,
 } from "@/components/common/filter-dropdown";
-import DateRangePicker from "@/components/common/date-range-picker";
-import { Button } from "@/components/ui/button";
+import StatCard from "@/components/common/stat-card";
 import StatusBadge from "@/components/common/status-badge";
-import { Eye, Trash2, FileEdit } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Eye, FileEdit, Trash2 } from "lucide-react";
+import React, { useState } from "react";
 
 // Mock data for demonstration
 const MOCK_APPLICANTS = [

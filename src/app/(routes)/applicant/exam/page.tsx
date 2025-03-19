@@ -1,9 +1,9 @@
 "use client";
 
-import type React from "react";
-import SectionSidebar from "@/components/assessment/section-sidebar";
-import MultipleChoiceQuestion from "@/components/assessment/multiple-choice-qn";
 import EssayQuestion from "@/components/assessment/essay-qn";
+import MultipleChoiceQuestion from "@/components/assessment/multiple-choice-qn";
+import SectionSidebar from "@/components/assessment/section-sidebar";
+import type React from "react";
 
 interface AssessmentPageProps {
 	section: "multiple-choice" | "short-essay";

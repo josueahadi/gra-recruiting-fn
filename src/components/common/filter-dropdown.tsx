@@ -1,6 +1,6 @@
 "use client";
 
-import type React from "react";
+import { Label } from "@/components/ui/label";
 import {
 	Select,
 	SelectContent,
@@ -9,7 +9,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { Label } from "@/components/ui/label";
+import type React from "react";
 
 export interface FilterOption {
 	value: string;

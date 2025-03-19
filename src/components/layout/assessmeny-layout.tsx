@@ -1,10 +1,10 @@
 "use client";
 
-import type React from "react";
-import Image from "next/image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bell } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import type React from "react";
 
 interface AssessmentLayoutProps {
 	children: React.ReactNode;

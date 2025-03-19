@@ -1,7 +1,7 @@
+import SectionItem from "@/components/common/section-item";
+import { cn } from "@/lib/utils";
 import type React from "react";
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
-import SectionItem from "@/components/common/section-item";
 
 interface SectionLayoutProps {
 	title: string;

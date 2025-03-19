@@ -1,14 +1,14 @@
 "use client";
 
-import type React from "react";
-import { useState, useRef } from "react";
+import SectionLayout, {
+	SectionItem,
+} from "@/components/layout/applicant/section-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Check } from "lucide-react";
-import SectionLayout, {
-	SectionItem,
-} from "@/components/layout/applicant/section-layout";
+import type React from "react";
+import { useRef, useState } from "react";
 import { Edit1 } from "../icons/edit-1";
 
 const ProfileSection = () => {

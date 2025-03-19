@@ -1,16 +1,16 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import SectionLayout, {
 	SectionItem,
 } from "@/components/layout/applicant/section-layout";
-import { HiOutlineCloudUpload } from "react-icons/hi";
-import { Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { Check, X } from "lucide-react";
+import type React from "react";
+import { useState } from "react";
+import { HiOutlineCloudUpload } from "react-icons/hi";
 
 const DocumentsSection = () => {
 	const [isUploading, setIsUploading] = useState(false);

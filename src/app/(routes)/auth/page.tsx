@@ -2,8 +2,8 @@
 
 import AuthForm from "@/components/auth/auth-form";
 import Image from "next/image";
-import { Suspense, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 // Client component that safely uses useSearchParams
 function AuthContent() {

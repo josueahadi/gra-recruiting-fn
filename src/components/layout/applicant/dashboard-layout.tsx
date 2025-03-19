@@ -1,13 +1,10 @@
 "use client";
 
-import type React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
-import { Brand } from "@/components/ui/brand";
-import { useState } from "react";
 import { Notifications } from "@/components/common/notifications";
+import Footer from "@/components/layout/footer/footer";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Brand } from "@/components/ui/brand";
+import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -15,9 +12,12 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { User, LogOut } from "lucide-react";
-import Footer from "@/components/layout/footer/footer";
+import { cn } from "@/lib/utils";
+import { LogOut, User } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import type React from "react";
+import { useState } from "react";
 
 interface DashboardLayoutProps {
 	children: React.ReactNode;

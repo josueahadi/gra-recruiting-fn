@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
 import { Edit2 } from "@/components/icons/edit-2";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import React from "react";
 
 interface SectionLayoutProps {
 	title: string;

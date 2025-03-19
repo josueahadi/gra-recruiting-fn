@@ -1,18 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-	type ColumnDef,
-	flexRender,
-	getCoreRowModel,
-	getPaginationRowModel,
-	useReactTable,
-	getSortedRowModel,
-	type SortingState,
-	type ColumnFiltersState,
-	getFilteredRowModel,
-	type VisibilityState,
-} from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
 	Table,
 	TableBody,
@@ -21,17 +10,28 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
+	type ColumnDef,
+	type ColumnFiltersState,
+	type SortingState,
+	type VisibilityState,
+	flexRender,
+	getCoreRowModel,
+	getFilteredRowModel,
+	getPaginationRowModel,
+	getSortedRowModel,
+	useReactTable,
+} from "@tanstack/react-table";
+import {
+	ChevronDown,
 	ChevronLeft,
 	ChevronRight,
 	ChevronUp,
-	ChevronDown,
 	Search,
 	X,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import React, { useState } from "react";
 
 interface DataTableProps<TData, TValue> {
 	columns: ColumnDef<TData, TValue>[];

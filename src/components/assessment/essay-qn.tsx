@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import Image from "next/image";
+import type React from "react";
+import { useState } from "react";
 
 interface EssayQuestionProps {
 	questionNumber: number;
