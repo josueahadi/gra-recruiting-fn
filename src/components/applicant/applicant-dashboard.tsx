@@ -16,7 +16,7 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
 	// Determine color based on percentage
 	const getColor = () => {
 		if (percentage < 30) return "text-red-500";
-		if (percentage < 70) return "text-amber-500";
+		if (percentage < 100) return "text-amber-500";
 		return "text-green-500";
 	};
 
@@ -50,7 +50,7 @@ const ProfileCompletion: React.FC<ProfileCompletionProps> = ({
 						stroke={
 							percentage < 30
 								? "#EF4444"
-								: percentage < 70
+								: percentage < 100
 									? "#F59E0B"
 									: "#10B981"
 						}
@@ -77,7 +77,7 @@ const ApplicantDashboard = () => {
 	// Mock data - in a real app this would come from API/context
 	const profile = {
 		name: "John Doe",
-		completionPercentage: 15,
+		completionPercentage: 75,
 	};
 
 	return (

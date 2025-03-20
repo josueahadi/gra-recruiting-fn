@@ -151,7 +151,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, userType }) => {
 							>
 								<Menu className="h-6 w-6" />
 							</Button>
-							<h1 className="text-xl font-medium text-gray-600">
+							<h1 className="text-2xl font-semibold text-primary-shades-800">
 								{getPageTitle(pathname, userType)}
 							</h1>
 						</div>

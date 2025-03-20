@@ -61,10 +61,10 @@ export const ProfileNavigation: React.FC<ProfileNavigationProps> = ({
 						key={tab.href}
 						href={tab.href}
 						className={cn(
-							"text-center py-4 px-4 transition-colors font-medium",
+							"text-xs md:text-base text-center py-4 px-4 transition-colors font-semibold",
 							isTabActive(tab.href)
-								? "bg-primary-base text-white"
-								: "bg-white text-gray-700 hover:bg-gray-50",
+								? "bg-gradient-to-tr from-primary-dark to-primary-base text-white"
+								: "bg-white text-primary-shades-800 hover:bg-gray-50",
 						)}
 					>
 						{/* Show short label on small screens, full label on larger screens */}
