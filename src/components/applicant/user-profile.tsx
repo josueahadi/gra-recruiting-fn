@@ -2,7 +2,7 @@
 
 import SectionLayout, {
 	SectionItem,
-} from "@/components/layout/applicant/section-layout";
+} from "@/components/applicant/section-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

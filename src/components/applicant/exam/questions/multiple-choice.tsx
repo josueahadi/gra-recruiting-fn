@@ -1,14 +1,13 @@
-"use client";
-
+import type React from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
-import type React from "react";
+import { MoveRight } from "lucide-react";
 
 interface Option {
-	id: number;
-	optionText?: string;
-	optionImageUrl?: string;
+	id: string;
+	text?: string;
+	imageUrl?: string;
 }
 
 interface MultipleChoiceQuestionProps {
@@ -17,13 +16,16 @@ interface MultipleChoiceQuestionProps {
 	questionText: string;
 	questionImageUrl?: string;
 	options: Option[];
-	onSelectOption: (optionId: number) => void;
+	selectedOptionId?: string;
+	onSelectOption: (optionId: string) => void;
 	onNextQuestion: () => void;
-	selectedOptionId?: number;
+	sectionTitle?: string;
+	buttonText?: string;
 }
 
 /**
- * Component to display multiple choice questions
+ * Component for rendering multiple choice questions
+ * Supports both text and image-based options
  */
 const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 	questionNumber,
@@ -31,10 +33,13 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 	questionText,
 	questionImageUrl,
 	options,
+	selectedOptionId,
 	onSelectOption,
 	onNextQuestion,
-	selectedOptionId,
+	sectionTitle = "Section one - Multiple Choice",
+	buttonText = "Next Question",
 }) => {
+	// Determine if we should use letter options (A, B, C, D)
 	const hasLetterOptions = options.length <= 4;
 
 	// Get letter for option (A, B, C, D)
@@ -43,14 +48,19 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 	};
 
 	return (
-		<div className="p-6 md:p-8">
-			{/* Question header */}
-			<div className="mb-8">
-				<span className="text-gray-600 text-lg">{questionNumber}. </span>
-				<span className="text-lg font-medium">{questionText}</span>
+		<div className="flex flex-col h-full">
+			{/* Section title */}
+			<div className="mb-6 border-b pb-2">
+				<h2 className="text-lg text-primary-600">{sectionTitle}</h2>
 			</div>
 
-			{/* Question image if available */}
+			{/* Question number and text */}
+			<div className="mb-8">
+				<h3 className="text-2xl mb-4">Q: {questionNumber}</h3>
+				<p className="text-lg">{questionText}</p>
+			</div>
+
+			{/* Question image if provided */}
 			{questionImageUrl && (
 				<div className="mb-8 flex justify-center">
 					<div className="relative h-64 w-full max-w-xl">
@@ -64,17 +74,17 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 				</div>
 			)}
 
-			{/* Options with letters (A,B,C,D) */}
+			{/* Options with letters (A, B, C, D) */}
 			{hasLetterOptions ? (
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+				<div className="space-y-4 mb-8">
 					{options.map((option, index) => (
 						<div
 							key={option.id}
 							onClick={() => onSelectOption(option.id)}
 							className={cn(
-								"p-6 rounded-lg border-2 cursor-pointer transition-all flex items-center",
+								"p-4 rounded-lg border-2 cursor-pointer transition-all flex items-center",
 								selectedOptionId === option.id
-									? "border-[#4A90B9] bg-blue-50"
+									? "border-primary-base bg-primary-50"
 									: "border-gray-200 hover:border-gray-300",
 							)}
 						>
@@ -82,21 +92,19 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 								className={cn(
 									"w-10 h-10 rounded-full flex items-center justify-center mr-4 text-lg font-semibold",
 									selectedOptionId === option.id
-										? "bg-[#4A90B9] text-white"
+										? "bg-primary-base text-white"
 										: "bg-gray-100 text-gray-700",
 								)}
 							>
 								{getLetterForOption(index)}
 							</div>
 
-							{option.optionText && (
-								<div className="flex-1">{option.optionText}</div>
-							)}
+							{option.text && <div className="flex-1">{option.text}</div>}
 
-							{option.optionImageUrl && (
+							{option.imageUrl && (
 								<div className="flex-1 relative h-24">
 									<Image
-										src={option.optionImageUrl}
+										src={option.imageUrl}
 										alt={`Option ${getLetterForOption(index)}`}
 										fill
 										className="object-contain"
@@ -116,16 +124,16 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 							className={cn(
 								"p-4 rounded-lg border-2 cursor-pointer transition-all text-center",
 								selectedOptionId === option.id
-									? "border-[#4A90B9] bg-blue-50"
+									? "border-primary-base bg-primary-50"
 									: "border-gray-200 hover:border-gray-300",
 							)}
 						>
-							{option.optionText && <div>{option.optionText}</div>}
+							{option.text && <div>{option.text}</div>}
 
-							{option.optionImageUrl && (
+							{option.imageUrl && (
 								<div className="relative h-24 w-full">
 									<Image
-										src={option.optionImageUrl}
+										src={option.imageUrl}
 										alt="Option image"
 										fill
 										className="object-contain"
@@ -137,13 +145,15 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 				</div>
 			)}
 
-			{/* Navigation */}
-			<div className="flex justify-end mt-8">
+			{/* Navigation button */}
+			<div className="flex justify-end mt-auto">
 				<Button
 					onClick={onNextQuestion}
-					className="bg-[#4A90B9] hover:bg-[#3A80A9] text-white px-8"
+					className="bg-primary-base hover:bg-primary-dark flex items-center"
+					disabled={!selectedOptionId}
 				>
-					Next
+					{buttonText}
+					<MoveRight className="w-5 h-5 ml-2" />
 				</Button>
 			</div>
 		</div>
