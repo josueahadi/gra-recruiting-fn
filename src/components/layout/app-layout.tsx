@@ -28,7 +28,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useState } from "react";
 
 export type UserType = "applicant" | "admin";
 
@@ -49,7 +49,7 @@ const BackgroundPattern = () => {
 		<div
 			className="fixed inset-0 z-0 opacity-100 pointer-events-none"
 			style={{
-				backgroundImage: "url('/images/growpattern-01-vertical.svg')",
+				backgroundImage: "url('/images/growrwanda-pattern-01-vertical.svg')",
 				backgroundSize: "contain",
 				backgroundRepeat: "repeat",
 			}}
