@@ -4,6 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MoveRight, MoveUpRight } from "lucide-react";
+import ProfileCompletionCard from "@/components/applicant/dashboard/profile-completion-card";
+import WelcomeBanner from "@/components/applicant/dashboard/welcome-banner";
 
 // Type definitions for better type safety
 interface ResultData {
@@ -17,64 +19,6 @@ interface ResultData {
 	};
 	assessmentCompleted: boolean;
 }
-
-const ProfileCompletion = ({ percentage, className }) => {
-	// Determine color based on percentage
-	const getColor = () => {
-		if (percentage < 30) return "#EF4444"; // Red
-		if (percentage < 100) return "#F59E0B"; // Amber/Yellow
-		return "#10B981"; // Green
-	};
-
-	// SVG circle calculations
-	const radius = 70;
-	const circumference = 2 * Math.PI * radius;
-	const offset = circumference - (percentage / 100) * circumference;
-
-	return (
-		<div
-			className={`bg-white rounded-lg p-6 flex flex-col items-center ${className}`}
-		>
-			{/* Profile completion circle */}
-			<h3 className="text-lg font-semibold mb-4">Profile Completion</h3>
-
-			<div className="relative w-40 h-40">
-				{/* Background circle */}
-				<svg className="w-full h-full" viewBox="0 0 160 160">
-					<title>Profile Completion Progress</title>
-					<circle
-						cx="80"
-						cy="80"
-						r={radius}
-						fill="none"
-						stroke="#F3F4F6"
-						strokeWidth="12"
-					/>
-					{/* Progress circle */}
-					<circle
-						cx="80"
-						cy="80"
-						r={radius}
-						fill="none"
-						stroke={getColor()}
-						strokeWidth="12"
-						strokeDasharray={circumference}
-						strokeDashoffset={offset}
-						transform="rotate(-90 80 80)"
-						strokeLinecap="round"
-					/>
-				</svg>
-
-				{/* Percentage text */}
-				<div className="absolute inset-0 flex items-center justify-center">
-					<span className="text-4xl font-bold" style={{ color: getColor() }}>
-						{percentage}%
-					</span>
-				</div>
-			</div>
-		</div>
-	);
-};
 
 // Result component for showing assessment results
 const ResultSection = ({ section, score, completed }) => {
@@ -207,11 +151,11 @@ const ApplicantDashboard = () => {
 				// Update state based on URL parameters or localStorage
 				const savedCompletion = localStorage.getItem("profileCompletion");
 				if (completionParam) {
-					const newCompletion = parseInt(completionParam, 10);
+					const newCompletion = Number.parseInt(completionParam, 10);
 					setCompletionPercentage(newCompletion);
 					localStorage.setItem("profileCompletion", newCompletion.toString());
 				} else if (savedCompletion) {
-					setCompletionPercentage(parseInt(savedCompletion, 10));
+					setCompletionPercentage(Number.parseInt(savedCompletion, 10));
 				}
 
 				// Check if we should show results
@@ -426,7 +370,7 @@ const ApplicantDashboard = () => {
 
 				{/* Profile Completion Card - 1/3 of the width */}
 				<div className="md:col-span-1">
-					<ProfileCompletion
+					<ProfileCompletionCard
 						className="h-full"
 						percentage={completionPercentage}
 					/>

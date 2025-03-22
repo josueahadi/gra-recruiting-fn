@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { MoveRight } from "lucide-react";
@@ -13,9 +13,6 @@ interface WelcomeBannerProps {
 	className?: string;
 }
 
-/**
- * A banner component that welcomes the user and provides a call-to-action
- */
 const WelcomeBanner: React.FC<WelcomeBannerProps> = ({
 	userName = "John Doe",
 	buttonText = "Complete Your Profile",

@@ -1,91 +1,86 @@
 "use client";
 
-import EssayQuestion from "@/components/applicant/exam/questions/essay";
-import MultipleChoiceQuestion from "@/components/applicant/exam/questions/multiple-choice";
-import SectionSidebar from "@/components/applicant/exam/section-sidebar";
-import type React from "react";
-
-interface AssessmentPageProps {
-	section: "multiple-choice" | "short-essay";
-	currentQuestion: number;
-	totalQuestions: number;
-	timeLeft: string;
-	answeredQuestions: number[];
-	questionText: string;
-	questionImageUrl?: string;
-	options?: Array<{
-		id: number;
-		optionText?: string;
-		optionImageUrl?: string;
-	}>;
-	essayAnswer?: string;
-	selectedOptionId?: number;
-	onSelectOption?: (optionId: number) => void;
-	onAnswerChange?: (answer: string) => void;
-	onNextQuestion: () => void;
-	onQuestionSelect?: (questionNumber: number) => void;
-}
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import AppLayout from "@/components/layout/app-layout";
+import AssessmentIntro from "@/components/applicant/exam/assessment-intro";
+import ProfileBlockMessage from "@/components/applicant/exam/profile-block-message";
 
 /**
- * Component that combines the sidebar and question display
+ * The main exam page component - shows either exam intro or profile block message
+ * This is what's displayed when user clicks on "Exam" in the sidebar
  */
-const AssessmentPage: React.FC<AssessmentPageProps> = ({
-	section,
-	currentQuestion,
-	totalQuestions,
-	timeLeft,
-	answeredQuestions,
-	questionText,
-	questionImageUrl,
-	options = [],
-	essayAnswer = "",
-	selectedOptionId,
-	onSelectOption = () => {},
-	onAnswerChange = () => {},
-	onNextQuestion,
-	onQuestionSelect,
-}) => {
-	return (
-		<div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 min-h-[600px]">
-			{/* Sidebar */}
-			<div className="md:col-span-1 p-4">
-				<SectionSidebar
-					currentSection={section}
-					currentQuestion={currentQuestion}
-					totalQuestions={totalQuestions}
-					timeLeft={timeLeft}
-					answeredQuestions={answeredQuestions}
-					onQuestionSelect={onQuestionSelect}
-				/>
-			</div>
+export default function ExamPage() {
+	const router = useRouter();
+	const [isProfileComplete, setIsProfileComplete] = useState(false);
+	const [isLoading, setIsLoading] = useState(true);
 
-			{/* Main question area */}
-			<div className="md:col-span-3 lg:col-span-4 border-l">
-				{section === "multiple-choice" ? (
-					<MultipleChoiceQuestion
-						questionNumber={currentQuestion}
-						totalQuestions={totalQuestions}
-						questionText={questionText}
-						questionImageUrl={questionImageUrl}
-						options={options}
-						selectedOptionId={selectedOptionId}
-						onSelectOption={onSelectOption}
-						onNextQuestion={onNextQuestion}
-					/>
+	// Check if the profile is complete when component mounts
+	useEffect(() => {
+		const checkProfileStatus = async () => {
+			setIsLoading(true);
+			try {
+				// In a real app, this would be an API call
+				// const response = await fetch('/api/profile/status');
+				// const data = await response.json();
+				// setIsProfileComplete(data.isComplete);
+
+				// For demo purposes, check localStorage or URL params
+				const urlParams = new URLSearchParams(window.location.search);
+				const completionParam = urlParams.get("completion");
+				const savedCompletion = localStorage.getItem("profileCompletion");
+
+				let profileCompletion = 0;
+
+				if (completionParam) {
+					profileCompletion = parseInt(completionParam, 10);
+					localStorage.setItem("profileCompletion", completionParam);
+				} else if (savedCompletion) {
+					profileCompletion = parseInt(savedCompletion, 10);
+				}
+
+				// Profile is complete when 100%
+				setIsProfileComplete(profileCompletion === 100);
+			} catch (error) {
+				console.error("Error checking profile status:", error);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		checkProfileStatus();
+	}, []);
+
+	// Handle starting the exam
+	const handleStartExam = () => {
+		// Navigate to the first question of section 1
+		router.push("/applicant/exam/assessment/section/1/question/1");
+	};
+
+	// Show loading state
+	if (isLoading) {
+		return (
+			<AppLayout userType="applicant">
+				<div className="bg-white rounded-lg p-6 shadow-sm">
+					<div className="flex items-center justify-center h-64">
+						<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base" />
+					</div>
+				</div>
+			</AppLayout>
+		);
+	}
+
+	return (
+		<AppLayout userType="applicant">
+			<div className="bg-white rounded-lg shadow-sm">
+				{isProfileComplete ? (
+					// Show exam introduction if profile is complete
+					<AssessmentIntro onStartExam={handleStartExam} />
 				) : (
-					<EssayQuestion
-						questionNumber={currentQuestion}
-						totalQuestions={totalQuestions}
-						questionText={questionText}
-						questionImageUrl={questionImageUrl}
-						answer={essayAnswer}
-						onAnswerChange={onAnswerChange}
-						onSubmit={onNextQuestion}
-					/>
+					// Show message to complete profile
+					<ProfileBlockMessage />
 				)}
 			</div>
-		</div>
+		</AppLayout>
 	);
-};
-
-export default AssessmentPage;
+}

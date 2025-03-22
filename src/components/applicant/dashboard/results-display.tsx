@@ -1,84 +1,127 @@
-import type React from "react";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { MoveRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import React from "react";
+import { cn } from "@/lib/utils";
 
-interface WelcomeBannerProps {
-	userName: string;
-	buttonText: string;
-	buttonLink: string;
-	imageUrl?: string;
-	onButtonClick?: () => void;
+interface SectionResult {
+	sectionTitle: string;
+	sectionDescription: string;
+	score: number | null;
+	completed: boolean;
+}
+
+interface ResultsDisplayProps {
+	sectionResults: SectionResult[];
 	className?: string;
 }
 
 /**
- * A banner component that welcomes the user and provides a call-to-action
+ * Component to display assessment results
  */
-const WelcomeBanner: React.FC<WelcomeBannerProps> = ({
-	userName = "John Doe",
-	buttonText = "Complete Your Profile",
-	buttonLink = "/applicant",
-	imageUrl = "/images/complete-profile.png",
-	onButtonClick,
+const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
+	sectionResults,
 	className,
 }) => {
-	const router = useRouter();
-
-	const handleButtonClick = () => {
-		if (onButtonClick) {
-			onButtonClick();
-		} else {
-			router.push(buttonLink);
-		}
-	};
+	// SVG circle calculations
+	const radius = 70;
+	const circumference = 2 * Math.PI * radius;
 
 	return (
-		<div
-			className={`bg-gradient-to-tr from-primary-dark to-custom-skyBlue rounded-lg text-white relative z-10 overflow-hidden p-6 ${className}`}
-		>
-			{/* Background pattern */}
-			<div
-				className="absolute inset-0 z-0 opacity-100 pointer-events-none"
-				style={{
-					backgroundImage: "url('/images/growrwanda-pattern-01.svg')",
-					backgroundSize: "cover",
-					backgroundRepeat: "no-repeat",
-				}}
-			/>
+		<div className={cn("bg-white rounded-lg p-8 w-full", className)}>
+			<h2 className="text-3xl font-bold mb-12">Score</h2>
 
-			<div className="flex flex-col md:flex-row items-center">
-				{/* Image */}
-				<Image
-					src={imageUrl}
-					alt="Welcome"
-					width={332}
-					height={300}
-					className="z-10"
-				/>
-
-				{/* Text and button */}
-				<div className="relative z-10 py-6 flex flex-col items-center text-center md:items-start md:text-left">
-					<h2 className="text-lg">Hi, {userName}</h2>
-					<h1 className="text-3xl font-semibold mt-2 mb-6">
-						Welcome To Your
-						<br />
-						Applicant Dashboard
-					</h1>
-
-					<Button
-						variant="default"
-						className="bg-white text-custom-skyBlue hover:bg-gray-100 flex items-center font-semibold"
-						onClick={handleButtonClick}
+			<div className="flex flex-wrap">
+				{sectionResults.map((result, index) => (
+					<div
+						// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+						key={index}
+						className="w-full md:w-1/2 flex flex-col items-center mb-8 md:mb-0"
 					>
-						{buttonText}
-						<MoveRight className="w-6 h-6 ml-2" />
-					</Button>
-				</div>
+						{result.completed ? (
+							/* Completed section with score */
+							<div className="relative w-40 h-40">
+								<svg className="w-full h-full" viewBox="0 0 160 160">
+									<title>Section Score</title>
+									<circle
+										cx="80"
+										cy="80"
+										r={radius}
+										fill="none"
+										stroke="#F3F4F6"
+										strokeWidth="12"
+									/>
+									{result.score !== null && (
+										<circle
+											cx="80"
+											cy="80"
+											r={radius}
+											fill="none"
+											stroke={
+												result.score >= 70
+													? "#10B981"
+													: result.score >= 50
+														? "#F59E0B"
+														: "#EF4444"
+											}
+											strokeWidth="12"
+											strokeDasharray={circumference}
+											strokeDashoffset={
+												circumference - (result.score / 100) * circumference
+											}
+											transform="rotate(-90 80 80)"
+											strokeLinecap="round"
+										/>
+									)}
+								</svg>
+								<div className="absolute inset-0 flex items-center justify-center">
+									<span
+										className="text-4xl font-bold"
+										style={{
+											color:
+												result.score >= 70
+													? "#10B981"
+													: result.score >= 50
+														? "#F59E0B"
+														: "#EF4444",
+										}}
+									>
+										{result.score}%
+									</span>
+								</div>
+							</div>
+						) : (
+							/* Not completed section */
+							<div className="flex flex-col items-center justify-center bg-amber-50 py-8 rounded-lg w-full max-w-xs h-40">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									className="h-12 w-12 text-amber-500"
+									fill="none"
+									viewBox="0 0 24 24"
+									stroke="currentColor"
+								>
+									<title>Waiting Icon</title>
+									<path
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										strokeWidth={2}
+										d="M12 9v2m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z"
+									/>
+								</svg>
+							</div>
+						)}
+
+						<h3 className="text-xl mt-4">
+							Section {result.sectionTitle} - {result.sectionDescription}
+						</h3>
+
+						{!result.completed && (
+							<p className="text-center mt-2 text-amber-700">
+								Come back later for Section {result.sectionTitle} score
+							</p>
+						)}
+					</div>
+				))}
 			</div>
 		</div>
 	);
 };
 
-export default WelcomeBanner;
+export default ResultsDisplay;

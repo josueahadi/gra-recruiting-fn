@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { cn } from "@/lib/utils";
 
 interface ProfileCompletionCardProps {
@@ -15,10 +15,15 @@ const ProfileCompletionCard: React.FC<ProfileCompletionCardProps> = ({
 	className,
 	size = "medium",
 }) => {
+	// Validate percentage
+	if (percentage < 0 || percentage > 100) {
+		throw new Error("Percentage must be between 0 and 100.");
+	}
+
 	// Determine color based on percentage
 	const getColor = () => {
 		if (percentage < 30) return "#EF4444"; // Red
-		if (percentage < 70) return "#F59E0B"; // Amber/Yellow
+		if (percentage < 100) return "#F59E0B"; // Amber/Yellow
 		return "#10B981"; // Green
 	};
 
@@ -29,7 +34,6 @@ const ProfileCompletionCard: React.FC<ProfileCompletionCardProps> = ({
 				return { width: 100, height: 100, radius: 40 };
 			case "large":
 				return { width: 180, height: 180, radius: 80 };
-			case "medium":
 			default:
 				return { width: 160, height: 160, radius: 70 };
 		}
@@ -47,10 +51,10 @@ const ProfileCompletionCard: React.FC<ProfileCompletionCardProps> = ({
 				className,
 			)}
 		>
-			<h3 className="text-lg font-medium mb-4">Profile Completion</h3>
+			<h3 className="text-lg font-semibold mb-4">Profile Completion</h3>
 
 			<div
-				className={`relative w-${svgSize.width / 10} h-${svgSize.height / 10}`}
+				className={`relative w-${svgSize.width / 4} h-${svgSize.height / 4}`}
 			>
 				{/* Background circle */}
 				<svg
