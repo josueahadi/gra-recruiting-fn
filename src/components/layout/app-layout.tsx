@@ -44,6 +44,19 @@ interface AppLayoutProps {
 	userType: UserType;
 }
 
+const BackgroundPattern = () => {
+	return (
+		<div
+			className="fixed inset-0 z-0 opacity-100 pointer-events-none"
+			style={{
+				backgroundImage: "url('/images/growpattern-01-vertical.svg')",
+				backgroundSize: "contain",
+				backgroundRepeat: "repeat",
+			}}
+		/>
+	);
+};
+
 const AppLayout: React.FC<AppLayoutProps> = ({ children, userType }) => {
 	const pathname = usePathname();
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -66,6 +79,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, userType }) => {
 
 	return (
 		<div className="flex min-h-screen bg-[#E0F5FF]">
+			<BackgroundPattern />
 			{/* Sidebar - Desktop */}
 			<aside className="hidden md:block w-60 bg-white shadow-md fixed h-screen overflow-y-auto">
 				<div className="pt-5 px-5 flex flex-col gap-20 justify-center items-center">
@@ -138,7 +152,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children, userType }) => {
 			)}
 
 			{/* Main Content Container */}
-			<div className="flex-1 flex flex-col pb-32 md:ml-60">
+			<div className="flex-1 flex flex-col pb-32 md:ml-60 relative z-10">
 				{/* Top Header */}
 				<header className="pt-5 px-4 md:px-12">
 					<div className=" mx-auto flex justify-between items-center">
