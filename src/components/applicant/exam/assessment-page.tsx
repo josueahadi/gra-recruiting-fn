@@ -1,26 +1,22 @@
-"use client";
-
-import type React from "react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import SectionSidebar from "@/components/applicant/exam/section-sidebar";
+import AdaptiveExamLayout from "@/components/applicant/exam/exam-layout";
 import MultipleChoiceQuestion from "@/components/applicant/exam/questions/multiple-choice";
 import EssayQuestion from "@/components/applicant/exam/questions/essay";
 import ExamCompletion from "@/components/applicant/exam/exam-completion";
 
 interface AssessmentPageProps {
-	sectionId?: string;
-	questionNumber?: string;
+	params: {
+		sectionId: string;
+		questionNumber: string;
+	};
 }
 
 /**
- * The main assessment page component
- * Displays questions and navigation based on section and question number
+ * The main assessment page component using the new adaptive layout
  */
-const AssessmentPage: React.FC<AssessmentPageProps> = ({
-	sectionId = "1",
-	questionNumber = "1",
-}) => {
+export default function AssessmentPage({ params }: AssessmentPageProps) {
+	const { sectionId = "1", questionNumber = "1" } = params;
 	const router = useRouter();
 
 	// Convert to numbers for easier comparisons
@@ -42,7 +38,6 @@ const AssessmentPage: React.FC<AssessmentPageProps> = ({
 	const [selectedOptionId, setSelectedOptionId] = useState<string | number>("");
 	const [essayAnswer, setEssayAnswer] = useState("");
 	const [answeredQuestions, setAnsweredQuestions] = useState<number[]>([]);
-	const [timeLeft, setTimeLeft] = useState("00:15:00");
 	const [isLoading, setIsLoading] = useState(true);
 	const [examCompleted, setExamCompleted] = useState(false);
 
@@ -50,18 +45,6 @@ const AssessmentPage: React.FC<AssessmentPageProps> = ({
 	const sectionType =
 		currentSectionId === 1 ? "multiple-choice" : "short-essay";
 	const totalQuestions = currentSectionId === 1 ? 15 : 5;
-
-	// Mock timer (in a real app, implement actual countdown)
-	useEffect(() => {
-		// In a real implementation, set up a proper countdown timer
-		// For now, just use a static value
-		setTimeLeft("00:15:00");
-
-		// Clean up timer if needed
-		return () => {
-			// Clear any timers if needed
-		};
-	}, []);
 
 	// Fetch question data when section or question changes
 	useEffect(() => {
@@ -79,7 +62,7 @@ const AssessmentPage: React.FC<AssessmentPageProps> = ({
 				if (currentSectionId === 1) {
 					// Multiple choice questions
 					if (currentQuestionNum === 9) {
-						// Logic question example from Image 2
+						// Logic question example from Image 1
 						setQuestionText(
 							'All 2-legged animals are "Zelopes", No brown furred Animals have 2 legs. Which statement is true:',
 						);
@@ -90,7 +73,7 @@ const AssessmentPage: React.FC<AssessmentPageProps> = ({
 							{ id: "d", optionText: "All Zelopes have brown fur" },
 						]);
 					} else if (currentQuestionNum === 10) {
-						// Visual question example from Image 3
+						// Visual question example from Image 2
 						setQuestionText(
 							"Select the correct pattern that should go in the empty space:",
 						);
@@ -128,7 +111,7 @@ const AssessmentPage: React.FC<AssessmentPageProps> = ({
 				} else {
 					// Essay questions
 					if (currentQuestionNum === 1) {
-						// Resume question example from Image 4
+						// Resume question example from Image 3
 						setQuestionText(
 							"A well-structured resume is one of the most important tools for job seekers. It helps employers quickly assess a candidate's qualifications and suitability for a role. When creating a resume, what is the primary purpose it should serve in a job application?",
 						);
@@ -223,7 +206,7 @@ const AssessmentPage: React.FC<AssessmentPageProps> = ({
 			);
 		} else if (currentSectionId === 1) {
 			// First section completed, go to second section
-			router.push(`/applicant/exam/assessment/section/2/question/1`);
+			router.push("/applicant/exam/assessment/section/2/question/1");
 		} else {
 			// All sections completed
 			setExamCompleted(true);
@@ -233,68 +216,70 @@ const AssessmentPage: React.FC<AssessmentPageProps> = ({
 
 	// Show exam completion screen if exam is finished
 	if (examCompleted) {
-		return <ExamCompletion />;
+		return (
+			<AdaptiveExamLayout showNavigation={false}>
+				<ExamCompletion
+					title="Exam Completed"
+					message="You have successfully completed the exam.\nThank you for your time and effort."
+					subtitle="Your results will be available soon"
+					buttonText="Back To Dashboard"
+					imageUrl="/images/exam-complete.svg"
+				/>
+			</AdaptiveExamLayout>
+		);
 	}
 
 	// Show loading indicator while fetching question data
 	if (isLoading) {
 		return (
-			<div className="flex items-center justify-center h-64">
-				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base"></div>
-			</div>
+			<AdaptiveExamLayout showNavigation={false}>
+				<div className="flex items-center justify-center h-64">
+					<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base" />
+				</div>
+			</AdaptiveExamLayout>
 		);
 	}
 
-	// Render the main assessment interface
+	// Render the main assessment interface with AdaptiveExamLayout
 	return (
-		<div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-5 min-h-[600px]">
-			{/* Sidebar with question navigation */}
-			<div className="md:col-span-1 p-4">
-				<SectionSidebar
-					currentSection={sectionType}
-					currentQuestion={currentQuestionNum}
+		<AdaptiveExamLayout
+			userName="John Doe"
+			currentSectionId={currentSectionId}
+			currentQuestionNumber={currentQuestionNum}
+			answeredQuestions={answeredQuestions}
+			onQuestionSelect={handleQuestionSelect}
+			showNavigation={true}
+		>
+			{sectionType === "multiple-choice" ? (
+				<MultipleChoiceQuestion
+					questionNumber={currentQuestionNum}
 					totalQuestions={totalQuestions}
-					timeLeft={timeLeft}
-					answeredQuestions={answeredQuestions}
-					onQuestionSelect={handleQuestionSelect}
+					questionText={questionText}
+					questionImageUrl={questionImageUrl}
+					options={options}
+					selectedOptionId={selectedOptionId}
+					onSelectOption={handleSelectOption}
+					onNextQuestion={handleNextQuestion}
+					buttonText={
+						currentQuestionNum === totalQuestions
+							? "Next Section"
+							: "Next Question"
+					}
 				/>
-			</div>
-
-			{/* Main question content */}
-			<div className="md:col-span-3 lg:col-span-4 border-l p-6">
-				{sectionType === "multiple-choice" ? (
-					<MultipleChoiceQuestion
-						questionNumber={currentQuestionNum}
-						totalQuestions={totalQuestions}
-						questionText={questionText}
-						questionImageUrl={questionImageUrl}
-						options={options}
-						selectedOptionId={selectedOptionId}
-						onSelectOption={handleSelectOption}
-						onNextQuestion={handleNextQuestion}
-						buttonText={
-							currentQuestionNum === totalQuestions && currentSectionId === 2
-								? "Submit"
-								: "Next Question"
-						}
-					/>
-				) : (
-					<EssayQuestion
-						questionNumber={currentQuestionNum}
-						totalQuestions={totalQuestions}
-						questionText={questionText}
-						questionImageUrl={questionImageUrl}
-						answer={essayAnswer}
-						onAnswerChange={handleEssayChange}
-						onSubmit={handleNextQuestion}
-						buttonText={
-							currentQuestionNum === totalQuestions ? "Submit" : "Next Question"
-						}
-					/>
-				)}
-			</div>
-		</div>
+			) : (
+				<EssayQuestion
+					questionNumber={currentQuestionNum}
+					totalQuestions={totalQuestions}
+					questionText={questionText}
+					questionImageUrl={questionImageUrl}
+					answer={essayAnswer}
+					onAnswerChange={handleEssayChange}
+					onSubmit={handleNextQuestion}
+					buttonText={
+						currentQuestionNum === totalQuestions ? "Submit" : "Next Question"
+					}
+				/>
+			)}
+		</AdaptiveExamLayout>
 	);
-};
-
-export default AssessmentPage;
+}

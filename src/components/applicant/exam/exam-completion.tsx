@@ -1,4 +1,4 @@
-import type React from "react";
+import React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
@@ -35,7 +35,7 @@ const ExamCompletion: React.FC<ExamCompletionProps> = ({
 	};
 
 	return (
-		<div className="flex flex-col items-center justify-center text-center py-12 px-4">
+		<div className="flex flex-col items-center justify-center text-center py-16 px-4">
 			<Image
 				src={imageUrl}
 				alt="Exam Completed"
@@ -53,14 +53,14 @@ const ExamCompletion: React.FC<ExamCompletionProps> = ({
 					</p>
 				))}
 
-				<p className="text-primary-base mt-6 mb-8">{subtitle}</p>
+				<p className="text-[#4A90B9] mt-6 mb-8">{subtitle}</p>
 
 				<Button
 					onClick={handleButtonClick}
-					className="bg-primary-base hover:bg-primary-dark flex items-center mx-auto"
+					className="bg-[#4A90B9] hover:bg-[#3A80A9] text-white flex items-center mx-auto px-8 py-2 rounded-md"
 				>
 					{buttonText}
-					<MoveRight className="w-5 h-5 ml-2" />
+					<MoveRight className="ml-2" size={16} />
 				</Button>
 			</div>
 		</div>

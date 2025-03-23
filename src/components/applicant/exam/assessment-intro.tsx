@@ -1,7 +1,7 @@
 import type React from "react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
-import { MoveRight } from "lucide-react";
+import { CircleHelp, MoveRight, Timer, TriangleAlert } from "lucide-react";
 
 interface SectionInfo {
 	title: string;
@@ -69,54 +69,25 @@ const AssessmentIntro: React.FC<AssessmentIntroProps> = ({
 				The exam Consists Of {sections.length} Sections
 			</h2>
 
-			<div className="flex flex-col md:flex-row gap-6 mb-10 w-full max-w-3xl">
+			<div className="flex flex-col md:flex-row gap-6 mb-10 w-full max-w-2xl">
 				{sections.map((section, index) => (
 					<div
 						// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 						key={index}
-						className="bg-gradient-to-tr from-primary-dark to-primary-base text-white p-6 flex-1 rounded-xl shadow-md"
+						className="bg-gradient-to-tr from-primary-dark to-custom-skyBlue text-white p-6 flex-1 rounded-xl shadow-md text-center"
 					>
-						<h3 className="text-xl font-medium mb-2">{section.title}</h3>
+						<h3 className="text-2xl font-semibold mb-2 capitalize">
+							{section.title}
+						</h3>
 						<p className="text-lg mb-4">{section.description}</p>
-						<div className="flex justify-around">
+						<div className="flex justify-center gap-4 text-sm">
 							<div className="flex items-center">
-								<div className="bg-yellow-400 rounded-full p-2 mr-2">
-									<svg
-										viewBox="0 0 24 24"
-										fill="none"
-										className="h-5 w-5"
-										stroke="currentColor"
-									>
-										<title>Timer</title>
-										<circle cx="12" cy="12" r="7.5" strokeWidth="1.5" />
-										<path
-											d="M12 8v4l2.5 2.5"
-											strokeWidth="1.5"
-											strokeLinecap="round"
-										/>
-									</svg>
-								</div>
-								<span>{section.timeInMinutes}mins</span>
-							</div>
-							<div className="flex items-center">
-								<div className="bg-yellow-400 rounded-full p-2 mr-2">
-									<svg
-										viewBox="0 0 24 24"
-										fill="none"
-										className="h-5 w-5"
-										stroke="currentColor"
-									>
-										<title>Questions</title>
-										<circle cx="12" cy="12" r="9" strokeWidth="1.5" />
-										<path
-											d="M12 7v5h5"
-											strokeWidth="1.5"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										/>
-									</svg>
-								</div>
+								<CircleHelp className="w-6 h-6 mr-2 text-accent-base" />
 								<span>{section.questionCount} questions</span>
+							</div>
+							<div className="flex items-center ">
+								<Timer className="w-6 h-6 mr-2 text-accent-base" />
+								<span>{section.timeInMinutes}mins</span>
 							</div>
 						</div>
 					</div>
@@ -125,7 +96,7 @@ const AssessmentIntro: React.FC<AssessmentIntroProps> = ({
 
 			<Button
 				onClick={handleStartExam}
-				className="bg-primary-base hover:bg-primary-dark text-white py-4 px-8 text-lg rounded-md w-full max-w-lg flex items-center justify-center"
+				className="bg-primary-base hover:bg-primary-base text-white py-6 px-8 text-lg rounded-lg w-full max-w-xl flex items-center justify-center font-medium"
 			>
 				{buttonText}
 				<MoveRight className="w-6 h-6 ml-2" />
@@ -133,25 +104,11 @@ const AssessmentIntro: React.FC<AssessmentIntroProps> = ({
 
 			{warningText && warningText.length > 0 && (
 				<div className="mt-10 bg-amber-50 border border-amber-200 p-4 rounded-lg flex items-start text-left max-w-3xl">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						className="h-6 w-6 text-amber-500 mr-3 mt-1 flex-shrink-0"
-						fill="none"
-						viewBox="0 0 24 24"
-						stroke="currentColor"
-					>
-						<title>Warning</title>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							strokeWidth={2}
-							d="M12 9v2m0 4h.01M12 3a9 9 0 100 18 9 9 0 000-18z"
-						/>
-					</svg>
+					<TriangleAlert className="w-6 h-6 text-accent-base mr-4" />
 					<div>
 						{warningText.map((text, index) => (
 							// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-							<p key={index} className="text-sm text-amber-800 mb-1">
+							<p key={index} className="text-sm text-black mb-1">
 								{text}
 							</p>
 						))}

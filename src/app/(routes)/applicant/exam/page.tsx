@@ -33,10 +33,10 @@ export default function ExamPage() {
 				let profileCompletion = 0;
 
 				if (completionParam) {
-					profileCompletion = parseInt(completionParam, 10);
+					profileCompletion = Number.parseInt(completionParam, 10);
 					localStorage.setItem("profileCompletion", completionParam);
 				} else if (savedCompletion) {
-					profileCompletion = parseInt(savedCompletion, 10);
+					profileCompletion = Number.parseInt(savedCompletion, 10);
 				}
 
 				// Profile is complete when 100%
@@ -75,10 +75,37 @@ export default function ExamPage() {
 			<div className="bg-white rounded-lg shadow-sm py-10 md:py-20">
 				{isProfileComplete ? (
 					// Show exam introduction if profile is complete
-					<AssessmentIntro onStartExam={handleStartExam} />
+					<AssessmentIntro
+						title="GROW RWANDA RECRUITMENT ASSESSMENT"
+						description="The Grow Rwanda Recruitment Assessment is designed to evaluate candidates based on their knowledge and reasoning skills. The exam consists of two sections:"
+						sections={[
+							{
+								title: "section 1",
+								description: "Multiple Choice",
+								timeInMinutes: 20,
+								questionCount: 15,
+							},
+							{
+								title: "section 2",
+								description: "Short Essay",
+								timeInMinutes: 10,
+								questionCount: 5,
+							},
+						]}
+						warningText={[
+							"Once a section begins, candidates cannot go back to previous questions.",
+							"The system will automatically submit all answers when time runs out.",
+						]}
+						buttonText="Start Exam"
+						onStartExam={handleStartExam}
+					/>
 				) : (
 					// Show message to complete profile
-					<ProfileBlockMessage />
+					<ProfileBlockMessage
+						title="First complete your profile to unlock the assessment"
+						buttonText="Complete Your Profile"
+						showImage={true}
+					/>
 				)}
 			</div>
 		</AppLayout>

@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { MoveRight, MoveUpRight } from "lucide-react";
+import { MoveRight } from "lucide-react";
 import ProfileCompletionCard from "@/components/applicant/dashboard/profile-completion-card";
 import WelcomeBanner from "@/components/applicant/dashboard/welcome-banner";
 import ResultsDisplay from "@/components/applicant/dashboard/results-display";
 import ProfileBlockMessage from "@/components/applicant/exam/profile-block-message";
-import AssessmentIntro from "@/components/applicant/exam/assessment-intro";
 
 interface ResultData {
 	sectionOne: {
@@ -20,6 +18,7 @@ interface ResultData {
 	};
 	assessmentCompleted: boolean;
 }
+
 // Main dashboard content
 const ApplicantDashboard = () => {
 	const router = useRouter();
