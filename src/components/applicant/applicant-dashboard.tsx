@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MoveRight, MoveUpRight } from "lucide-react";
 import ProfileCompletionCard from "@/components/applicant/dashboard/profile-completion-card";
 import WelcomeBanner from "@/components/applicant/dashboard/welcome-banner";
+import ResultsDisplay from "@/components/applicant/dashboard/results-display";
+import ProfileBlockMessage from "@/components/applicant/exam/profile-block-message";
+import AssessmentIntro from "@/components/applicant/exam/assessment-intro";
 
-// Type definitions for better type safety
 interface ResultData {
 	sectionOne: {
 		score: number;
@@ -19,94 +20,6 @@ interface ResultData {
 	};
 	assessmentCompleted: boolean;
 }
-
-// Result component for showing assessment results
-const ResultSection = ({ section, score, completed }) => {
-	// SVG circle calculations for score display
-	const radius = 70;
-	const circumference = 2 * Math.PI * radius;
-	const offset = completed
-		? circumference - (score / 100) * circumference
-		: circumference;
-
-	return (
-		<div className="w-full md:w-1/2 flex flex-col items-center mb-8 md:mb-0">
-			<div className="relative w-40 h-40">
-				{/* Score circle */}
-				<svg className="w-full h-full" viewBox="0 0 160 160">
-					<title>Assessment Score</title>
-					<circle
-						cx="80"
-						cy="80"
-						r={radius}
-						fill="none"
-						stroke="#F3F4F6"
-						strokeWidth="12"
-					/>
-					{completed && (
-						<circle
-							cx="80"
-							cy="80"
-							r={radius}
-							fill="none"
-							stroke={
-								score >= 70 ? "#10B981" : score >= 50 ? "#F59E0B" : "#EF4444"
-							}
-							strokeWidth="12"
-							strokeDasharray={circumference}
-							strokeDashoffset={offset}
-							transform="rotate(-90 80 80)"
-							strokeLinecap="round"
-						/>
-					)}
-				</svg>
-				<div className="absolute inset-0 flex items-center justify-center">
-					{completed ? (
-						<span
-							className="text-4xl font-bold"
-							style={{
-								color:
-									score >= 70 ? "#10B981" : score >= 50 ? "#F59E0B" : "#EF4444",
-							}}
-						>
-							{score}%
-						</span>
-					) : (
-						<svg
-							width="48"
-							height="48"
-							viewBox="0 0 24 24"
-							fill="none"
-							xmlns="http://www.w3.org/2000/svg"
-						>
-							<title>SVG</title>
-							<path
-								d="M12 9V14"
-								stroke="#F59E0B"
-								strokeWidth="2"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-							/>
-							<circle cx="12" cy="17" r="1" fill="#F59E0B" />
-							<circle cx="12" cy="12" r="10" stroke="#F59E0B" strokeWidth="2" />
-						</svg>
-					)}
-				</div>
-			</div>
-			<h3 className="text-xl mt-4">
-				{section === "one"
-					? "Section One - Multiple Choice"
-					: "Section Two - Short Essay"}
-			</h3>
-			{!completed && (
-				<p className="text-center mt-2 text-gray-500">
-					{section === "one" ? "Not yet completed" : "Results pending"}
-				</p>
-			)}
-		</div>
-	);
-};
-
 // Main dashboard content
 const ApplicantDashboard = () => {
 	const router = useRouter();
@@ -254,12 +167,32 @@ const ApplicantDashboard = () => {
 		router.push("/applicant");
 	};
 
+	// Format results data for ResultsDisplay component
+	const formatResultsForDisplay = () => {
+		return [
+			{
+				section: "one",
+				sectionTitle: "Section One",
+				sectionDescription: "Multiple Choice",
+				score: resultsData.sectionOne.score,
+				completed: resultsData.sectionOne.completed,
+			},
+			{
+				section: "two",
+				sectionTitle: "Section Two",
+				sectionDescription: "Short Essay",
+				score: resultsData.sectionTwo.score,
+				completed: resultsData.sectionTwo.completed,
+			},
+		];
+	};
+
 	// Determine which main content to render based on completion percentage
 	const renderMainContent = () => {
 		// For 100% completion, show assessment info
 		if (completionPercentage === 100) {
 			return (
-				<div className="bg-white rounded-lg p-8 w-full text-center">
+				<div className="bg-white rounded-lg p-8 md:py-16 w-full text-center">
 					<h1 className="text-2xl md:text-4xl font-bold mb-4">
 						GROW RWANDA RECRUITMENT ASSESSMENT
 					</h1>
@@ -282,27 +215,12 @@ const ApplicantDashboard = () => {
 
 		// For incomplete profiles, show the checklist card
 		return (
-			<div className="bg-white rounded-lg p-8 flex flex-col items-center justify-center text-center">
-				<Image
-					src="/images/profile-checklist.svg"
-					alt="Complete Profile"
-					className="mb-6"
-					width={207}
-					height={126}
-				/>
-
-				<h3 className="text-lg font-semibold mb-2">
-					First complete your profile to unlock the assessment
-				</h3>
-
-				<Button
-					className="mt-4 bg-primary-base hover:bg-primary-base flex items-center p-6 text-base font-semibold"
-					onClick={handleCompleteProfileClick}
-				>
-					Complete Your Profile
-					<MoveUpRight className="w-6 h-6 ml-2" />
-				</Button>
-			</div>
+			<ProfileBlockMessage
+				title="First complete your profile to unlock the assessment"
+				buttonText="Complete Your Profile"
+				showImage={true}
+				className="md:py-16"
+			/>
 		);
 	};
 
@@ -319,53 +237,16 @@ const ApplicantDashboard = () => {
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 				{/* Welcome Card - spans 2/3 of the width */}
 				<div className="md:col-span-2">
-					<div className="bg-gradient-to-tr from-primary-dark to-custom-skyBlue rounded-lg text-white relative z-10 overflow-hidden flex flex-col md:flex-row items-center p-6">
-						<div
-							className="absolute inset-0 z-0 opacity-100 pointer-events-none"
-							style={{
-								backgroundImage: "url('/images/growrwanda-pattern-01.svg')",
-								backgroundSize: "cover",
-								backgroundRepeat: "no-repeat",
-							}}
-						/>
-						<Image
-							src="/images/complete-profile.png"
-							alt="Happy Applicant"
-							className="z-10"
-							width={332}
-							height={300}
-						/>
-						<div className="relative z-10 py-6 flex flex-col items-center text-center md:items-start md:text-left">
-							<h2 className="text-lg">Hi, John Doe</h2>
-							<h1 className="text-3xl font-semibold mt-2 mb-6">
-								Welcome To Your
-								<br />
-								Applicant Dashboard
-							</h1>
-
-							<div className="flex flex-wrap gap-4">
-								<Button
-									variant="default"
-									className="bg-white text-custom-skyBlue hover:bg-gray-100 flex items-center font-semibold"
-									onClick={handleActionButtonClick}
-								>
-									{getActionButtonLabel()}
-									<MoveRight className="w-6 h-6 ml-2" />
-								</Button>
-
-								{/* Show this button only if user has results to view */}
-								{(completionPercentage === 100 || showResults) && (
-									<Button
-										variant="outline"
-										className="bg-transparent border-white text-white hover:bg-white/10"
-										onClick={toggleResultsView}
-									>
-										{showResults ? "View Assessment" : "View Results"}
-									</Button>
-								)}
-							</div>
-						</div>
-					</div>
+					<WelcomeBanner
+						userName="John Doe"
+						primaryButtonText={getActionButtonLabel()}
+						onPrimaryButtonClick={handleActionButtonClick}
+						showSecondaryButton={completionPercentage === 100 || showResults}
+						secondaryButtonText={
+							showResults ? "View Assessment" : "View Results"
+						}
+						onSecondaryButtonClick={toggleResultsView}
+					/>
 				</div>
 
 				{/* Profile Completion Card - 1/3 of the width */}
@@ -379,72 +260,11 @@ const ApplicantDashboard = () => {
 
 			{/* Bottom content area - shows different content based on completion */}
 			{showResults ? (
-				// Show exam results
-				<div className="bg-white rounded-lg p-8 w-full">
-					<h2 className="text-3xl font-bold mb-12">Assessment Results</h2>
-
-					<div className="flex flex-wrap">
-						<ResultSection
-							section="one"
-							score={resultsData.sectionOne.score}
-							completed={resultsData.sectionOne.completed}
-						/>
-
-						<div className="w-full md:w-1/2 flex flex-col items-center">
-							{resultsData.sectionTwo.completed ? (
-								<ResultSection
-									section="two"
-									score={resultsData.sectionTwo.score}
-									completed={resultsData.sectionTwo.completed}
-								/>
-							) : (
-								<div className="flex flex-col items-center justify-center bg-amber-50 py-8 px-4 rounded-lg w-full max-w-sm">
-									<svg
-										width="48"
-										height="48"
-										viewBox="0 0 24 24"
-										fill="none"
-										xmlns="http://www.w3.org/2000/svg"
-									>
-										<title>Pending</title>
-										<path
-											d="M12 9V14"
-											stroke="#F59E0B"
-											strokeWidth="2"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										/>
-										<circle cx="12" cy="17" r="1" fill="#F59E0B" />
-										<circle
-											cx="12"
-											cy="12"
-											r="10"
-											stroke="#F59E0B"
-											strokeWidth="2"
-										/>
-									</svg>
-									<p className="text-xl text-center mt-4 text-gray-700">
-										{resultsData.sectionOne.completed
-											? "Come back later for Section 2 score"
-											: "Complete Section 1 first"}
-									</p>
-								</div>
-							)}
-						</div>
-					</div>
-
-					{resultsData.assessmentCompleted && (
-						<div className="mt-8 text-center">
-							<Button
-								className="bg-primary-base hover:bg-primary-base flex items-center mx-auto px-6 py-4 text-base font-semibold"
-								onClick={() => router.push("/applicant/results")}
-							>
-								View Detailed Results
-								<MoveRight className="w-6 h-6 ml-2" />
-							</Button>
-						</div>
-					)}
-				</div>
+				<ResultsDisplay
+					sectionResults={formatResultsForDisplay()}
+					assessmentCompleted={resultsData.assessmentCompleted}
+					detailedResultsPath="/applicant/results"
+				/>
 			) : (
 				// Show profile completion or assessment info
 				renderMainContent()

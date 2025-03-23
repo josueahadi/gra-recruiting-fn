@@ -233,10 +233,14 @@ function isLinkActive(pathname: string, link: SidebarLink): boolean {
 	// For dashboard links, don't match with other sections
 	if (link.href.includes("dashboard") && pathname !== link.href) return false;
 
+	// For exam links, match any exam-related path
+	if (link.href.includes("/exam") && pathname.includes("/exam")) return true;
+
 	// For profile links, check the active section
 	if (link.activeSection && pathname.includes(link.activeSection)) {
-		// Don't mark profile as active when viewing dashboard
-		if (pathname.includes("dashboard")) return false;
+		// Don't mark profile as active when viewing dashboard or exam
+		if (pathname.includes("dashboard") || pathname.includes("exam"))
+			return false;
 
 		return true;
 	}

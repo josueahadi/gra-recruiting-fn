@@ -87,7 +87,7 @@ export default {
 					foreground: "hsl(var(--success-foreground))",
 					base: "#39E3BD",
 				},
-				Dangrek: {
+				danger: {
 					DEFAULT: "hsl(var(--dangrek))",
 					foreground: "hsl(var(--dangrek-foreground))",
 					base: "#E3394F",

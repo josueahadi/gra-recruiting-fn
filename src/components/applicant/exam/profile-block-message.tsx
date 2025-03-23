@@ -8,6 +8,7 @@ interface ProfileBlockMessageProps {
 	title?: string;
 	buttonText?: string;
 	showImage?: boolean;
+	className?: string;
 }
 
 /**
@@ -15,9 +16,10 @@ interface ProfileBlockMessageProps {
  * Used both in dashboard and when trying to access the exam before profile completion
  */
 const ProfileBlockMessage: React.FC<ProfileBlockMessageProps> = ({
-	title = "FIRST COMPLETE YOUR PROFILE TO UNLOCK THE ASSESSMENT",
+	title = "First complete your profile to unlock the assessment",
 	buttonText = "Complete Your Profile",
 	showImage = true,
+	className = "",
 }) => {
 	const router = useRouter();
 
@@ -26,7 +28,9 @@ const ProfileBlockMessage: React.FC<ProfileBlockMessageProps> = ({
 	};
 
 	return (
-		<div className="bg-white rounded-lg p-8 flex flex-col items-center justify-center text-center">
+		<div
+			className={`bg-white rounded-lg p-8 flex flex-col items-center justify-center text-center ${className}`}
+		>
 			{showImage && (
 				<Image
 					src="/images/profile-checklist.svg"

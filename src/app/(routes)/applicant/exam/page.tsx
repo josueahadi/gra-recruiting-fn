@@ -72,7 +72,7 @@ export default function ExamPage() {
 
 	return (
 		<AppLayout userType="applicant">
-			<div className="bg-white rounded-lg shadow-sm">
+			<div className="bg-white rounded-lg shadow-sm py-10 md:py-20">
 				{isProfileComplete ? (
 					// Show exam introduction if profile is complete
 					<AssessmentIntro onStartExam={handleStartExam} />
