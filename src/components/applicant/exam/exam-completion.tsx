@@ -18,11 +18,11 @@ interface ExamCompletionProps {
  */
 const ExamCompletion: React.FC<ExamCompletionProps> = ({
 	title = "Exam Completed",
-	message = "You have successfully completed the exam.\nThank you for your time and effort.",
+	message = "You have successfully completed the exam. Thank you for your time and effort.",
 	subtitle = "Your results will be available soon",
 	buttonText = "Back To Dashboard",
 	onButtonClick,
-	imageUrl = "/images/exam-complete.svg",
+	imageUrl = "/images/exam-complete.png",
 }) => {
 	const router = useRouter();
 
@@ -53,11 +53,11 @@ const ExamCompletion: React.FC<ExamCompletionProps> = ({
 					</p>
 				))}
 
-				<p className="text-[#4A90B9] mt-6 mb-8">{subtitle}</p>
+				<p className="text-primary-base mt-6 mb-8 font-medium">{subtitle}</p>
 
 				<Button
 					onClick={handleButtonClick}
-					className="bg-[#4A90B9] hover:bg-[#3A80A9] text-white flex items-center mx-auto px-8 py-2 rounded-md"
+					className="bg-primary-base hover:bg-primary-base text-white flex items-center mx-auto px-8 py-5 rounded-lg"
 				>
 					{buttonText}
 					<MoveRight className="ml-2" size={16} />

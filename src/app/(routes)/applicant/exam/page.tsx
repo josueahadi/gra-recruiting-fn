@@ -54,7 +54,7 @@ export default function ExamPage() {
 	// Handle starting the exam
 	const handleStartExam = () => {
 		// Navigate to the first question of section 1
-		router.push("/applicant/exam/assessment/section/1/question/1");
+		router.push("/applicant/exam/section/1/question/1");
 	};
 
 	// Show loading state

@@ -22,7 +22,7 @@ export function generateMetadata({ params }: PageParams) {
 
 /**
  * Dynamic route for exam questions
- * Path: /applicant/exam/assessment/section/[sectionId]/question/[questionNumber]
+ * Path: /applicant/exam/section/[sectionId]/question/[questionNumber]
  * Renders the AssessmentPage component with the section and question parameters
  */
 export default function Page({ params }: PageParams) {

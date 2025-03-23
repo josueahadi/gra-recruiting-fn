@@ -12,8 +12,12 @@ interface AssessmentPageProps {
 	};
 }
 
+// Constants for localStorage keys
+const EXAM_COMPLETION_KEY = "examCompletion";
+const EXAM_SECTION_ANSWERS_KEY = "examSectionAnswers";
+
 /**
- * The main assessment page component using the new adaptive layout
+ * The main assessment page component using the adaptive layout
  */
 export default function AssessmentPage({ params }: AssessmentPageProps) {
 	const { sectionId = "1", questionNumber = "1" } = params;
@@ -37,7 +41,12 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 	>([]);
 	const [selectedOptionId, setSelectedOptionId] = useState<string | number>("");
 	const [essayAnswer, setEssayAnswer] = useState("");
-	const [answeredQuestions, setAnsweredQuestions] = useState<number[]>([]);
+	const [answeredQuestions, setAnsweredQuestions] = useState<{
+		[key: string]: number[];
+	}>({
+		"1": [],
+		"2": [],
+	});
 	const [isLoading, setIsLoading] = useState(true);
 	const [examCompleted, setExamCompleted] = useState(false);
 
@@ -51,9 +60,26 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		const fetchQuestionData = async () => {
 			setIsLoading(true);
 			try {
-				// In a real app, this would be an API call
-				// const response = await fetch(`/api/exam/section/${sectionId}/question/${questionNumber}`);
-				// const data = await response.json();
+				// Check if the URL has a completion parameter
+				const urlParams =
+					typeof window !== "undefined"
+						? new URLSearchParams(window.location.search)
+						: null;
+				const showCompletion = urlParams?.get("examCompleted");
+
+				if (showCompletion === "true") {
+					setExamCompleted(true);
+					setIsLoading(false);
+					return;
+				}
+
+				// Check if exam was previously completed
+				const savedExamCompletion = localStorage.getItem(EXAM_COMPLETION_KEY);
+				if (savedExamCompletion === "true") {
+					setExamCompleted(true);
+					setIsLoading(false);
+					return;
+				}
 
 				// Simulate API delay
 				await new Promise((resolve) => setTimeout(resolve, 500));
@@ -62,7 +88,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 				if (currentSectionId === 1) {
 					// Multiple choice questions
 					if (currentQuestionNum === 9) {
-						// Logic question example from Image 1
+						// Logic question example
 						setQuestionText(
 							'All 2-legged animals are "Zelopes", No brown furred Animals have 2 legs. Which statement is true:',
 						);
@@ -73,7 +99,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 							{ id: "d", optionText: "All Zelopes have brown fur" },
 						]);
 					} else if (currentQuestionNum === 10) {
-						// Visual question example from Image 2
+						// Visual question example
 						setQuestionText(
 							"Select the correct pattern that should go in the empty space:",
 						);
@@ -111,7 +137,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 				} else {
 					// Essay questions
 					if (currentQuestionNum === 1) {
-						// Resume question example from Image 3
+						// Resume question example
 						setQuestionText(
 							"A well-structured resume is one of the most important tools for job seekers. It helps employers quickly assess a candidate's qualifications and suitability for a role. When creating a resume, what is the primary purpose it should serve in a job application?",
 						);
@@ -123,12 +149,34 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 					}
 				}
 
-				// Get answered questions from localStorage
-				const savedAnswers = localStorage.getItem(
-					`section_${sectionId}_answers`,
+				// Get saved answers from localStorage
+				try {
+					const savedAnswersJSON = localStorage.getItem(
+						EXAM_SECTION_ANSWERS_KEY,
+					);
+					if (savedAnswersJSON) {
+						const parsedAnswers = JSON.parse(savedAnswersJSON);
+						setAnsweredQuestions(parsedAnswers);
+					}
+				} catch (err) {
+					console.error("Error parsing saved answers:", err);
+					// Initialize with empty arrays if there's an error
+					setAnsweredQuestions({ "1": [], "2": [] });
+				}
+
+				// Load saved answer for this question
+				const savedSelectedOption = localStorage.getItem(
+					`s${sectionId}_q${questionNumber}_mc`,
 				);
-				if (savedAnswers) {
-					setAnsweredQuestions(JSON.parse(savedAnswers));
+				if (savedSelectedOption && currentSectionId === 1) {
+					setSelectedOptionId(savedSelectedOption);
+				}
+
+				const savedEssayAnswer = localStorage.getItem(
+					`s${sectionId}_q${questionNumber}_essay`,
+				);
+				if (savedEssayAnswer && currentSectionId === 2) {
+					setEssayAnswer(savedEssayAnswer);
 				}
 
 				setIsLoading(false);
@@ -144,98 +192,115 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 	// Handle option selection for multiple choice questions
 	const handleSelectOption = (optionId: string | number) => {
 		setSelectedOptionId(optionId);
+		// Save selected option to localStorage with shorter key
+		localStorage.setItem(
+			`s${sectionId}_q${questionNumber}_mc`,
+			optionId.toString(),
+		);
 	};
 
 	// Handle text input for essay questions
 	const handleEssayChange = (text: string) => {
 		setEssayAnswer(text);
+		// Save essay answer to localStorage with shorter key
+		localStorage.setItem(`s${sectionId}_q${questionNumber}_essay`, text);
 	};
 
 	// Handle time up event
 	const handleTimeUp = () => {
 		// Auto-submit current section and move to next section or completion
 		if (currentSectionId === 1) {
-			router.push(`/applicant/exam/assessment/section/2/question/1`);
+			router.push(`/applicant/exam/section/2/question/1`);
 		} else {
-			setExamCompleted(true);
-			localStorage.setItem("assessmentCompleted", "true");
+			completeExam();
 		}
+	};
+
+	// Handle completing the exam
+	const completeExam = () => {
+		setExamCompleted(true);
+		localStorage.setItem(EXAM_COMPLETION_KEY, "true");
+
+		// Clear any conflicting parameters
+		localStorage.removeItem("assessmentCompleted");
 	};
 
 	// Handle question navigation from sidebar
 	const handleQuestionSelect = (questionNum: number) => {
 		// Only allow navigation to questions that have been seen/answered
 		if (
-			answeredQuestions.includes(questionNum) ||
+			answeredQuestions[sectionId]?.includes(questionNum) ||
 			questionNum === currentQuestionNum
 		) {
 			router.push(
-				`/applicant/exam/assessment/section/${sectionId}/question/${questionNum}`,
+				`/applicant/exam/section/${sectionId}/question/${questionNum}`,
 			);
 		}
 	};
 
 	// Handle next question button click
 	const handleNextQuestion = () => {
-		// Save answer (in a real app, this would be an API call)
-		console.log(
-			"Saving answer:",
-			sectionType === "multiple-choice" ? selectedOptionId : essayAnswer,
-		);
-
-		// Update answered questions list
-		const updatedAnsweredQuestions = [...answeredQuestions];
-		if (!updatedAnsweredQuestions.includes(currentQuestionNum)) {
-			updatedAnsweredQuestions.push(currentQuestionNum);
+		// Save answer and update answered questions
+		const updatedAnsweredQuestions = { ...answeredQuestions };
+		if (!updatedAnsweredQuestions[sectionId]?.includes(currentQuestionNum)) {
+			if (!updatedAnsweredQuestions[sectionId]) {
+				updatedAnsweredQuestions[sectionId] = [];
+			}
+			updatedAnsweredQuestions[sectionId] = [
+				...updatedAnsweredQuestions[sectionId],
+				currentQuestionNum,
+			];
 		}
 		setAnsweredQuestions(updatedAnsweredQuestions);
 		localStorage.setItem(
-			`section_${sectionId}_answers`,
+			EXAM_SECTION_ANSWERS_KEY,
 			JSON.stringify(updatedAnsweredQuestions),
 		);
-
-		// Reset current answer for next question
-		setSelectedOptionId("");
-		setEssayAnswer("");
 
 		// Navigate to next question or next section
 		if (currentQuestionNum < totalQuestions) {
 			// Go to next question
 			router.push(
-				`/applicant/exam/assessment/section/${sectionId}/question/${currentQuestionNum + 1}`,
+				`/applicant/exam/section/${sectionId}/question/${currentQuestionNum + 1}`,
 			);
 		} else if (currentSectionId === 1) {
 			// First section completed, go to second section
-			router.push("/applicant/exam/assessment/section/2/question/1");
+			router.push("/applicant/exam/section/2/question/1");
 		} else {
 			// All sections completed
-			setExamCompleted(true);
-			localStorage.setItem("assessmentCompleted", "true");
+			completeExam();
 		}
 	};
-
-	// Show exam completion screen if exam is finished
-	if (examCompleted) {
-		return (
-			<AdaptiveExamLayout showNavigation={false}>
-				<ExamCompletion
-					title="Exam Completed"
-					message="You have successfully completed the exam.\nThank you for your time and effort."
-					subtitle="Your results will be available soon"
-					buttonText="Back To Dashboard"
-					imageUrl="/images/exam-complete.svg"
-				/>
-			</AdaptiveExamLayout>
-		);
-	}
 
 	// Show loading indicator while fetching question data
 	if (isLoading) {
 		return (
-			<AdaptiveExamLayout showNavigation={false}>
+			<AdaptiveExamLayout showNavigation={true}>
 				<div className="flex items-center justify-center h-64">
 					<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base" />
 				</div>
+			</AdaptiveExamLayout>
+		);
+	}
+
+	// Show exam completion screen if exam is finished
+	if (examCompleted) {
+		return (
+			<AdaptiveExamLayout
+				showNavigation={true}
+				currentSectionId={currentSectionId}
+				currentQuestionNumber={currentQuestionNum}
+				answeredQuestions={answeredQuestions[currentSectionId.toString()] || []}
+				onQuestionSelect={handleQuestionSelect}
+				pageTitle="Exam Completed"
+			>
+				<ExamCompletion
+					title="Exam Completed"
+					message="You have successfully completed the exam. Thank you for your time and effort."
+					subtitle="Your results will be available soon"
+					buttonText="Back To Dashboard"
+					imageUrl="/images/exam-complete.png"
+				/>
 			</AdaptiveExamLayout>
 		);
 	}
@@ -246,7 +311,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 			userName="John Doe"
 			currentSectionId={currentSectionId}
 			currentQuestionNumber={currentQuestionNum}
-			answeredQuestions={answeredQuestions}
+			answeredQuestions={answeredQuestions[currentSectionId.toString()] || []}
 			onQuestionSelect={handleQuestionSelect}
 			showNavigation={true}
 		>

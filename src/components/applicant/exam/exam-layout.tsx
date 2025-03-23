@@ -78,8 +78,8 @@ const AdaptiveExamLayout: React.FC<AdaptiveExamLayoutProps> = ({
 			/>
 
 			{/* Sidebar - Desktop */}
-			<aside className="hidden md:block w-60 bg-white shadow-md fixed h-screen overflow-y-auto z-10">
-				<div className="pt-5 px-5 flex flex-col">
+			<aside className="hidden md:block w-80 bg-white shadow-md fixed h-screen overflow-y-auto z-10">
+				<div className="pt-5 px-5 flex flex-col items-center">
 					{/* Logo */}
 					<div className="mb-12">
 						<Brand />
@@ -218,7 +218,7 @@ const AdaptiveExamLayout: React.FC<AdaptiveExamLayoutProps> = ({
 			<div
 				className={cn(
 					"flex-1 flex flex-col relative z-10",
-					showNavigation && "md:ml-60",
+					showNavigation && "md:ml-80",
 				)}
 			>
 				{/* Top header */}
