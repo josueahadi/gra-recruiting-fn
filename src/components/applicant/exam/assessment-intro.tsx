@@ -1,7 +1,7 @@
-import type React from "react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { CircleHelp, MoveRight, Timer, TriangleAlert } from "lucide-react";
+import { useRouter } from "next/navigation";
+import type React from "react";
 
 interface SectionInfo {
 	title: string;
@@ -53,7 +53,7 @@ const AssessmentIntro: React.FC<AssessmentIntroProps> = ({
 		if (onStartExam) {
 			onStartExam();
 		} else {
-			router.push("/applicant/exam/section/1");
+			router.push("/applicant/exam/assessment");
 		}
 	};
 

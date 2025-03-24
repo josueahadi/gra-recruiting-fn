@@ -1,12 +1,8 @@
 "use client";
 
-import type React from "react";
-import { useEffect, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import { Bell, LogOut, Menu, Timer, User, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import Notifications from "@/components/common/notifications";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Brand } from "@/components/ui/brand";
 import { Button } from "@/components/ui/button";
 import {
 	DropdownMenu,
@@ -15,8 +11,11 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Brand } from "@/components/ui/brand";
-import Notifications from "@/components/common/notifications";
+import { cn } from "@/lib/utils";
+import { LogOut, Menu, Timer, User, X } from "lucide-react";
+import Link from "next/link";
+import type React from "react";
+import { useEffect, useState } from "react";
 
 interface AdaptiveExamLayoutProps {
 	children: React.ReactNode;
@@ -29,11 +28,6 @@ interface AdaptiveExamLayoutProps {
 	pageTitle?: string;
 }
 
-/**
- * A layout component for exam pages that adapts the app layout structure
- * Reuses the same structural components from AppLayout for consistency
- * Now with mobile sidebar support
- */
 const AdaptiveExamLayout: React.FC<AdaptiveExamLayoutProps> = ({
 	children,
 	userName = "John Doe",
@@ -107,7 +101,7 @@ const AdaptiveExamLayout: React.FC<AdaptiveExamLayoutProps> = ({
 									<button
 										key={`section${section.id}-${num}`}
 										type="button"
-										onClick={() => onQuestionSelect && onQuestionSelect(num)}
+										onClick={() => onQuestionSelect?.(num)}
 										className={cn(
 											"h-8 w-8 rounded-md text-sm font-medium flex items-center justify-center",
 											currentSectionId === section.id &&
@@ -154,6 +148,7 @@ const AdaptiveExamLayout: React.FC<AdaptiveExamLayoutProps> = ({
 										fill="none"
 										xmlns="http://www.w3.org/2000/svg"
 									>
+										<title>Timer</title>
 										<path
 											d="M12 8V12L15 15"
 											stroke="currentColor"
@@ -189,7 +184,7 @@ const AdaptiveExamLayout: React.FC<AdaptiveExamLayoutProps> = ({
 												key={`mobile-section${section.id}-${num}`}
 												type="button"
 												onClick={() => {
-													onQuestionSelect && onQuestionSelect(num);
+													onQuestionSelect?.(num);
 													setIsMobileMenuOpen(false);
 												}}
 												className={cn(

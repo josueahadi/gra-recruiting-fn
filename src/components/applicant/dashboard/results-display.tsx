@@ -1,9 +1,9 @@
-import type React from "react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { MoveRight } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { TriangleAlert } from "lucide-react";
+import { useRouter } from "next/navigation";
+import type React from "react";
 
 interface SectionResult {
 	section: string;

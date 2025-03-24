@@ -1,8 +1,8 @@
-import React from "react";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
 import { MoveRight } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import type React from "react";
 
 interface ExamCompletionProps {
 	title?: string;
@@ -48,6 +48,7 @@ const ExamCompletion: React.FC<ExamCompletionProps> = ({
 				<h1 className="text-2xl font-bold mb-4 text-gray-800">{title}</h1>
 
 				{message.split("\n").map((line, i) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 					<p key={i} className="text-lg mb-2">
 						{line}
 					</p>

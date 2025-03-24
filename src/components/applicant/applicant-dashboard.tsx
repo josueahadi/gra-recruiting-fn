@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { MoveRight } from "lucide-react";
 import ProfileCompletionCard from "@/components/applicant/dashboard/profile-completion-card";
-import WelcomeBanner from "@/components/applicant/dashboard/welcome-banner";
 import ResultsDisplay from "@/components/applicant/dashboard/results-display";
+import WelcomeBanner from "@/components/applicant/dashboard/welcome-banner";
 import ProfileBlockMessage from "@/components/applicant/exam/profile-block-message";
+import { Button } from "@/components/ui/button";
+import { MoveRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
 
 interface ResultData {
 	sectionOne: {
