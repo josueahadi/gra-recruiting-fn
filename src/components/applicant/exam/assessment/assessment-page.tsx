@@ -1,7 +1,7 @@
 "use client";
 
 import ExamCompletion from "@/components/applicant/exam/assessment/exam-completion";
-import AdaptiveExamLayout from "@/components/applicant/exam/exam-layout";
+import AdaptiveExamLayout from "@/components/applicant/exam/assessment/assessment-page-layout";
 import EssayQuestion from "@/components/applicant/exam/assessment/questions/essay";
 import MultipleChoiceQuestion from "@/components/applicant/exam/assessment/questions/multiple-choice";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,31 @@ interface AssessmentPageProps {
 		sectionId?: string;
 	};
 }
+interface BaseQuestion {
+	id: number;
+	text: string;
+	imageUrl?: string;
+	displayId?: number;
+	originalId?: number;
+	type: string; // This is important for type narrowing
+}
+
+interface MultipleChoiceQuestionType extends BaseQuestion {
+	type: "multiple-choice";
+	options: Array<{
+		id: string;
+		optionText?: string;
+		optionImageUrl?: string;
+	}>;
+}
+
+interface EssayQuestionType extends BaseQuestion {
+	type: "essay";
+	// No options for essay questions
+}
+
+// Union type for all question types
+type Question = MultipleChoiceQuestionType | EssayQuestionType;
 
 // Constants for localStorage keys
 const EXAM_COMPLETION_KEY = "examCompletion";
@@ -19,11 +44,12 @@ const EXAM_SECTION_ANSWERS_KEY = "examSectionAnswers";
 const QUESTION_MAPPING_KEY = "questionMapping";
 
 // Define question bank with all possible questions
-const questionBank = {
+const questionBank: { [key: string]: Question[] } = {
 	"1": [
 		// Section 1 - Multiple Choice
 		{
 			id: 1,
+			type: "multiple-choice",
 			text: "Which of the following best defines function composition in programming?",
 			options: [
 				{
@@ -49,6 +75,7 @@ const questionBank = {
 		},
 		{
 			id: 2,
+			type: "multiple-choice",
 			text: "What does the acronym API stand for?",
 			options: [
 				{ id: "a", optionText: "Application Programming Interface" },
@@ -59,6 +86,7 @@ const questionBank = {
 		},
 		{
 			id: 3,
+			type: "multiple-choice",
 			text: "Which data structure would be most efficient for implementing a dictionary?",
 			options: [
 				{ id: "a", optionText: "Array" },
@@ -69,6 +97,7 @@ const questionBank = {
 		},
 		{
 			id: 4,
+			type: "multiple-choice",
 			text: "What is the time complexity of binary search on a sorted array?",
 			options: [
 				{ id: "a", optionText: "O(1)" },
@@ -79,6 +108,7 @@ const questionBank = {
 		},
 		{
 			id: 5,
+			type: "multiple-choice",
 			text: "In React, what hook would you use to run code after a component renders?",
 			options: [
 				{ id: "a", optionText: "useState" },
@@ -89,6 +119,7 @@ const questionBank = {
 		},
 		{
 			id: 6,
+			type: "multiple-choice",
 			text: "What concept does the 'S' in SOLID principles stand for?",
 			options: [
 				{ id: "a", optionText: "Stateless Design" },
@@ -99,6 +130,7 @@ const questionBank = {
 		},
 		{
 			id: 7,
+			type: "multiple-choice",
 			text: "Which is NOT a principle of REST architecture?",
 			options: [
 				{ id: "a", optionText: "Stateless" },
@@ -109,6 +141,7 @@ const questionBank = {
 		},
 		{
 			id: 8,
+			type: "multiple-choice",
 			text: "What database type is MongoDB classified as?",
 			options: [
 				{ id: "a", optionText: "Relational Database" },
@@ -119,6 +152,7 @@ const questionBank = {
 		},
 		{
 			id: 9,
+			type: "multiple-choice",
 			text: 'All 2-legged animals are "Zelopes", No brown furred Animals have 2 legs. Which statement is true:',
 			options: [
 				{ id: "a", optionText: "No Zelopes have brown fur" },
@@ -129,6 +163,7 @@ const questionBank = {
 		},
 		{
 			id: 10,
+			type: "multiple-choice",
 			text: "Select the correct pattern that should go in the empty space:",
 			imageUrl: "/images/assessment/pattern-question.png",
 			options: [
@@ -140,6 +175,7 @@ const questionBank = {
 		},
 		{
 			id: 11,
+			type: "multiple-choice",
 			text: "What problem does the MVC architecture pattern solve?",
 			options: [
 				{ id: "a", optionText: "Database performance" },
@@ -150,6 +186,7 @@ const questionBank = {
 		},
 		{
 			id: 12,
+			type: "multiple-choice",
 			text: "What is the purpose of dependency injection?",
 			options: [
 				{ id: "a", optionText: "To reduce memory usage" },
@@ -160,6 +197,7 @@ const questionBank = {
 		},
 		{
 			id: 13,
+			type: "multiple-choice",
 			text: "Which of the following is a valid way to optimize React rendering?",
 			options: [
 				{ id: "a", optionText: "Always use class components" },
@@ -173,6 +211,7 @@ const questionBank = {
 		},
 		{
 			id: 14,
+			type: "multiple-choice",
 			text: "Which design pattern is React's context API most similar to?",
 			options: [
 				{ id: "a", optionText: "Factory Pattern" },
@@ -183,6 +222,7 @@ const questionBank = {
 		},
 		{
 			id: 15,
+			type: "multiple-choice",
 			text: "What is the primary purpose of TypeScript?",
 			options: [
 				{ id: "a", optionText: "To make JavaScript run faster" },
@@ -196,22 +236,27 @@ const questionBank = {
 		// Section 2 - Essay Questions
 		{
 			id: 1,
+			type: "essay",
 			text: "A well-structured resume is one of the most important tools for job seekers. It helps employers quickly assess a candidate's qualifications and suitability for a role. When creating a resume, what is the primary purpose it should serve in a job application?",
 		},
 		{
 			id: 2,
+			type: "essay",
 			text: "Describe a situation where you had to solve a complex problem. What was your approach and what was the outcome?",
 		},
 		{
 			id: 3,
+			type: "essay",
 			text: "Explain how you would approach implementing a new feature in a large codebase. What steps would you take from planning to deployment?",
 		},
 		{
 			id: 4,
+			type: "essay",
 			text: "Discuss a time when you had to work under pressure to meet a deadline. How did you manage your time and what did you learn from the experience?",
 		},
 		{
 			id: 5,
+			type: "essay",
 			text: "What do you think are the most important qualities for a software developer to possess in today's work environment, and why?",
 		},
 	],
@@ -229,7 +274,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 
 	// State for question mapping
 	const [questionMapping, setQuestionMapping] = useState<{
-		[key: string]: any[];
+		[key: string]: Question[];
 	}>({});
 
 	// State for question content and user responses
@@ -304,7 +349,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 
 		// Check for URL params on initial load, then discard them
 		if (params?.sectionId) {
-			const initialSectionId = parseInt(params.sectionId, 10) || 1;
+			const initialSectionId = Number.parseInt(params.sectionId, 10) || 1;
 			setCurrentSectionId(initialSectionId);
 		}
 
@@ -353,7 +398,10 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 						setQuestionText(mappedQuestion.text);
 						setQuestionImageUrl(mappedQuestion.imageUrl);
 
-						if (currentSectionId === 1) {
+						if (
+							currentSectionId === 1 &&
+							mappedQuestion.type === "multiple-choice"
+						) {
 							setOptions(mappedQuestion.options || []);
 						}
 					} else {
@@ -484,15 +532,15 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 	};
 
 	// Handle time up event
-	const handleTimeUp = () => {
-		// Auto-submit current section and move to next section or completion
-		if (currentSectionId === 1) {
-			setCurrentSectionId(2);
-			setCurrentQuestionNum(1);
-		} else {
-			completeExam();
-		}
-	};
+	// const handleTimeUp = () => {
+	// 	// Auto-submit current section and move to next section or completion
+	// 	if (currentSectionId === 1) {
+	// 		setCurrentSectionId(2);
+	// 		setCurrentQuestionNum(1);
+	// 	} else {
+	// 		completeExam();
+	// 	}
+	// };
 
 	// Handle completing the exam
 	const completeExam = () => {

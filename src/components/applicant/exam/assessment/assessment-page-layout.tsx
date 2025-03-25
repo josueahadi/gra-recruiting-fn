@@ -17,7 +17,7 @@ import Link from "next/link";
 import type React from "react";
 import { useEffect, useState } from "react";
 
-interface AdaptiveExamLayoutProps {
+interface AssessmentPageLayoutProps {
 	children: React.ReactNode;
 	userName?: string;
 	currentSectionId?: number;
@@ -28,7 +28,7 @@ interface AdaptiveExamLayoutProps {
 	pageTitle?: string;
 }
 
-const AdaptiveExamLayout: React.FC<AdaptiveExamLayoutProps> = ({
+const AssessmentPageLayout: React.FC<AssessmentPageLayoutProps> = ({
 	children,
 	userName = "John Doe",
 	currentSectionId = 1,
@@ -283,4 +283,4 @@ const AdaptiveExamLayout: React.FC<AdaptiveExamLayoutProps> = ({
 	);
 };
 
-export default AdaptiveExamLayout;
+export default AssessmentPageLayout;

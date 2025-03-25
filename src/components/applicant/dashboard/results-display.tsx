@@ -35,6 +35,11 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 	const radius = 70;
 	const circumference = 2 * Math.PI * radius;
 
+	const getScoreColor = (score: number | null): string => {
+		if (score === null) return "#6B7280"; // Default gray color
+		return score >= 70 ? "#10B981" : score >= 50 ? "#F59E0B" : "#EF4444";
+	};
+
 	const handleViewDetailsClick = () => {
 		router.push(detailedResultsPath);
 	};
@@ -68,13 +73,7 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 											cy="80"
 											r={radius}
 											fill="none"
-											stroke={
-												result.score >= 70
-													? "#10B981"
-													: result.score >= 50
-														? "#F59E0B"
-														: "#EF4444"
-											}
+											stroke={getScoreColor(result.score)}
 											strokeWidth="12"
 											strokeDasharray={circumference}
 											strokeDashoffset={
@@ -88,16 +87,9 @@ const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 								<div className="absolute inset-0 flex items-center justify-center">
 									<span
 										className="text-4xl font-bold"
-										style={{
-											color:
-												result.score >= 70
-													? "#10B981"
-													: result.score >= 50
-														? "#F59E0B"
-														: "#EF4444",
-										}}
+										style={{ color: getScoreColor(result.score) }}
 									>
-										{result.score}%
+										{result.score !== null ? `${result.score}%` : "N/A"}
 									</span>
 								</div>
 							</div>

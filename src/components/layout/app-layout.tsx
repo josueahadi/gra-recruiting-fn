@@ -264,9 +264,10 @@ function getPageTitle(pathname: string, userType: UserType): string {
 		if (pathname.includes("/skills")) return "Skills & Competence";
 		if (pathname.includes("/education")) return "Work & Education";
 		if (pathname.includes("/documents")) return "Documents & Portfolio";
+		const lastPathSegment = pathname.split("/").pop() || "";
 		return (
-			pathname.split("/").pop()?.charAt(0).toUpperCase() +
-				pathname.split("/").pop()?.slice(1) || "Dashboard"
+			lastPathSegment.charAt(0).toUpperCase() + lastPathSegment.slice(1) ||
+			"Dashboard"
 		);
 	}
 }
