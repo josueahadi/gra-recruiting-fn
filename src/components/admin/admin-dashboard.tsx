@@ -1,7 +1,7 @@
 "use client";
 
 import DataTable from "@/components/common/data-table";
-import SearchBar from "@/components/common/data-table";
+import SearchBar from "@/components/common/search-bar";
 import DateRangePicker from "@/components/common/date-range-picker";
 import FilterDropdown, {
 	type FilterOption,

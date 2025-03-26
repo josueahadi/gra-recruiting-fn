@@ -80,7 +80,7 @@ const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 
 				{/* Sections with question navigation */}
 				{sections.map((section) => (
-					<div key={section.id} className="mb-6 w-full">
+					<div key={section.id} className="mb-6">
 						<h2 className="text-base font-medium mb-3">
 							Section {section.title} - {section.description}
 						</h2>

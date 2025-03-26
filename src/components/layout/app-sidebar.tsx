@@ -4,8 +4,8 @@
 import { Brand } from "@/components/ui/brand";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { X } from "lucide-react";
 import { getSidebarLinks, isLinkActive } from "@/lib/utils";
+import { X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type React from "react";
 import SidebarLink from "./sidebar-link";

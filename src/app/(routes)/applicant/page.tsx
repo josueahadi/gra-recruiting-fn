@@ -1,7 +1,7 @@
 "use client";
 
 import ProfileSection from "@/components/applicant/user-profile";
-import AppLayout from "@/components/layout/app-layout";
+import AppLayout from "@/components/layout/app-layout-updated";
 
 export default function ApplicantProfilePage() {
 	return (

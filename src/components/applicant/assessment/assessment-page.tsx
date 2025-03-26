@@ -1,7 +1,7 @@
 "use client";
 
+import AssessmentLayout from "@/components/applicant/assessment/assessment-page-layout";
 import ExamCompletion from "@/components/applicant/assessment/exam-completion";
-import AdaptiveExamLayout from "@/components/applicant/assessment/assessment-page-layout";
 import EssayQuestion from "@/components/applicant/assessment/questions/essay";
 import MultipleChoiceQuestion from "@/components/applicant/assessment/questions/multiple-choice";
 import { useRouter } from "next/navigation";
@@ -628,18 +628,18 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 	// Show loading indicator while fetching question data
 	if (isLoading) {
 		return (
-			<AdaptiveExamLayout showNavigation={true}>
+			<AssessmentLayout showNavigation={true}>
 				<div className="flex items-center justify-center h-64">
 					<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base" />
 				</div>
-			</AdaptiveExamLayout>
+			</AssessmentLayout>
 		);
 	}
 
 	// Show exam completion screen if exam is finished
 	if (examCompleted) {
 		return (
-			<AdaptiveExamLayout
+			<AssessmentLayout
 				showNavigation={true}
 				currentSectionId={currentSectionId}
 				currentQuestionNumber={currentQuestionNum}
@@ -666,13 +666,13 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 						Reset Exam (Dev Only)
 					</button>
 				</div>
-			</AdaptiveExamLayout>
+			</AssessmentLayout>
 		);
 	}
 
-	// Render the main assessment interface with AdaptiveExamLayout
+	// Render the main assessment interface with AssessmentLayout
 	return (
-		<AdaptiveExamLayout
+		<AssessmentLayout
 			userName="John Doe"
 			currentSectionId={currentSectionId}
 			currentQuestionNumber={currentQuestionNum}
@@ -710,6 +710,6 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 					}
 				/>
 			)}
-		</AdaptiveExamLayout>
+		</AssessmentLayout>
 	);
 }
