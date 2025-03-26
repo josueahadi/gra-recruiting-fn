@@ -1,9 +1,9 @@
 "use client";
 
-import ExamCompletion from "@/components/applicant/exam/assessment/exam-completion";
-import AdaptiveExamLayout from "@/components/applicant/exam/assessment/assessment-page-layout";
-import EssayQuestion from "@/components/applicant/exam/assessment/questions/essay";
-import MultipleChoiceQuestion from "@/components/applicant/exam/assessment/questions/multiple-choice";
+import ExamCompletion from "@/components/applicant/assessment/exam-completion";
+import AdaptiveExamLayout from "@/components/applicant/assessment/assessment-page-layout";
+import EssayQuestion from "@/components/applicant/assessment/questions/essay";
+import MultipleChoiceQuestion from "@/components/applicant/assessment/questions/multiple-choice";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 

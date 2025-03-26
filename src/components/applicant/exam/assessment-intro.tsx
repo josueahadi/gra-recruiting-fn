@@ -53,7 +53,7 @@ const AssessmentIntro: React.FC<AssessmentIntroProps> = ({
 		if (onStartExam) {
 			onStartExam();
 		} else {
-			router.push("/applicant/exam/assessment");
+			router.push("/applicant/assessment");
 		}
 	};
 
