@@ -2,7 +2,7 @@
 
 import AssessmentIntro from "@/components/applicant/exam/assessment-intro";
 import ProfileBlockMessage from "@/components/applicant/exam/profile-block-message";
-import AppLayout from "@/components/layout/app-layout-updated";
+import AppLayout from "@/components/layout/app-layout";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 

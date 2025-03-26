@@ -1,7 +1,7 @@
 "use client";
 
 import ApplicantDashboard from "@/components/applicant/applicant-dashboard";
-import AppLayout from "@/components/layout/app-layout-updated";
+import AppLayout from "@/components/layout/app-layout";
 import React from "react";
 
 export default function ApplicantDashboardPage() {
