@@ -56,16 +56,24 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		const formData = new FormData(e.currentTarget);
 
 		if (mode === "login") {
+			// For demo purposes, just redirect to the dashboard without actual API call
+			handleSuccess();
+			/*
 			await login({
 				email: formData.get("email") as string,
 				password: formData.get("password") as string,
 			});
+			*/
 		} else {
 			if (currentStep === 1) {
 				setCurrentStep(2);
 				return;
 			}
 
+			// For demo purposes, just redirect to the dashboard without actual API call
+			handleSuccess();
+
+			/*
 			await signup({
 				name: formData.get("fullName") as string,
 				email: formData.get("email") as string,
@@ -76,6 +84,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 				program: formData.get("program") as string,
 				graduationYear: formData.get("graduationYear") as string,
 			});
+			*/
 		}
 	};
 
