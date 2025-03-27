@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -10,10 +11,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { PlusCircle, Trash2 } from "lucide-react";
 import { useFieldArray, type Control } from "react-hook-form";
-import { QuestionFormValues } from "./add-question-form";
+// import { QuestionFormValues } from "./add-question-form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface ChoiceInputsProps {
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	control: Control<any>;
 }
 

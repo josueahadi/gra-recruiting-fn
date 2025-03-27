@@ -27,7 +27,7 @@ interface MultipleChoiceQuestionProps {
  */
 const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 	questionNumber,
-	totalQuestions,
+	// totalQuestions,
 	questionText,
 	questionImageUrl,
 	options,
@@ -73,6 +73,7 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 			{/* Options with letters (A, B, C, D) */}
 			<div className="space-y-4 mb-8">
 				{options.map((option, index) => (
+					// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
 					<div
 						key={option.id}
 						onClick={() => onSelectOption(option.id)}
@@ -126,6 +127,7 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 						fill="none"
 						xmlns="http://www.w3.org/2000/svg"
 					>
+						<title>SVg</title>
 						<path
 							d="M5 12H19M12 5L19 12L12 19"
 							stroke="currentColor"

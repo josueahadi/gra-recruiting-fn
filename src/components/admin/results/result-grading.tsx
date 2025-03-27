@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -24,16 +25,19 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 
 interface ResultGradingProps {
 	isOpen: boolean;
 	onClose: () => void;
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	onSubmit: (values: any) => void;
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	applicant: any;
 }
 

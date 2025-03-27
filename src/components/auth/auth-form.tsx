@@ -37,8 +37,8 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		isLoading,
 		showPassword,
 		setShowPassword,
-		login,
-		signup,
+		// login,
+		// signup,
 		handleGoogleAuth,
 	} = useAuth({
 		onSuccess: handleSuccess,
@@ -53,7 +53,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 
 	const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		const formData = new FormData(e.currentTarget);
+		// const formData = new FormData(e.currentTarget);
 
 		if (mode === "login") {
 			// For demo purposes, just redirect to the dashboard without actual API call

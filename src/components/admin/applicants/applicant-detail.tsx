@@ -9,8 +9,9 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileEdit, Mail, Phone, Trash2 } from "lucide-react";
-import React from "react";
+import { FileEdit, Mail, Phone, Trash2 } from "lucide-react";
+import Image from "next/image";
+import type React from "react";
 import ApplicantSkills from "./applicant-detail/applicant-skills";
 import ApplicantEducation from "./applicant-detail/applicant-education";
 import ApplicantWorkExperience from "./applicant-detail/applicant-work-experience";
@@ -96,10 +97,13 @@ const ApplicantDetail: React.FC<ApplicantDetailProps> = ({
 
 				<div className="flex items-center mb-6">
 					<div className="relative">
-						<img
+						<Image
 							src={applicant.avatarSrc || "/images/avatar.jpg"}
 							alt={applicant.name}
-							className="w-20 h-20 rounded-full object-cover"
+							width={80}
+							height={80}
+							priority
+							className="rounded-full object-cover"
 						/>
 					</div>
 					<div className="ml-4">

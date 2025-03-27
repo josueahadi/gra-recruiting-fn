@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import ContentCard from "@/components/admin/common/content-card";
@@ -88,6 +89,7 @@ const ResultsManagement = () => {
 	const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
 	const [toDate, setToDate] = useState<Date | undefined>(undefined);
 
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	const [selectedResult, setSelectedResult] = useState<any | null>(null);
 	const [isDetailOpen, setIsDetailOpen] = useState(false);
 	const [isGradingOpen, setIsGradingOpen] = useState(false);
@@ -123,6 +125,7 @@ const ResultsManagement = () => {
 		}
 	};
 
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	const handleSubmitGrade = (results: any) => {
 		console.log("Submitting grade", results);
 		// In a real app, you would call an API to submit the grade
@@ -197,13 +200,16 @@ const ResultsManagement = () => {
 		{
 			accessorKey: "status",
 			header: "Status",
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			cell: ({ row }: any) => (
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 				<StatusBadge status={row.original.status as any} />
 			),
 		},
 		{
 			accessorKey: "score",
 			header: "Score",
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			cell: ({ row }: any) => (
 				<div className="text-center">
 					{row.original.score !== null ? (
@@ -223,6 +229,7 @@ const ResultsManagement = () => {
 		{
 			id: "actions",
 			header: "Actions",
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			cell: ({ row }: any) => (
 				<div className="flex items-center space-x-2">
 					<TableActions

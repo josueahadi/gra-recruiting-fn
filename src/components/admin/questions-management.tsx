@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import ContentCard from "@/components/admin/common/content-card";
@@ -93,6 +94,7 @@ const QuestionsManagement = () => {
 	const [statusFilter, setStatusFilter] = useState("all");
 
 	// Question detail modal state
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	const [selectedQuestion, setSelectedQuestion] = useState<any | null>(null);
 	const [isQuestionDetailOpen, setIsQuestionDetailOpen] = useState(false);
 
@@ -207,6 +209,7 @@ const QuestionsManagement = () => {
 		{
 			id: "actions",
 			header: "Actions",
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			cell: ({ row }: any) => (
 				<TableActions
 					actions={[

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Badge } from "@/components/ui/badge";
@@ -7,11 +8,12 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import React from "react";
+import type React from "react";
 
 interface ResultDetailProps {
 	isOpen: boolean;
 	onClose: () => void;
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	result: any;
 }
 

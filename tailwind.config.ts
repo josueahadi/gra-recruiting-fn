@@ -1,4 +1,4 @@
-import { Dangrek } from "next/font/google";
+// import { Dangrek } from "next/font/google";
 import type { Config } from "tailwindcss";
 
 export default {

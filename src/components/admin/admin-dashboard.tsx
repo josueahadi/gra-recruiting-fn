@@ -6,8 +6,7 @@ import StatsSection, {
 } from "@/components/admin/common/stats-section";
 import TableActions from "@/components/admin/common/table-actions";
 import DataTable from "@/components/common/data-table";
-import type { FilterOption } from "@/components/common/filter-dropdown";
-import StatusBadge from "@/components/common/status-badge";
+import StatusBadge, { type StatusType } from "@/components/common/status-badge";
 import { CircleHelp, FileText, Users } from "lucide-react";
 import React, { useState } from "react";
 import FilterBar, { type FilterConfig } from "./common/filter-bar";
@@ -145,8 +144,8 @@ const AdminDashboard = () => {
 		{
 			accessorKey: "status",
 			header: "Status",
-			cell: ({ row }: any) => (
-				<StatusBadge status={row.original.status as any} />
+			cell: ({ row }: { row: { original: { status: string } } }) => (
+				<StatusBadge status={row.original.status as StatusType} />
 			),
 		},
 		{
@@ -160,7 +159,9 @@ const AdminDashboard = () => {
 		{
 			id: "actions",
 			header: "Actions",
-			cell: ({ row }: any) => (
+			cell: ({
+				row,
+			}: { row: { original: { id: string; status: string } } }) => (
 				<TableActions
 					actions={[
 						{
