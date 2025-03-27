@@ -1,12 +1,12 @@
 "use client";
 
-import DashboardLayout from "@/components/layout/applicant/dashboard-layout";
 import DocumentsSection from "@/components/applicant/documents";
+import AppLayout from "@/components/layout/app-layout";
 
 export default function ApplicantDocumentsPage() {
 	return (
-		<DashboardLayout userType="applicant">
+		<AppLayout userType="applicant">
 			<DocumentsSection />
-		</DashboardLayout>
+		</AppLayout>
 	);
 }

@@ -1,14 +1,14 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react";
+import SectionLayout, {
+	SectionItem,
+} from "@/components/applicant/section-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Check, Plus, X } from "lucide-react";
-import SectionLayout, {
-	SectionItem,
-} from "@/components/layout/applicant/section-layout";
+import type React from "react";
+import { useState } from "react";
 
 interface Education {
 	id: string;

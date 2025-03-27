@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import { AUTH_CONSTANTS } from "@/constants";
 import { BsGithub, BsLinkedin } from "react-icons/bs";
+import SocialInputField from "./social-input-field";
 
 const GRADUATION_YEARS = Array.from({ length: 30 }, (_, i) =>
 	(new Date().getFullYear() - i).toString(),
@@ -154,20 +155,16 @@ export const EducationBackgroundFields = ({
 			>
 				Add Optional Information
 			</label>
-			<Button
-				variant="outline"
-				className="w-full h-12 rounded-xl border-gray-400 bg-white hover:bg-gray-50"
-			>
-				<BsLinkedin className="mr-2 text-[#0077B5]" />
-				LinkedIn Profile Link
-			</Button>
-			<Button
-				variant="outline"
-				className="w-full h-12 rounded-xl border-gray-400 bg-white hover:bg-gray-50"
-			>
-				<BsGithub className="mr-2" />
-				GitHub Profile Link
-			</Button>
+			<SocialInputField
+				name="linkedinUrl"
+				icon={<BsLinkedin className="text-[#0077B5]" size={20} />}
+				placeholder="https://linkedin.com/in/yourprofile"
+			/>
+			<SocialInputField
+				name="githubUrl"
+				icon={<BsGithub size={20} />}
+				placeholder="https://github.com/yourusername"
+			/>
 		</div>
 
 		<div className="flex gap-4">

@@ -1,12 +1,12 @@
 "use client";
 
-import DashboardLayout from "@/components/layout/applicant/dashboard-layout";
 import SettingsSection from "@/components/applicant/settings";
+import AppLayout from "@/components/layout/app-layout";
 
 export default function ApplicantSettingsPage() {
 	return (
-		<DashboardLayout userType="applicant">
+		<AppLayout userType="applicant">
 			<SettingsSection />
-		</DashboardLayout>
+		</AppLayout>
 	);
 }
