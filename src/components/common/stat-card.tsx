@@ -7,6 +7,10 @@ interface StatCardProps {
 	value: number | string;
 	icon: ReactNode;
 	className?: string;
+	trend?: {
+		value: number;
+		label: string;
+	};
 }
 
 const StatCard: React.FC<StatCardProps> = ({
@@ -16,12 +20,12 @@ const StatCard: React.FC<StatCardProps> = ({
 	className,
 }) => {
 	return (
-		<div className={cn("bg-white rounded-lg shadow-sm p-6", className)}>
+		<div className={cn("bg-white rounded-lg shadow-sm px-12 py-6", className)}>
 			<div className="flex items-center gap-4">
-				<div className="flex-shrink-0 text-blue-500">{icon}</div>
+				<div className="flex-shrink-0 text-primary-base">{icon}</div>
 				<div>
-					<div className="text-3xl font-bold text-blue-500">{value}</div>
-					<div className="text-gray-600 text-sm">{title}</div>
+					<div className="text-3xl font-bold text-primary-base">{value}</div>
+					<div className="text-black text-base">{title}</div>
 				</div>
 			</div>
 		</div>

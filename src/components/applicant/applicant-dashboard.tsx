@@ -161,10 +161,10 @@ const ApplicantDashboard = () => {
 	};
 
 	// Handle the button in the profile completion card
-	const handleCompleteProfileClick = () => {
-		// Redirect to profile page
-		router.push("/applicant");
-	};
+	// const handleCompleteProfileClick = () => {
+	// 	// Redirect to profile page
+	// 	router.push("/applicant");
+	// };
 
 	// Format results data for ResultsDisplay component
 	const formatResultsForDisplay = () => {
