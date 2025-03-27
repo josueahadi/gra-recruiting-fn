@@ -125,7 +125,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
 			{hasAddButton && addButtonProps && (
 				<div className="flex items-end">
 					<Button
-						className="h-10 bg-blue-500 hover:bg-blue-600"
+						className="h-10 bg-primary-base hover:bg-primary-shades-500"
 						onClick={addButtonProps.onClick}
 					>
 						{addButtonProps.icon || <Plus className="h-4 w-4 mr-2" />}

@@ -2,13 +2,12 @@
 
 import ConfirmationDialog from "@/components/common/confirm-dialog";
 import DataTable from "@/components/common/data-table";
-import FilterDropdown, {
-	type FilterOption,
-} from "@/components/common/filter-dropdown";
-import SearchBar from "@/components/common/search-bar";
-import SectionHeader from "@/components/common/section-header";
-import { Button } from "@/components/ui/button";
-import { Edit, Eye, Plus, Trash2 } from "lucide-react";
+import FilterBar, {
+	type FilterConfig,
+} from "@/components/admin/common/filter-bar";
+import ContentCard from "@/components/admin/common/content-card";
+import TableActions from "@/components/admin/common/table-actions";
+import { Plus } from "lucide-react";
 import React, { useState } from "react";
 
 // Mock data - in a real app this would come from an API
@@ -77,14 +76,6 @@ const QuestionsManagement = () => {
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
 
-	// Filter options
-	const statusOptions: FilterOption[] = [
-		{ value: "all", label: "Status - All" },
-		{ value: "multiple-choice", label: "Multiple Choice" },
-		{ value: "essay", label: "Essay" },
-		{ value: "problem-solving", label: "Problem Solving" },
-	];
-
 	// Handle search
 	const handleSearch = (value: string) => {
 		setSearchValue(value);
@@ -120,6 +111,42 @@ const QuestionsManagement = () => {
 		setQuestionToDelete(null);
 	};
 
+	// Filter configurations
+	const filterConfigs: FilterConfig[] = [
+		{
+			type: "search",
+			props: {
+				onSearch: handleSearch,
+				placeholder: "Search questions...",
+				initialValue: searchValue,
+			},
+		},
+		{
+			type: "dropdown",
+			props: {
+				options: [
+					{ value: "all", label: "Type - All" },
+					{ value: "multiple-choice", label: "Multiple Choice" },
+					{ value: "essay", label: "Essay" },
+					{ value: "problem-solving", label: "Problem Solving" },
+				],
+				value: statusFilter,
+				onChange: handleStatusChange,
+			},
+			width: "w-full md:w-1/5",
+		},
+		{
+			type: "button",
+			props: {
+				variant: "outline",
+				onClick: handleClearFilters,
+				label: "Clear",
+				disabled: !searchValue && statusFilter === "all",
+			},
+			align: "right",
+		},
+	];
+
 	// Table columns
 	const columns = [
 		{
@@ -142,30 +169,25 @@ const QuestionsManagement = () => {
 			id: "actions",
 			header: "Actions",
 			cell: ({ row }: any) => (
-				<div className="flex items-center gap-2">
-					<Button
-						variant="ghost"
-						size="icon"
-						className="text-blue-500 hover:text-blue-700"
-					>
-						<Eye className="h-4 w-4" />
-					</Button>
-					<Button
-						variant="ghost"
-						size="icon"
-						className="text-amber-500 hover:text-amber-700"
-					>
-						<Edit className="h-4 w-4" />
-					</Button>
-					<Button
-						variant="ghost"
-						size="icon"
-						className="text-red-500 hover:text-red-700"
-						onClick={() => handleDeleteQuestion(row.original.id)}
-					>
-						<Trash2 className="h-4 w-4" />
-					</Button>
-				</div>
+				<TableActions
+					actions={[
+						{
+							icon: "view",
+							onClick: () => console.log("View question", row.original.id),
+							tooltip: "View Details",
+						},
+						{
+							icon: "edit",
+							onClick: () => console.log("Edit question", row.original.id),
+							tooltip: "Edit",
+						},
+						{
+							icon: "delete",
+							onClick: () => handleDeleteQuestion(row.original.id),
+							tooltip: "Delete",
+						},
+					]}
+				/>
 			),
 		},
 	];
@@ -188,56 +210,25 @@ const QuestionsManagement = () => {
 
 	return (
 		<div className="space-y-6">
-			<SectionHeader
+			{/* <SectionHeader
 				title="Questions"
 				description="Manage assessment questions"
 				actionLabel="Add Question"
 				onAction={handleAddQuestion}
 				icon={<Plus className="h-5 w-5" />}
-			/>
+			/> */}
 
-			<div className="bg-white rounded-lg p-6">
-				<h2 className="text-xl font-medium text-blue-500 mb-6">Questions</h2>
-
+			<ContentCard title="Questions">
 				{/* Filter Controls */}
-				<div className="flex flex-col md:flex-row gap-4 mb-6">
-					<div className="w-full md:w-1/3">
-						<SearchBar
-							onSearch={handleSearch}
-							placeholder="Search questions..."
-							initialValue={searchValue}
-						/>
-					</div>
-
-					<div className="w-full md:w-1/5">
-						<FilterDropdown
-							options={statusOptions}
-							value={statusFilter}
-							onChange={handleStatusChange}
-						/>
-					</div>
-
-					<div className="flex items-end ml-auto">
-						<Button
-							variant="outline"
-							onClick={handleClearFilters}
-							className="h-10"
-							disabled={!searchValue && statusFilter === "all"}
-						>
-							Clear
-						</Button>
-					</div>
-
-					<div className="flex items-end">
-						<Button
-							className="h-10 bg-blue-500 hover:bg-blue-600"
-							onClick={handleAddQuestion}
-						>
-							<Plus className="h-4 w-4 mr-2" />
-							Add Question
-						</Button>
-					</div>
-				</div>
+				<FilterBar
+					filters={filterConfigs}
+					hasAddButton={true}
+					addButtonProps={{
+						label: "Add Question",
+						onClick: handleAddQuestion,
+						icon: <Plus className="h-4 w-4 mr-2" />,
+					}}
+				/>
 
 				{/* Questions Table */}
 				<DataTable
@@ -246,7 +237,7 @@ const QuestionsManagement = () => {
 					searchColumn="excerpt"
 					showSearch={false}
 				/>
-			</div>
+			</ContentCard>
 
 			{/* Delete Confirmation Dialog */}
 			<ConfirmationDialog
