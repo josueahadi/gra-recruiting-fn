@@ -1,12 +1,12 @@
 "use client";
 
 import AppHeader from "@/components/layout/app-header";
-import AssessmentSidebar from "./assessment-sidebar";
 import BackgroundPattern from "@/components/layout/background-pattern";
 import { LayoutProvider, useLayout } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import AssessmentSidebar from "./assessment-sidebar";
 
 interface AssessmentLayoutProps {
 	children: React.ReactNode;

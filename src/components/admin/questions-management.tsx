@@ -1,12 +1,16 @@
 "use client";
 
-import ConfirmationDialog from "@/components/common/confirm-dialog";
-import DataTable from "@/components/common/data-table";
+import ContentCard from "@/components/admin/common/content-card";
 import FilterBar, {
 	type FilterConfig,
 } from "@/components/admin/common/filter-bar";
-import ContentCard from "@/components/admin/common/content-card";
 import TableActions from "@/components/admin/common/table-actions";
+import AddQuestionForm, {
+	type QuestionFormValues,
+} from "./questions/add-question-form";
+import QuestionDetail from "./questions/question-detail";
+import ConfirmationDialog from "@/components/common/confirm-dialog";
+import DataTable from "@/components/common/data-table";
 import { Plus } from "lucide-react";
 import React, { useState } from "react";
 
@@ -14,17 +18,31 @@ import React, { useState } from "react";
 const MOCK_QUESTIONS = [
 	{
 		id: "01",
+		text: "What is the most important aspect of a well-structured resume?",
 		excerpt:
 			"A well-structured resume is one of the most important tools for job seekers. It helps...",
 		section: "Multiple Choice",
 		type: "Problem Solving",
+		choices: [
+			{ text: "Clear formatting and organization", isCorrect: true },
+			{ text: "Including all past jobs", isCorrect: false },
+			{ text: "Using advanced vocabulary", isCorrect: false },
+			{ text: "Adding personal hobbies", isCorrect: false },
+		],
 	},
 	{
 		id: "02",
+		text: "What are the essential components of a professional email?",
 		excerpt:
 			"A well-structured resume is one of the most important tools for job seekers. It helps...",
 		section: "Multiple Choice",
 		type: "Computer Skills",
+		choices: [
+			{ text: "Clear subject line", isCorrect: true },
+			{ text: "Formal greeting", isCorrect: false },
+			{ text: "Concise message", isCorrect: false },
+			{ text: "Professional signature", isCorrect: false },
+		],
 	},
 	{
 		id: "03",
@@ -73,6 +91,15 @@ const MOCK_QUESTIONS = [
 const QuestionsManagement = () => {
 	const [searchValue, setSearchValue] = useState("");
 	const [statusFilter, setStatusFilter] = useState("all");
+
+	// Question detail modal state
+	const [selectedQuestion, setSelectedQuestion] = useState<any | null>(null);
+	const [isQuestionDetailOpen, setIsQuestionDetailOpen] = useState(false);
+
+	// Add question modal state
+	const [isAddQuestionOpen, setIsAddQuestionOpen] = useState(false);
+
+	// Delete confirmation dialog state
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
 
@@ -92,10 +119,31 @@ const QuestionsManagement = () => {
 		setStatusFilter("all");
 	};
 
+	// Handle viewing question details
+	const handleViewQuestion = (id: string) => {
+		const question = MOCK_QUESTIONS.find((q) => q.id === id);
+		if (question) {
+			setSelectedQuestion(question);
+			setIsQuestionDetailOpen(true);
+		}
+	};
+
+	// Handle edit question
+	const handleEditQuestion = (id: string) => {
+		console.log("Edit question", id);
+		// In a real app, you would open the edit form with the question data
+	};
+
 	// Handle add question
 	const handleAddQuestion = () => {
-		console.log("Add question");
-		// Navigate to add question page or open modal
+		setIsAddQuestionOpen(true);
+	};
+
+	// Handle submit new question
+	const handleSubmitQuestion = (values: QuestionFormValues) => {
+		console.log("Submitted question:", values);
+		// In a real app, you would call an API to save the question
+		setIsAddQuestionOpen(false);
 	};
 
 	// Handle delete question
@@ -108,6 +156,7 @@ const QuestionsManagement = () => {
 	const confirmDeleteQuestion = () => {
 		console.log(`Deleting question: ${questionToDelete}`);
 		// In a real app, you would call an API to delete the question
+		setIsDeleteDialogOpen(false);
 		setQuestionToDelete(null);
 	};
 
@@ -134,16 +183,6 @@ const QuestionsManagement = () => {
 				onChange: handleStatusChange,
 			},
 			width: "w-full md:w-1/5",
-		},
-		{
-			type: "button",
-			props: {
-				variant: "outline",
-				onClick: handleClearFilters,
-				label: "Clear",
-				disabled: !searchValue && statusFilter === "all",
-			},
-			align: "right",
 		},
 	];
 
@@ -173,12 +212,12 @@ const QuestionsManagement = () => {
 					actions={[
 						{
 							icon: "view",
-							onClick: () => console.log("View question", row.original.id),
+							onClick: () => handleViewQuestion(row.original.id),
 							tooltip: "View Details",
 						},
 						{
 							icon: "edit",
-							onClick: () => console.log("Edit question", row.original.id),
+							onClick: () => handleEditQuestion(row.original.id),
 							tooltip: "Edit",
 						},
 						{
@@ -210,14 +249,6 @@ const QuestionsManagement = () => {
 
 	return (
 		<div className="space-y-6">
-			{/* <SectionHeader
-				title="Questions"
-				description="Manage assessment questions"
-				actionLabel="Add Question"
-				onAction={handleAddQuestion}
-				icon={<Plus className="h-5 w-5" />}
-			/> */}
-
 			<ContentCard title="Questions">
 				{/* Filter Controls */}
 				<FilterBar
@@ -228,6 +259,8 @@ const QuestionsManagement = () => {
 						onClick: handleAddQuestion,
 						icon: <Plus className="h-4 w-4 mr-2" />,
 					}}
+					onClear={handleClearFilters}
+					clearDisabled={!searchValue && statusFilter === "all"}
 				/>
 
 				{/* Questions Table */}
@@ -238,6 +271,24 @@ const QuestionsManagement = () => {
 					showSearch={false}
 				/>
 			</ContentCard>
+
+			{/* Add Question Form Modal */}
+			<AddQuestionForm
+				isOpen={isAddQuestionOpen}
+				onClose={() => setIsAddQuestionOpen(false)}
+				onSubmit={handleSubmitQuestion}
+			/>
+
+			{/* Question Detail Modal */}
+			{selectedQuestion && (
+				<QuestionDetail
+					isOpen={isQuestionDetailOpen}
+					onClose={() => setIsQuestionDetailOpen(false)}
+					question={selectedQuestion}
+					onEdit={handleEditQuestion}
+					onDelete={handleDeleteQuestion}
+				/>
+			)}
 
 			{/* Delete Confirmation Dialog */}
 			<ConfirmationDialog

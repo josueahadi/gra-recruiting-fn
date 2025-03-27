@@ -1,8 +1,8 @@
 "use client";
 
-import type React from "react";
 import StatCard from "@/components/common/stat-card";
 import { cn } from "@/lib/utils";
+import type React from "react";
 
 export interface StatCardProps {
 	title: string;

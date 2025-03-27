@@ -2,6 +2,6 @@
 
 import AdminPage from "@/components/admin/admin-page";
 
-export default function DashboardPage() {
+export default function ApplicantsPage() {
 	return <AdminPage />;
 }

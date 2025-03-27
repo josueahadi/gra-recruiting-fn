@@ -1,13 +1,7 @@
 "use client";
 
-import QuestionsManagement from "@/components/admin/questions-management";
-import AppLayout from "@/components/layout/app-layout";
-import React from "react";
+import AdminPage from "@/components/admin/admin-page";
 
 export default function QuestionsPage() {
-	return (
-		<AppLayout userType="admin">
-			<QuestionsManagement />
-		</AppLayout>
-	);
+	return <AdminPage />;
 }

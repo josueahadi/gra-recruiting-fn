@@ -1,16 +1,16 @@
 "use client";
 
+import ContentCard from "@/components/admin/common/content-card";
+import StatsSection, {
+	type StatCardProps,
+} from "@/components/admin/common/stats-section";
+import TableActions from "@/components/admin/common/table-actions";
 import DataTable from "@/components/common/data-table";
 import type { FilterOption } from "@/components/common/filter-dropdown";
 import StatusBadge from "@/components/common/status-badge";
 import { CircleHelp, FileText, Users } from "lucide-react";
 import React, { useState } from "react";
-import ContentCard from "@/components/admin/common/content-card";
 import FilterBar, { type FilterConfig } from "./common/filter-bar";
-import StatsSection, {
-	type StatCardProps,
-} from "@/components/admin/common/stats-section";
-import TableActions from "@/components/admin/common/table-actions";
 
 // Mock data for demonstration
 const MOCK_APPLICANTS = [

@@ -1,11 +1,11 @@
 "use client";
 
-import AssessmentLayout from "./assessment-layout";
 import ExamCompletion from "@/components/applicant/assessment/exam-completion";
 import EssayQuestion from "@/components/applicant/assessment/questions/essay";
 import MultipleChoiceQuestion from "@/components/applicant/assessment/questions/multiple-choice";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
+import AssessmentLayout from "./assessment-layout";
 
 interface AssessmentPageProps {
 	params?: {

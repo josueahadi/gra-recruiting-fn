@@ -1,12 +1,12 @@
 "use client";
 
-import type React from "react";
-import SearchBar from "@/components/common/search-bar";
-import FilterDropdown from "@/components/common/filter-dropdown";
 import DateRangePicker from "@/components/common/date-range-picker";
+import FilterDropdown from "@/components/common/filter-dropdown";
+import SearchBar from "@/components/common/search-bar";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Plus } from "lucide-react";
+import type React from "react";
 
 export interface FilterConfig {
 	type: "search" | "dropdown" | "dateRange" | "button" | "custom";

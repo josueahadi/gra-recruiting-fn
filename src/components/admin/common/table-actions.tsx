@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Eye, Trash2, FileEdit } from "lucide-react";
+import { Eye, FileEdit, Trash2 } from "lucide-react";
 import type React from "react";
 
 export interface ActionButton {
