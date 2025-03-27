@@ -1,3 +1,4 @@
+import { Dangrek } from "next/font/google";
 import type { Config } from "tailwindcss";
 
 export default {
@@ -67,6 +68,7 @@ export default {
 				},
 				custom: {
 					lightBlue: "#B1DEF2", // Extra light blue
+					skyBlue: "#2B9AC9", // Sky blue
 					lightGray: "#EDEDED", // Soft gray
 					navyBlue: "#215c75", // Deep navy blue
 					darkGray: "#575d66", // Muted dark gray
@@ -78,6 +80,17 @@ export default {
 				accent: {
 					DEFAULT: "hsl(var(--accent))",
 					foreground: "hsl(var(--accent-foreground))",
+					base: "#E3AC39",
+				},
+				success: {
+					DEFAULT: "hsl(var(--success))",
+					foreground: "hsl(var(--success-foreground))",
+					base: "#39E3BD",
+				},
+				danger: {
+					DEFAULT: "hsl(var(--dangrek))",
+					foreground: "hsl(var(--dangrek-foreground))",
+					base: "#E3394F",
 				},
 				destructive: {
 					DEFAULT: "hsl(var(--destructive))",

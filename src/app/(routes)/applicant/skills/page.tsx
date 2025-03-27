@@ -1,12 +1,12 @@
 "use client";
 
-import DashboardLayout from "@/components/layout/applicant/dashboard-layout";
 import SkillsSection from "@/components/applicant/skills";
+import AppLayout from "@/components/layout/app-layout";
 
 export default function ApplicantSkillsPage() {
 	return (
-		<DashboardLayout userType="applicant">
+		<AppLayout userType="applicant">
 			<SkillsSection />
-		</DashboardLayout>
+		</AppLayout>
 	);
 }
