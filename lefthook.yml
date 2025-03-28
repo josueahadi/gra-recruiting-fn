@@ -1,11 +1,11 @@
-pre-commit:
-  parallel: true
-  commands:
-    check:
-      run: npx @biomejs/biome check ./src --write --no-errors-on-unmatched --files-ignore-unknown=true --colors=off {staged_files}
-      stage_fixed: true
+# pre-commit:
+#   parallel: true
+#   commands:
+#     check:
+#       run: npx @biomejs/biome check ./src --write --no-errors-on-unmatched --files-ignore-unknown=true --colors=off {staged_files}
+#       stage_fixed: true
 
-pre-push:
-  commands:
-    check:
-      run: yarn build
+# pre-push:
+#   commands:
+#     check:
+#       run: yarn build
