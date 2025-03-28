@@ -10,6 +10,7 @@ import StatusBadge, { type StatusType } from "@/components/common/status-badge";
 import { CircleHelp, FileText, Users } from "lucide-react";
 import React, { useState } from "react";
 import FilterBar, { type FilterConfig } from "./common/filter-bar";
+import { useRouter } from "next/navigation";
 
 // Mock data for demonstration
 const MOCK_APPLICANTS = [
@@ -17,7 +18,7 @@ const MOCK_APPLICANTS = [
 		id: "1",
 		name: "Johnny Doe",
 		email: "johndoe12@yahoo.com",
-		status: "success",
+		status: "success" as StatusType,
 		department: "Design",
 		date: "12/06/2025",
 	},
@@ -25,7 +26,7 @@ const MOCK_APPLICANTS = [
 		id: "2",
 		name: "Jack Black",
 		email: "johndoe12@outlook.com",
-		status: "success",
+		status: "success" as StatusType,
 		department: "Development",
 		date: "12/06/2025",
 	},
@@ -33,7 +34,7 @@ const MOCK_APPLICANTS = [
 		id: "3",
 		name: "James Brown",
 		email: "johndoe12@hotmail.com",
-		status: "success",
+		status: "success" as StatusType,
 		department: "Design",
 		date: "12/06/2025",
 	},
@@ -41,7 +42,7 @@ const MOCK_APPLICANTS = [
 		id: "4",
 		name: "Jack Dixon",
 		email: "johndoe12@outlook.com",
-		status: "fail",
+		status: "fail" as StatusType,
 		department: "Accounting",
 		date: "12/06/2025",
 	},
@@ -49,13 +50,14 @@ const MOCK_APPLICANTS = [
 		id: "5",
 		name: "Jonny Deer",
 		email: "johndoe12@hotmail.com",
-		status: "waiting",
+		status: "waiting" as StatusType,
 		department: "Marketing",
 		date: "12/06/2025",
 	},
 ];
 
 const AdminDashboard = () => {
+	const router = useRouter();
 	const [searchValue, setSearchValue] = useState("");
 	const [statusFilter, setStatusFilter] = useState("all");
 	const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
@@ -74,6 +76,22 @@ const AdminDashboard = () => {
 		setStatusFilter("all");
 		setFromDate(undefined);
 		setToDate(undefined);
+	};
+
+	// View applicant by navigating to their profile page
+	const handleViewApplicant = (id: string) => {
+		router.push(`/admin/applicants/${id}`);
+	};
+
+	// Navigate to edit page
+	const handleEditApplicant = (id: string) => {
+		router.push(`/admin/applicants/${id}?edit=true`);
+	};
+
+	// Delete applicant
+	const handleDeleteApplicant = (id: string) => {
+		console.log("Delete applicant", id);
+		// In a real app, you would show a confirmation dialog
 	};
 
 	// Stats configuration for the stats section
@@ -144,8 +162,8 @@ const AdminDashboard = () => {
 		{
 			accessorKey: "status",
 			header: "Status",
-			cell: ({ row }: { row: { original: { status: string } } }) => (
-				<StatusBadge status={row.original.status as StatusType} />
+			cell: ({ row }: { row: { original: { status: StatusType } } }) => (
+				<StatusBadge status={row.original.status} />
 			),
 		},
 		{
@@ -159,25 +177,23 @@ const AdminDashboard = () => {
 		{
 			id: "actions",
 			header: "Actions",
-			cell: ({
-				row,
-			}: { row: { original: { id: string; status: string } } }) => (
+			cell: ({ row }: { row: { original: { id: string } } }) => (
 				<TableActions
 					actions={[
 						{
 							icon: "view",
-							onClick: () => console.log("View applicant", row.original.id),
+							onClick: () => handleViewApplicant(row.original.id),
 							tooltip: "View Details",
 						},
 						{
-							icon: "delete",
-							onClick: () => console.log("Delete applicant", row.original.id),
-							tooltip: "Delete",
+							icon: "edit",
+							onClick: () => handleEditApplicant(row.original.id),
+							tooltip: "Edit",
 						},
 						{
-							icon: "edit",
-							onClick: () => console.log("Edit applicant", row.original.id),
-							tooltip: "Edit",
+							icon: "delete",
+							onClick: () => handleDeleteApplicant(row.original.id),
+							tooltip: "Delete",
 						},
 					]}
 				/>

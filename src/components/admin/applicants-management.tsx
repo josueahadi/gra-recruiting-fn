@@ -9,9 +9,8 @@ import ConfirmationDialog from "@/components/common/confirm-dialog";
 import DataTable from "@/components/common/data-table";
 import StatusBadge, { type StatusType } from "@/components/common/status-badge";
 import { useState } from "react";
-import ApplicantDetail, {
-	type ApplicantData,
-} from "./applicants/applicant-detail";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data for demonstration
 const MOCK_APPLICANTS = [
@@ -20,143 +19,34 @@ const MOCK_APPLICANTS = [
 		name: "Johnny Doe",
 		email: "johndoe12@yahoo.com",
 		phone: "+250 781 234 567",
-		status: "success" as "success" | "fail" | "waiting",
+		status: "success" as StatusType,
 		department: "Design",
 		dateApplied: "12/06/2025",
-		bio: "Experienced designer with a passion for creating intuitive user interfaces.",
-		location: {
-			country: "Rwanda",
-			city: "Kigali",
-			address: "KN 21 Ave",
-			postalCode: "00000",
-		},
-		skills: ["UI Design", "UX Research", "Figma", "Adobe XD"],
-		languages: [
-			{ language: "English", level: "Fluent" },
-			{ language: "Kinyarwanda", level: "Native" },
-		],
-		education: [
-			{
-				institution: "University of Rwanda",
-				degree: "Bachelor's",
-				field: "Design",
-				startDate: "2018",
-				endDate: "2022",
-			},
-		],
-		experience: [
-			{
-				position: "UI Designer",
-				company: "Tech Solutions",
-				type: "Full-time",
-				startDate: "2022",
-				endDate: "Present",
-			},
-		],
-		documents: [
-			{ name: "Resume.pdf", url: "#" },
-			{ name: "Portfolio.pdf", url: "#" },
-		],
-		links: {
-			GitHub: "https://github.com/johndoe",
-			Portfolio: "https://johndoe.design",
-		},
 	},
 	{
 		id: "2",
 		name: "Jack Black",
 		email: "johndoe12@outlook.com",
 		phone: "+250 782 345 678",
-		status: "success" as "success" | "fail" | "waiting",
+		status: "success" as StatusType,
 		department: "Development",
 		dateApplied: "12/06/2025",
-		bio: "Software developer with expertise in backend systems.",
-		location: {
-			country: "Rwanda",
-			city: "Kigali",
-			address: "KN 22 Ave",
-			postalCode: "00001",
-		},
-		skills: ["JavaScript", "Node.js", "TypeScript"],
-		languages: [
-			{ language: "English", level: "Fluent" },
-			{ language: "French", level: "Intermediate" },
-		],
-		education: [
-			{
-				institution: "University of Rwanda",
-				degree: "Bachelor's",
-				field: "Computer Science",
-				startDate: "2017",
-				endDate: "2021",
-			},
-		],
-		experience: [
-			{
-				position: "Backend Developer",
-				company: "Tech Innovations",
-				type: "Full-time",
-				startDate: "2021",
-				endDate: "Present",
-			},
-		],
-		documents: [
-			{ name: "Resume.pdf", url: "#" },
-			{ name: "CoverLetter.pdf", url: "#" },
-		],
-		links: {
-			LinkedIn: "https://linkedin.com/in/jackblack",
-		},
 	},
 	{
 		id: "3",
 		name: "James Brown",
 		email: "johndoe12@hotmail.com",
 		phone: "+250 783 456 789",
-		status: "success" as "success" | "fail" | "waiting",
+		status: "success" as StatusType,
 		department: "Design",
 		dateApplied: "12/06/2025",
-		bio: "Creative designer with a focus on branding and visual identity.",
-		location: {
-			country: "Rwanda",
-			city: "Kigali",
-			address: "KN 23 Ave",
-			postalCode: "00002",
-		},
-		skills: ["Graphic Design", "Illustrator", "Photoshop"],
-		languages: [
-			{ language: "English", level: "Fluent" },
-			{ language: "Swahili", level: "Intermediate" },
-		],
-		education: [
-			{
-				institution: "Kigali Institute of Design",
-				degree: "Diploma",
-				field: "Graphic Design",
-				startDate: "2016",
-				endDate: "2019",
-			},
-		],
-		experience: [
-			{
-				position: "Graphic Designer",
-				company: "Creative Agency",
-				type: "Full-time",
-				startDate: "2019",
-				endDate: "Present",
-			},
-		],
-		documents: [{ name: "Portfolio.pdf", url: "#" }],
-		links: {
-			Dribbble: "https://dribbble.com/jamesbrown",
-		},
 	},
 	{
 		id: "4",
 		name: "Jack Dixon",
 		email: "johndoe12@outlook.com",
 		phone: "+250 784 567 890",
-		status: "fail" as "success" | "fail" | "waiting",
+		status: "fail" as StatusType,
 		department: "Accounting",
 		dateApplied: "12/06/2025",
 	},
@@ -165,22 +55,20 @@ const MOCK_APPLICANTS = [
 		name: "Jonny Deer",
 		email: "johndoe12@hotmail.com",
 		phone: "+250 785 678 901",
-		status: "waiting" as "success" | "fail" | "waiting",
+		status: "waiting" as StatusType,
 		department: "Marketing",
 		dateApplied: "12/06/2025",
 	},
 ];
 
 const ApplicantsManagement = () => {
+	const router = useRouter();
+	const { toast } = useToast();
 	const [searchValue, setSearchValue] = useState("");
 	const [statusFilter, setStatusFilter] = useState("all");
 	const [departmentFilter, setDepartmentFilter] = useState("all");
 	const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
 	const [toDate, setToDate] = useState<Date | undefined>(undefined);
-
-	const [selectedApplicant, setSelectedApplicant] =
-		useState<ApplicantData | null>(null);
-	const [isDetailOpen, setIsDetailOpen] = useState(false);
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [applicantToDelete, setApplicantToDelete] = useState<string | null>(
 		null,
@@ -206,29 +94,32 @@ const ApplicantsManagement = () => {
 		setToDate(undefined);
 	};
 
+	// View applicant by navigating to their profile page
 	const handleViewApplicant = (id: string) => {
-		const applicant = MOCK_APPLICANTS.find((a) => a.id === id);
-		if (applicant) {
-			setSelectedApplicant(applicant as ApplicantData);
-			setIsDetailOpen(true);
-		}
+		router.push(`/admin/applicants/${id}`);
 	};
 
+	// Navigate to edit page (could be same as view page with edit state)
 	const handleEditApplicant = (id: string) => {
-		console.log("Edit applicant", id);
-		// Implementation for editing an applicant would go here
+		router.push(`/admin/applicants/${id}?edit=true`);
 	};
 
+	// Show delete confirmation
 	const handleDeleteApplicant = (id: string) => {
 		setApplicantToDelete(id);
 		setIsDeleteDialogOpen(true);
 	};
 
+	// Confirm deletion
 	const confirmDeleteApplicant = () => {
-		console.log(`Deleting applicant: ${applicantToDelete}`);
-		// In a real app, you would call an API to delete the applicant
+		toast({
+			title: "Applicant deleted",
+			description: `Applicant ${applicantToDelete} has been deleted successfully.`,
+		});
+
 		setIsDeleteDialogOpen(false);
 		setApplicantToDelete(null);
+		// In a real app, you would call an API here
 	};
 
 	// Filter configurations
@@ -294,8 +185,8 @@ const ApplicantsManagement = () => {
 		{
 			accessorKey: "status",
 			header: "Status",
-			cell: ({ row }: { row: { original: ApplicantData } }) => (
-				<StatusBadge status={row.original.status as StatusType} />
+			cell: ({ row }: { row: { original: { status: StatusType } } }) => (
+				<StatusBadge status={row.original.status} />
 			),
 		},
 		{
@@ -309,7 +200,7 @@ const ApplicantsManagement = () => {
 		{
 			id: "actions",
 			header: "Actions",
-			cell: ({ row }: { row: { original: ApplicantData } }) => (
+			cell: ({ row }: { row: { original: { id: string } } }) => (
 				<TableActions
 					actions={[
 						{
@@ -385,20 +276,11 @@ const ApplicantsManagement = () => {
 				{/* Applicants Table */}
 				<DataTable
 					columns={columns}
-					data={filteredApplicants as ApplicantData[]}
+					data={filteredApplicants}
 					searchColumn="name"
 					showSearch={false}
 				/>
 			</ContentCard>
-
-			{/* Applicant Detail Dialog */}
-			<ApplicantDetail
-				isOpen={isDetailOpen}
-				onClose={() => setIsDetailOpen(false)}
-				applicant={selectedApplicant}
-				onEdit={handleEditApplicant}
-				onDelete={handleDeleteApplicant}
-			/>
 
 			{/* Delete Confirmation Dialog */}
 			<ConfirmationDialog
