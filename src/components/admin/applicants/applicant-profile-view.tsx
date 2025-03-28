@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Download, ExternalLink, Github } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 // Define applicant data structure
 export interface ApplicantData {
@@ -126,6 +127,7 @@ const ApplicantProfileView: React.FC<ApplicantProfileViewProps> = ({ id }) => {
 	const [applicant, setApplicant] = useState<ApplicantData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useEffect(() => {
 		// In a real app, you would fetch this data from your API using the ID from the URL
 		const fetchApplicantData = async () => {
@@ -157,7 +159,7 @@ const ApplicantProfileView: React.FC<ApplicantProfileViewProps> = ({ id }) => {
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center h-96">
-				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base"></div>
+				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base" />
 			</div>
 		);
 	}
@@ -252,6 +254,7 @@ const ApplicantProfileView: React.FC<ApplicantProfileViewProps> = ({ id }) => {
 					<div className="flex flex-wrap gap-2">
 						{applicant.skills?.map((skill, index) => (
 							<div
+								// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 								key={index}
 								className="bg-slate-600 text-white px-4 py-2 rounded-full"
 							>
@@ -268,6 +271,7 @@ const ApplicantProfileView: React.FC<ApplicantProfileViewProps> = ({ id }) => {
 					<div className="flex flex-wrap gap-4">
 						{applicant.languages?.map((lang, index) => (
 							<div
+								// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 								key={index}
 								className="bg-blue-50 px-4 py-2 rounded-md text-center min-w-28"
 							>
@@ -285,6 +289,7 @@ const ApplicantProfileView: React.FC<ApplicantProfileViewProps> = ({ id }) => {
 					<div className="space-y-4">
 						{applicant.experience?.map((exp, index) => (
 							<div
+								// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 								key={index}
 								className="bg-blue-50 rounded-md p-4 flex justify-between items-start relative"
 							>
@@ -297,7 +302,10 @@ const ApplicantProfileView: React.FC<ApplicantProfileViewProps> = ({ id }) => {
 										{exp.startDate} - {exp.endDate}
 									</div>
 								</div>
-								<button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+								<button
+									type="button"
+									className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+								>
 									<svg
 										width="20"
 										height="20"
@@ -305,6 +313,7 @@ const ApplicantProfileView: React.FC<ApplicantProfileViewProps> = ({ id }) => {
 										fill="none"
 										xmlns="http://www.w3.org/2000/svg"
 									>
+										<title>SVG</title>
 										<path
 											d="M6 18L18 6M6 6L18 18"
 											stroke="currentColor"
@@ -326,6 +335,7 @@ const ApplicantProfileView: React.FC<ApplicantProfileViewProps> = ({ id }) => {
 					<div className="space-y-4">
 						{applicant.education?.map((edu, index) => (
 							<div
+								// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 								key={index}
 								className="bg-blue-50 rounded-md p-4 flex justify-between items-start relative"
 							>
@@ -338,7 +348,10 @@ const ApplicantProfileView: React.FC<ApplicantProfileViewProps> = ({ id }) => {
 										{edu.startDate} - {edu.endDate}
 									</div>
 								</div>
-								<button className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+								<button
+									type="button"
+									className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+								>
 									<svg
 										width="20"
 										height="20"
@@ -346,6 +359,7 @@ const ApplicantProfileView: React.FC<ApplicantProfileViewProps> = ({ id }) => {
 										fill="none"
 										xmlns="http://www.w3.org/2000/svg"
 									>
+										<title>SVG</title>
 										<path
 											d="M6 18L18 6M6 6L18 18"
 											stroke="currentColor"
@@ -369,10 +383,10 @@ const ApplicantProfileView: React.FC<ApplicantProfileViewProps> = ({ id }) => {
 							className="bg-blue-500 hover:bg-blue-600 py-3 px-6 flex items-center"
 							asChild
 						>
-							<a href="#" download>
+							<Link href="#" download>
 								<Download className="mr-2 h-5 w-5" />
 								Download Resume/CV
-							</a>
+							</Link>
 						</Button>
 					</div>
 				</div>
@@ -384,6 +398,7 @@ const ApplicantProfileView: React.FC<ApplicantProfileViewProps> = ({ id }) => {
 					<div className="space-y-4">
 						{Object.entries(applicant.links || {}).map(
 							([platform, url], index) => (
+								// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
 								<div key={index} className="flex items-center">
 									{platform === "GitHub" ? (
 										<Github className="h-5 w-5 mr-2 text-gray-600" />
