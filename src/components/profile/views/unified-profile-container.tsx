@@ -2,11 +2,11 @@ import React from 'react';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import PersonalInfoSection from './sections/personal-info';
-import AddressSection from './sections/address';
-import SkillsSection from './sections/skills';
-import WorkEducationSection from './sections/work-education';
-import DocumentsSection from './sections/documents';
+import PersonalInfoSection from '../sections/personal-info';
+import AddressSection from '../sections/address';
+import SkillsSection from '../sections/skills';
+import WorkEducationSection from '../sections/work-education';
+import DocumentsSection from '../sections/documents';
 import { 
   useProfile
 } from '@/hooks/use-profile';
@@ -95,7 +95,7 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
       )}
 
       {/* Main profile content */}
-      <div className={`bg-white rounded-lg px-2 py-6 md:px-10 md:py-6 shadow-md ${contentClassName}`}>
+      <div className={`bg-white rounded-lg p-6 md:px-10 shadow-md ${contentClassName}`}>
         <h1 className="text-2xl font-bold text-primary-base mb-6">
           {userType === 'admin' ? 'Applicant Profile' : 'User Profile'}
         </h1>

@@ -32,6 +32,11 @@ const AddressSection: React.FC<AddressSectionProps> = ({
 		onAddressUpdate(addressInfo);
 	};
 
+	const handleCancel = () => {
+		setIsEditing(false);
+		setAddressInfo(initialAddress); // Reset to the original data
+	};
+
 	return (
 		<ProfileSection
 			title="Address"
@@ -39,6 +44,7 @@ const AddressSection: React.FC<AddressSectionProps> = ({
 			isEditing={isEditing}
 			onEdit={handleEdit}
 			onSave={handleSave}
+			onCancel={handleCancel}
 		>
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-8">
 				<div>

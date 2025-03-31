@@ -1,12 +1,12 @@
 "use client";
 
-import WorkEducationSection from "@/components/applicant/work-education";
-import AppLayout from "@/components/layout/app-layout";
+import AppLayout from '@/components/layout/app-layout';
+import ProfileContent from '@/components/applicant/profile/profile-content';
 
 export default function ApplicantEducationPage() {
-	return (
-		<AppLayout userType="applicant">
-			<WorkEducationSection />
-		</AppLayout>
-	);
+  return (
+    <AppLayout userType="applicant">
+      <ProfileContent />
+    </AppLayout>
+  );
 }

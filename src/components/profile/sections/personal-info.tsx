@@ -44,6 +44,11 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 		onInfoUpdate(personalInfo);
 	};
 
+	const handleCancel = () => {
+		setIsEditing(false);
+		setPersonalInfo(initialInfo); // Reset to initial data
+	};
+
 	const handleAvatarClick = () => {
 		if (canEdit && fileInputRef.current) {
 			fileInputRef.current.click();
@@ -65,53 +70,53 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 
 	// User profile header with avatar
 	const profileHeader = (
-        <>
-		<div className="flex flex-col items-center md:flex-row md:gap-6 mb-8 px-4">
-			<div className="relative group">
-				<Avatar className="h-24 w-24 mb-4 md:mb-0">
-					<AvatarImage
-						src={avatarSrc}
-						alt={`${personalInfo.firstName} ${personalInfo.lastName}`}
+		<div className="px-4 md:px-10">
+			<div className="flex flex-col items-center md:flex-row md:gap-6 mb-8 ">
+				<div className="relative group">
+					<Avatar className="h-24 w-24 mb-4 md:mb-0">
+						<AvatarImage
+							src={avatarSrc}
+							alt={`${personalInfo.firstName} ${personalInfo.lastName}`}
+						/>
+						<AvatarFallback className="text-xl">
+							{isUploading
+								? "..."
+								: personalInfo.firstName[0] + personalInfo.lastName[0]}
+						</AvatarFallback>
+					</Avatar>
+
+					{canEdit && (
+						// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
+						<div
+							className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+							onClick={handleAvatarClick}
+						>
+							<Edit1 className="h-8 w-8 text-white" />
+						</div>
+					)}
+
+					<input
+						type="file"
+						ref={fileInputRef}
+						onChange={handleAvatarChange}
+						accept="image/*"
+						className="hidden"
 					/>
-					<AvatarFallback className="text-xl">
-						{isUploading
-							? "..."
-							: personalInfo.firstName[0] + personalInfo.lastName[0]}
-					</AvatarFallback>
-				</Avatar>
+				</div>
 
-				{canEdit && (
-					// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
-					<div
-						className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-						onClick={handleAvatarClick}
-					>
-						<Edit1 className="h-8 w-8 text-white" />
-					</div>
-				)}
-
-				<input
-					type="file"
-					ref={fileInputRef}
-					onChange={handleAvatarChange}
-					accept="image/*"
-					className="hidden"
-				/>
+				<div className="text-center md:text-left">
+					<h2 className="text-xl font-semibold">
+						{personalInfo.firstName} {personalInfo.lastName}
+					</h2>
+					{locationLabel && (
+						<p className="text-gray-600 font-regular text-base">
+							{locationLabel}
+						</p>
+					)}
+				</div>
 			</div>
-
-			<div className="text-center md:text-left">
-				<h2 className="text-xl font-semibold">
-					{personalInfo.firstName} {personalInfo.lastName}
-				</h2>
-				{locationLabel && (
-					<p className="text-gray-600 font-regular text-base">
-						{locationLabel}
-					</p>
-				)}
-			</div>
+			<Separator className="my-6" />
 		</div>
-        <Separator className="my-6" />
-        </>
 	);
 
 	return (
@@ -124,8 +129,9 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 				isEditing={isEditing}
 				onEdit={handleEdit}
 				onSave={handleSave}
+				onCancel={handleCancel}
 			>
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-8">
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-8 md:px-10">
 					<div>
 						<h3 className="text-sm text-gray-500 mb-1">First Name</h3>
 						{isEditing ? (

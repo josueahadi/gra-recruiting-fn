@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { X, Plus } from "lucide-react";
 import type { Education, WorkExperience } from "@/hooks/use-profile";
+import { Separator } from "@/components/ui/separator";
 
 interface WorkEducationSectionProps {
 	education: Education[];
@@ -173,6 +174,31 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 		setEducation(education.filter((edu) => edu.id !== id));
 	};
 
+	const handleCancelWork = () => {
+		setIsEditingWork(false);
+		setExperience(initialExperience);
+		setNewExperience({
+			id: "",
+			company: "",
+			role: "",
+			duration: "",
+			responsibilities: "",
+		});
+	};
+
+	const handleCancelEducation = () => {
+		setIsEditingEducation(false);
+		setEducation(initialEducation);
+		setNewEducation({
+			id: "",
+			institution: "",
+			degree: "",
+			program: "",
+			startYear: "",
+			endYear: "",
+		});
+	};
+
 	return (
 		<>
 			<ProfileSection
@@ -181,6 +207,7 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 				isEditing={isEditingWork}
 				onEdit={handleEditWork}
 				onSave={handleSaveWork}
+				onCancel={handleCancelWork}
 			>
 				{isEditingWork ? (
 					<div className="space-y-4">
@@ -357,12 +384,15 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 				)}
 			</ProfileSection>
 
+			<Separator className="my-8" />
+
 			<ProfileSection
 				title="Education"
 				canEdit={canEdit}
 				isEditing={isEditingEducation}
 				onEdit={handleEditEducation}
 				onSave={handleSaveEducation}
+				onCancel={handleCancelEducation}
 			>
 				{isEditingEducation ? (
 					<div className="space-y-4">

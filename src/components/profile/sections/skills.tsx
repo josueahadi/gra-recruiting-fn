@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Plus, X } from "lucide-react";
 import type { Skill, LanguageProficiency } from "@/hooks/use-profile";
+import { Separator } from "@radix-ui/react-separator";
 
 interface SkillsSectionProps {
 	technicalSkills: Skill[];
@@ -109,6 +110,20 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({
 		setLanguages(languages.filter((lang) => lang.language !== language));
 	};
 
+	const handleCancelSkills = () => {
+		setIsEditingSkills(false);
+		setTechnicalSkills(initialTechnical);
+		setSoftSkills(initialSoft);
+		// Also reset any new skill input fields
+		setNewTechnicalSkill("");
+		setNewSoftSkill("");
+	};
+
+	const handleCancelLanguages = () => {
+		setIsEditingLanguages(false);
+		setLanguages(initialLanguages);
+	};
+
 	return (
 		<>
 			<ProfileSection
@@ -117,6 +132,7 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({
 				isEditing={isEditingSkills}
 				onEdit={handleEditSkills}
 				onSave={handleSaveSkills}
+				onCancel={handleCancelSkills}
 			>
 				<div className="space-y-8">
 					<div>
@@ -203,12 +219,15 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({
 				</div>
 			</ProfileSection>
 
+			<Separator className="my-8" />
+
 			<ProfileSection
 				title="Language"
 				canEdit={canEdit}
 				isEditing={isEditingLanguages}
 				onEdit={handleEditLanguages}
 				onSave={handleSaveLanguages}
+				onCancel={handleCancelLanguages}
 			>
 				<div>
 					<h3 className="text-lg font-medium mb-6">Language Proficiency</h3>

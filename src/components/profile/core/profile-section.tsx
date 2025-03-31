@@ -11,6 +11,7 @@ interface ProfileSectionProps {
 	isEditing: boolean;
 	onEdit: () => void;
 	onSave: () => void;
+	onCancel?: () => void;
 	className?: string;
 	contentClassName?: string;
 }
@@ -25,13 +26,14 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 	isEditing,
 	onEdit,
 	onSave,
+	onCancel,
 	className,
 	contentClassName,
 }) => {
 	return (
-		<div className={cn("mb-8 px-2 md:px-4", className)}>
+		<div className={cn("mb-8 md:px-10", className)}>
 			<div className="flex items-center justify-between mb-6">
-				<h2 className="text-xl text-primary-base font-semibold">{title}</h2>
+				<h2 className="text-xl text-black font-semibold">{title}</h2>
 
 				{canEdit && (
 					<button
@@ -53,6 +55,9 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
 			{isEditing && (
 				<div className="flex justify-end mt-6 px-6">
+					<Button variant="outline" className="mr-4" onClick={onCancel}>
+						Cancel
+					</Button>
 					<Button
 						onClick={onSave}
 						className="bg-primary-base hover:bg-primary-dark"
