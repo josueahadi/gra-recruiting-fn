@@ -1,6 +1,6 @@
 "use client";
 
-import { ProfileNavigation } from "@/components/applicant/profile-tabs";
+import { ProfileNavigation } from "@/components/applicant/profile/profile-tabs";
 import AppHeader from "@/components/layout/app-header";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import BackgroundPattern from "@/components/layout/background-pattern";

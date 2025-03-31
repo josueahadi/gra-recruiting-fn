@@ -1,12 +1,12 @@
 "use client";
 
-import DocumentsSection from "@/components/applicant/documents";
-import AppLayout from "@/components/layout/app-layout";
+import AppLayout from '@/components/layout/app-layout';
+import ProfileContent from '@/components/applicant/profile/profile-content';
 
 export default function ApplicantDocumentsPage() {
-	return (
-		<AppLayout userType="applicant">
-			<DocumentsSection />
-		</AppLayout>
-	);
+  return (
+    <AppLayout userType="applicant">
+      <ProfileContent />
+    </AppLayout>
+  );
 }

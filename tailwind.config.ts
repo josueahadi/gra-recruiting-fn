@@ -1,4 +1,3 @@
-// import { Dangrek } from "next/font/google";
 import type { Config } from "tailwindcss";
 
 export default {
@@ -72,6 +71,7 @@ export default {
 					lightGray: "#EDEDED", // Soft gray
 					navyBlue: "#215c75", // Deep navy blue
 					darkGray: "#575d66", // Muted dark gray
+					separator: "#A2A1A1",
 				},
 				muted: {
 					DEFAULT: "hsl(var(--muted))",
