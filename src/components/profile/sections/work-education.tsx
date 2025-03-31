@@ -1,53 +1,34 @@
 import type React from "react";
 import { useState } from "react";
-import { ProfileInfoSection } from "@/components/profile/core/components";
+import ProfileSection from "@/components/profile/core/profile-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus, X } from "lucide-react";
-
-export interface Education {
-	id: string;
-	institution: string;
-	degree: string;
-	program: string;
-	startYear: string;
-	endYear: string;
-}
-
-export interface WorkExperience {
-	id: string;
-	company: string;
-	role: string;
-	duration: string;
-	responsibilities: string;
-}
+import { X, Plus } from "lucide-react";
+import type { Education, WorkExperience } from "@/hooks/use-profile";
 
 interface WorkEducationSectionProps {
-	educationList: Education[];
-	workList: WorkExperience[];
-	userType: "applicant" | "admin";
-	onSave?: (data: {
-		educationList: Education[];
-		workList: WorkExperience[];
+	education: Education[];
+	experience: WorkExperience[];
+	canEdit: boolean;
+	onUpdate: (data: {
+		education: Education[];
+		experience: WorkExperience[];
 	}) => void;
 }
 
-/**
- * Reusable work and education section component that works for both applicant and admin views
- */
 const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
-	educationList: initialEducationList,
-	workList: initialWorkList,
-	userType,
-	onSave,
+	education: initialEducation,
+	experience: initialExperience,
+	canEdit,
+	onUpdate,
 }) => {
 	const [isEditingEducation, setIsEditingEducation] = useState(false);
 	const [isEditingWork, setIsEditingWork] = useState(false);
 
-	const [educationList, setEducationList] =
-		useState<Education[]>(initialEducationList);
-	const [workList, setWorkList] = useState<WorkExperience[]>(initialWorkList);
+	const [education, setEducation] = useState<Education[]>(initialEducation);
+	const [experience, setExperience] =
+		useState<WorkExperience[]>(initialExperience);
 
 	const [newEducation, setNewEducation] = useState<Education>({
 		id: "",
@@ -58,7 +39,7 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 		endYear: "",
 	});
 
-	const [newWork, setNewWork] = useState<WorkExperience>({
+	const [newExperience, setNewExperience] = useState<WorkExperience>({
 		id: "",
 		company: "",
 		role: "",
@@ -66,28 +47,93 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 		responsibilities: "",
 	});
 
-	const canEdit = userType === "applicant";
+	// Work experience handlers
+	const handleEditWork = () => {
+		setIsEditingWork(true);
+	};
+
+	const handleSaveWork = () => {
+		setIsEditingWork(false);
+		onUpdate({
+			education,
+			experience,
+		});
+	};
+
+	const handleExperienceChange = (
+		e: React.ChangeEvent<HTMLInputElement>,
+		id: string,
+	) => {
+		const { name, value } = e.target;
+		setExperience(
+			experience.map((work) =>
+				work.id === id ? { ...work, [name]: value } : work,
+			),
+		);
+	};
+
+	const handleNewExperienceChange = (
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const { name, value } = e.target;
+		setNewExperience({ ...newExperience, [name]: value });
+	};
+
+	const handleAddExperience = () => {
+		if (newExperience.company && newExperience.role) {
+			setExperience([
+				...experience,
+				{ ...newExperience, id: Date.now().toString() },
+			]);
+			setNewExperience({
+				id: "",
+				company: "",
+				role: "",
+				duration: "",
+				responsibilities: "",
+			});
+		}
+	};
+
+	const handleRemoveExperience = (id: string) => {
+		setExperience(experience.filter((work) => work.id !== id));
+	};
+
+	// Education handlers
+	const handleEditEducation = () => {
+		setIsEditingEducation(true);
+	};
+
+	const handleSaveEducation = () => {
+		setIsEditingEducation(false);
+		onUpdate({
+			education,
+			experience,
+		});
+	};
 
 	const handleEducationChange = (
 		e: React.ChangeEvent<HTMLInputElement>,
 		id: string,
 	) => {
 		const { name, value } = e.target;
-		setEducationList(
-			educationList.map((edu) =>
-				edu.id === id ? { ...edu, [name]: value } : edu,
-			),
+		setEducation(
+			education.map((edu) => (edu.id === id ? { ...edu, [name]: value } : edu)),
 		);
 	};
 
-	const handleWorkChange = (
-		e: React.ChangeEvent<HTMLInputElement>,
-		id: string,
-	) => {
-		const { name, value } = e.target;
-		setWorkList(
-			workList.map((work) =>
-				work.id === id ? { ...work, [name]: value } : work,
+	const handleYearChange = (id: string, value: string) => {
+		const years = value.split("-");
+
+		setEducation(
+			education.map((edu) =>
+				edu.id === id
+					? {
+							...edu,
+							startYear: years[0] || "",
+							endYear: years[1] || "",
+						}
+					: edu,
 			),
 		);
 	};
@@ -97,15 +143,19 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 		setNewEducation({ ...newEducation, [name]: value });
 	};
 
-	const handleNewWorkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const { name, value } = e.target;
-		setNewWork({ ...newWork, [name]: value });
+	const handleNewYearChange = (value: string) => {
+		const years = value.split("-");
+		setNewEducation({
+			...newEducation,
+			startYear: years[0] || "",
+			endYear: years[1] || "",
+		});
 	};
 
 	const handleAddEducation = () => {
 		if (newEducation.institution && newEducation.degree) {
-			setEducationList([
-				...educationList,
+			setEducation([
+				...education,
 				{ ...newEducation, id: Date.now().toString() },
 			]);
 			setNewEducation({
@@ -119,54 +169,22 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 		}
 	};
 
-	const handleAddWork = () => {
-		if (newWork.company && newWork.role) {
-			setWorkList([...workList, { ...newWork, id: Date.now().toString() }]);
-			setNewWork({
-				id: "",
-				company: "",
-				role: "",
-				duration: "",
-				responsibilities: "",
-			});
-		}
-	};
-
 	const handleRemoveEducation = (id: string) => {
-		setEducationList(educationList.filter((edu) => edu.id !== id));
-	};
-
-	const handleRemoveWork = (id: string) => {
-		setWorkList(workList.filter((work) => work.id !== id));
-	};
-
-	const handleSaveEducation = () => {
-		setIsEditingEducation(false);
-		if (onSave) {
-			onSave({ educationList, workList });
-		}
-	};
-
-	const handleSaveWork = () => {
-		setIsEditingWork(false);
-		if (onSave) {
-			onSave({ educationList, workList });
-		}
+		setEducation(education.filter((edu) => edu.id !== id));
 	};
 
 	return (
 		<>
-			{/* Work Experience Section */}
-			<ProfileInfoSection
+			<ProfileSection
 				title="Work Experience"
 				canEdit={canEdit}
 				isEditing={isEditingWork}
-				onEdit={() => setIsEditingWork(true)}
+				onEdit={handleEditWork}
 				onSave={handleSaveWork}
 			>
 				{isEditingWork ? (
 					<div className="space-y-4">
-						{workList.map((work) => (
+						{experience.map((work) => (
 							<div key={work.id} className="border-b pb-6 last:border-0">
 								<div className="flex justify-between items-start">
 									<div className="space-y-4 w-full">
@@ -179,7 +197,7 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 													id={`company-${work.id}`}
 													name="company"
 													value={work.company}
-													onChange={(e) => handleWorkChange(e, work.id)}
+													onChange={(e) => handleExperienceChange(e, work.id)}
 													className="mt-1"
 												/>
 											</div>
@@ -190,7 +208,7 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 													id={`role-${work.id}`}
 													name="role"
 													value={work.role}
-													onChange={(e) => handleWorkChange(e, work.id)}
+													onChange={(e) => handleExperienceChange(e, work.id)}
 													className="mt-1"
 												/>
 											</div>
@@ -203,7 +221,7 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 													id={`duration-${work.id}`}
 													name="duration"
 													value={work.duration}
-													onChange={(e) => handleWorkChange(e, work.id)}
+													onChange={(e) => handleExperienceChange(e, work.id)}
 													className="mt-1"
 												/>
 											</div>
@@ -216,7 +234,7 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 													id={`responsibilities-${work.id}`}
 													name="responsibilities"
 													value={work.responsibilities}
-													onChange={(e) => handleWorkChange(e, work.id)}
+													onChange={(e) => handleExperienceChange(e, work.id)}
 													className="mt-1"
 												/>
 											</div>
@@ -226,7 +244,7 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 									<Button
 										variant="ghost"
 										size="icon"
-										onClick={() => handleRemoveWork(work.id)}
+										onClick={() => handleRemoveExperience(work.id)}
 										className="text-red-500 hover:text-red-700 ml-4"
 									>
 										<X className="h-5 w-5" />
@@ -245,8 +263,8 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 										<Input
 											id="new-company"
 											name="company"
-											value={newWork.company}
-											onChange={handleNewWorkChange}
+											value={newExperience.company}
+											onChange={handleNewExperienceChange}
 											placeholder="e.g. Tesla"
 											className="mt-1"
 										/>
@@ -257,8 +275,8 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 										<Input
 											id="new-role"
 											name="role"
-											value={newWork.role}
-											onChange={handleNewWorkChange}
+											value={newExperience.role}
+											onChange={handleNewExperienceChange}
 											placeholder="e.g. Web Developer"
 											className="mt-1"
 										/>
@@ -271,8 +289,8 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 										<Input
 											id="new-duration"
 											name="duration"
-											value={newWork.duration}
-											onChange={handleNewWorkChange}
+											value={newExperience.duration}
+											onChange={handleNewExperienceChange}
 											placeholder="e.g. 2 years"
 											className="mt-1"
 										/>
@@ -285,15 +303,15 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 										<Input
 											id="new-responsibilities"
 											name="responsibilities"
-											value={newWork.responsibilities}
-											onChange={handleNewWorkChange}
+											value={newExperience.responsibilities}
+											onChange={handleNewExperienceChange}
 											placeholder="e.g. Website Development"
 											className="mt-1"
 										/>
 									</div>
 								</div>
 
-								<Button onClick={handleAddWork} className="mt-2">
+								<Button onClick={handleAddExperience} className="mt-2">
 									<Plus className="h-4 w-4 mr-2" />
 									Add Work Experience
 								</Button>
@@ -302,7 +320,7 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 					</div>
 				) : (
 					<div>
-						{workList.map((work) => (
+						{experience.map((work) => (
 							<div
 								key={work.id}
 								className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-y-4"
@@ -329,49 +347,50 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 								</div>
 							</div>
 						))}
+
+						{experience.length === 0 && (
+							<p className="text-gray-500 italic">
+								No work experience added yet.
+							</p>
+						)}
 					</div>
 				)}
-			</ProfileInfoSection>
+			</ProfileSection>
 
-			{/* Education Section */}
-			<ProfileInfoSection
+			<ProfileSection
 				title="Education"
 				canEdit={canEdit}
 				isEditing={isEditingEducation}
-				onEdit={() => setIsEditingEducation(true)}
+				onEdit={handleEditEducation}
 				onSave={handleSaveEducation}
 			>
 				{isEditingEducation ? (
 					<div className="space-y-4">
-						{educationList.map((education) => (
-							<div key={education.id} className="border-b pb-6 last:border-0">
+						{education.map((edu) => (
+							<div key={edu.id} className="border-b pb-6 last:border-0">
 								<div className="flex justify-between items-start">
 									<div className="space-y-4 w-full">
 										<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 											<div>
-												<Label htmlFor={`degree-${education.id}`}>Degree</Label>
+												<Label htmlFor={`degree-${edu.id}`}>Degree</Label>
 												<Input
-													id={`degree-${education.id}`}
+													id={`degree-${edu.id}`}
 													name="degree"
-													value={education.degree}
-													onChange={(e) =>
-														handleEducationChange(e, education.id)
-													}
+													value={edu.degree}
+													onChange={(e) => handleEducationChange(e, edu.id)}
 													className="mt-1"
 												/>
 											</div>
 
 											<div>
-												<Label htmlFor={`institution-${education.id}`}>
+												<Label htmlFor={`institution-${edu.id}`}>
 													Institution
 												</Label>
 												<Input
-													id={`institution-${education.id}`}
+													id={`institution-${edu.id}`}
 													name="institution"
-													value={education.institution}
-													onChange={(e) =>
-														handleEducationChange(e, education.id)
-													}
+													value={edu.institution}
+													onChange={(e) => handleEducationChange(e, edu.id)}
 													className="mt-1"
 												/>
 											</div>
@@ -379,48 +398,25 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 
 										<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 											<div>
-												<Label htmlFor={`program-${education.id}`}>
-													Program
-												</Label>
+												<Label htmlFor={`program-${edu.id}`}>Program</Label>
 												<Input
-													id={`program-${education.id}`}
+													id={`program-${edu.id}`}
 													name="program"
-													value={education.program}
-													onChange={(e) =>
-														handleEducationChange(e, education.id)
-													}
+													value={edu.program}
+													onChange={(e) => handleEducationChange(e, edu.id)}
 													className="mt-1"
 												/>
 											</div>
 
 											<div>
-												<Label htmlFor={`years-${education.id}`}>Year</Label>
+												<Label htmlFor={`years-${edu.id}`}>Year</Label>
 												<Input
-													id={`years-${education.id}`}
-													name="endYear"
-													value={`${education.startYear}-${education.endYear}`}
-													onChange={(e) => {
-														const value = e.target.value;
-														const years = value.split("-");
-														handleEducationChange(
-															{
-																target: {
-																	name: "startYear",
-																	value: years[0] || "",
-																},
-															} as React.ChangeEvent<HTMLInputElement>,
-															education.id,
-														);
-														handleEducationChange(
-															{
-																target: {
-																	name: "endYear",
-																	value: years[1] || "",
-																},
-															} as React.ChangeEvent<HTMLInputElement>,
-															education.id,
-														);
-													}}
+													id={`years-${edu.id}`}
+													name="years"
+													value={`${edu.startYear}-${edu.endYear}`}
+													onChange={(e) =>
+														handleYearChange(edu.id, e.target.value)
+													}
 													placeholder="e.g. 2016-2021"
 													className="mt-1"
 												/>
@@ -431,7 +427,7 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 									<Button
 										variant="ghost"
 										size="icon"
-										onClick={() => handleRemoveEducation(education.id)}
+										onClick={() => handleRemoveEducation(edu.id)}
 										className="text-red-500 hover:text-red-700 ml-4"
 									>
 										<X className="h-5 w-5" />
@@ -493,15 +489,7 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 													? `${newEducation.startYear}-${newEducation.endYear}`
 													: ""
 											}
-											onChange={(e) => {
-												const value = e.target.value;
-												const years = value.split("-");
-												setNewEducation({
-													...newEducation,
-													startYear: years[0] || "",
-													endYear: years[1] || "",
-												});
-											}}
+											onChange={(e) => handleNewYearChange(e.target.value)}
 											className="mt-1"
 										/>
 									</div>
@@ -516,36 +504,40 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 					</div>
 				) : (
 					<div>
-						{educationList.map((education) => (
+						{education.map((edu) => (
 							<div
-								key={education.id}
+								key={edu.id}
 								className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-y-4"
 							>
 								<div>
 									<p className="text-gray-600 font-normal">Degree</p>
-									<p className="text-xl font-semibold">{education.degree}</p>
+									<p className="text-xl font-semibold">{edu.degree}</p>
 								</div>
 								<div>
 									<p className="text-gray-600 font-normal">Institution</p>
-									<p className="text-xl font-semibold">
-										{education.institution}
-									</p>
+									<p className="text-xl font-semibold">{edu.institution}</p>
 								</div>
 								<div>
 									<p className="text-gray-600 font-normal">Program</p>
-									<p className="text-xl font-semibold">{education.program}</p>
+									<p className="text-xl font-semibold">{edu.program}</p>
 								</div>
 								<div>
 									<p className="text-gray-600 font-normal">Year</p>
 									<p className="text-xl font-semibold">
-										{education.startYear}-{education.endYear}
+										{edu.startYear}-{edu.endYear}
 									</p>
 								</div>
 							</div>
 						))}
+
+						{education.length === 0 && (
+							<p className="text-gray-500 italic">
+								No education history added yet.
+							</p>
+						)}
 					</div>
 				)}
-			</ProfileInfoSection>
+			</ProfileSection>
 		</>
 	);
 };

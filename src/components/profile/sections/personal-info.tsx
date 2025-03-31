@@ -1,143 +1,204 @@
-import type React from "react";
-import { useState } from "react";
-import {
-	ProfileInfoSection,
-	ProfileField,
-	ProfileAvatar,
-	type PersonalInfo,
-} from "@/components/profile/core/components";
+"use client";
+
+import React, { useState } from "react";
+import ProfileSection from "@/components/profile/core/profile-section";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Edit1 } from "@/components/icons/edit-1";
+import type { ProfileInfo } from "@/hooks/use-profile";
+import { Separator } from "@/components/ui/separator";
 
 interface PersonalInfoSectionProps {
-	personalInfo: PersonalInfo;
+	personalInfo: ProfileInfo;
 	avatarSrc?: string;
-	userType: "applicant" | "admin";
-	onSave?: (updatedInfo: PersonalInfo) => void;
-	onAvatarChange?: (file: File) => void;
 	locationLabel?: string;
+	canEdit: boolean;
+	onInfoUpdate: (info: ProfileInfo) => void;
+	onAvatarChange?: (file: File) => void;
 }
 
-/**
- * Reusable personal information section that works for both applicant and admin views
- */
 const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
-	personalInfo: initialPersonalInfo,
+	personalInfo: initialInfo,
 	avatarSrc,
-	userType,
-	onSave,
-	onAvatarChange,
 	locationLabel,
+	canEdit,
+	onInfoUpdate,
+	onAvatarChange,
 }) => {
 	const [isEditing, setIsEditing] = useState(false);
-	const [personalInfo, setPersonalInfo] =
-		useState<PersonalInfo>(initialPersonalInfo);
 	const [isUploading, setIsUploading] = useState(false);
-
-	const canEdit = userType === "applicant";
+	const [personalInfo, setPersonalInfo] = useState<ProfileInfo>(initialInfo);
+	const fileInputRef = React.useRef<HTMLInputElement>(null);
 
 	const handleInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		setPersonalInfo((prev) => ({ ...prev, [name]: value }));
 	};
 
+	const handleEdit = () => {
+		setIsEditing(true);
+	};
+
 	const handleSave = () => {
 		setIsEditing(false);
-		if (onSave) {
-			onSave(personalInfo);
+		onInfoUpdate(personalInfo);
+	};
+
+	const handleAvatarClick = () => {
+		if (canEdit && fileInputRef.current) {
+			fileInputRef.current.click();
 		}
 	};
 
-	const handleAvatarUpload = (file: File) => {
-		setIsUploading(true);
-		if (onAvatarChange) {
+	const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		// biome-ignore lint/complexity/useOptionalChain: <explanation>
+		if (e.target.files && e.target.files[0] && onAvatarChange) {
+			setIsUploading(true);
+			const file = e.target.files[0];
+
 			onAvatarChange(file);
-			// In a real implementation, this would happen after upload completes
+
+			// In a real implementation, this would be done after upload completes
 			setTimeout(() => setIsUploading(false), 1000);
-		} else {
-			setIsUploading(false);
 		}
 	};
 
-	// User profile top section with avatar and name
+	// User profile header with avatar
 	const profileHeader = (
-		<div className="flex flex-col items-center md:flex-row md:gap-6 mb-6">
-			<ProfileAvatar
-				avatarSrc={avatarSrc}
-				firstName={personalInfo.firstName}
-				lastName={personalInfo.lastName}
-				canEdit={canEdit}
-				onAvatarChange={handleAvatarUpload}
-				isUploading={isUploading}
-			/>
+        <>
+		<div className="flex flex-col items-center md:flex-row md:gap-6 mb-8 px-4">
+			<div className="relative group">
+				<Avatar className="h-24 w-24 mb-4 md:mb-0">
+					<AvatarImage
+						src={avatarSrc}
+						alt={`${personalInfo.firstName} ${personalInfo.lastName}`}
+					/>
+					<AvatarFallback className="text-xl">
+						{isUploading
+							? "..."
+							: personalInfo.firstName[0] + personalInfo.lastName[0]}
+					</AvatarFallback>
+				</Avatar>
+
+				{canEdit && (
+					// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
+					<div
+						className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+						onClick={handleAvatarClick}
+					>
+						<Edit1 className="h-8 w-8 text-white" />
+					</div>
+				)}
+
+				<input
+					type="file"
+					ref={fileInputRef}
+					onChange={handleAvatarChange}
+					accept="image/*"
+					className="hidden"
+				/>
+			</div>
 
 			<div className="text-center md:text-left">
 				<h2 className="text-xl font-semibold">
 					{personalInfo.firstName} {personalInfo.lastName}
 				</h2>
 				{locationLabel && (
-					<p className="text-custom-darkGray font-regular text-base">
+					<p className="text-gray-600 font-regular text-base">
 						{locationLabel}
 					</p>
 				)}
 			</div>
 		</div>
+        <Separator className="my-6" />
+        </>
 	);
 
 	return (
 		<>
 			{profileHeader}
 
-			<ProfileInfoSection
+			<ProfileSection
 				title="Personal Information"
 				canEdit={canEdit}
 				isEditing={isEditing}
-				onEdit={() => setIsEditing(true)}
+				onEdit={handleEdit}
 				onSave={handleSave}
 			>
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-8">
-					<ProfileField
-						label="First Name"
-						value={personalInfo.firstName}
-						isEditing={isEditing}
-						name="firstName"
-						onChange={handleInfoChange}
-					/>
+					<div>
+						<h3 className="text-sm text-gray-500 mb-1">First Name</h3>
+						{isEditing ? (
+							<Input
+								name="firstName"
+								value={personalInfo.firstName}
+								onChange={handleInfoChange}
+								className="mt-1"
+							/>
+						) : (
+							<p className="font-medium">{personalInfo.firstName}</p>
+						)}
+					</div>
 
-					<ProfileField
-						label="Last Name"
-						value={personalInfo.lastName}
-						isEditing={isEditing}
-						name="lastName"
-						onChange={handleInfoChange}
-					/>
+					<div>
+						<h3 className="text-sm text-gray-500 mb-1">Last Name</h3>
+						{isEditing ? (
+							<Input
+								name="lastName"
+								value={personalInfo.lastName}
+								onChange={handleInfoChange}
+								className="mt-1"
+							/>
+						) : (
+							<p className="font-medium">{personalInfo.lastName}</p>
+						)}
+					</div>
 
-					<ProfileField
-						label="Email Address"
-						value={personalInfo.email}
-						isEditing={isEditing}
-						name="email"
-						onChange={handleInfoChange}
-						type="email"
-					/>
+					<div>
+						<h3 className="text-sm text-gray-500 mb-1">Email Address</h3>
+						{isEditing ? (
+							<Input
+								name="email"
+								value={personalInfo.email}
+								onChange={handleInfoChange}
+								className="mt-1"
+								type="email"
+							/>
+						) : (
+							<p className="font-medium">{personalInfo.email}</p>
+						)}
+					</div>
 
-					<ProfileField
-						label="Phone Number"
-						value={personalInfo.phone}
-						isEditing={isEditing}
-						name="phone"
-						onChange={handleInfoChange}
-						type="tel"
-					/>
+					<div>
+						<h3 className="text-sm text-gray-500 mb-1">Phone Number</h3>
+						{isEditing ? (
+							<Input
+								name="phone"
+								value={personalInfo.phone}
+								onChange={handleInfoChange}
+								className="mt-1"
+								type="tel"
+							/>
+						) : (
+							<p className="font-medium">{personalInfo.phone}</p>
+						)}
+					</div>
 
-					<ProfileField
-						label="Bio"
-						value={personalInfo.bio}
-						isEditing={isEditing}
-						name="bio"
-						onChange={handleInfoChange}
-						className="md:col-span-2"
-					/>
+					<div className="md:col-span-2">
+						<h3 className="text-sm text-gray-500 mb-1">Bio</h3>
+						{isEditing ? (
+							<Input
+								name="bio"
+								value={personalInfo.bio}
+								onChange={handleInfoChange}
+								className="mt-1"
+							/>
+						) : (
+							<p className="font-medium">{personalInfo.bio}</p>
+						)}
+					</div>
 				</div>
-			</ProfileInfoSection>
+			</ProfileSection>
 		</>
 	);
 };

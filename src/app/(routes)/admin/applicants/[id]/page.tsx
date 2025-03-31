@@ -1,19 +1,31 @@
 "use client";
 
-import React from "react";
-import { useParams } from "next/navigation";
-import AppLayout from "@/components/layout/app-layout";
-import ApplicantProfileView from "@/components/admin/applicants/applicant-profile-view";
+import React from 'react';
+import { useRouter } from 'next/navigation';
+import { ProfileContainer } from '@/components/profile';
+import AppLayout from '@/components/layout/app-layout';
 
-const ApplicantProfilePage = () => {
-	const params = useParams();
-	const id = params?.id as string;
+interface ApplicantProfilePageProps {
+  params: {
+    id: string;
+  };
+}
 
-	return (
-		<AppLayout userType="admin">
-			<ApplicantProfileView id={id} />
-		</AppLayout>
-	);
-};
-
-export default ApplicantProfilePage;
+export default function ApplicantProfilePage({ params }: ApplicantProfilePageProps) {
+  const router = useRouter();
+  
+  const handleGoBack = () => {
+    router.push('/admin/applicants');
+  };
+  
+  return (
+    <AppLayout userType="admin">
+        <ProfileContainer
+        userId={params.id}
+        userType="admin"
+        onNavigateBack={handleGoBack}
+        wrapperClassName=""
+        />
+    </AppLayout>
+  );
+}

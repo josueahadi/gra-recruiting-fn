@@ -48,7 +48,7 @@ const QUESTION_MAPPING_KEY = "questionMapping";
 const questionBank: { [key: string]: Question[] } = {
 	"1": [
 		// Section 1 - Multiple Choice questions
-		// (Keeping the existing questions array)
+
 		{
 			id: 1,
 			type: "multiple-choice",
@@ -73,6 +73,166 @@ const questionBank: { [key: string]: Question[] } = {
 					id: "d",
 					optionText: "A design pattern for organizing code into modules",
 				},
+			],
+		},
+		{
+			id: 2,
+			type: "multiple-choice",
+			text: "What does the acronym API stand for?",
+			options: [
+				{ id: "a", optionText: "Application Programming Interface" },
+				{ id: "b", optionText: "Automated Programming Interface" },
+				{ id: "c", optionText: "Application Protocol Interface" },
+				{ id: "d", optionText: "Advanced Programming Interface" },
+			],
+		},
+		{
+			id: 3,
+			type: "multiple-choice",
+			text: "Which data structure would be most efficient for implementing a dictionary?",
+			options: [
+				{ id: "a", optionText: "Array" },
+				{ id: "b", optionText: "Hash Table" },
+				{ id: "c", optionText: "Linked List" },
+				{ id: "d", optionText: "Stack" },
+			],
+		},
+		{
+			id: 4,
+			type: "multiple-choice",
+			text: "What is the time complexity of binary search on a sorted array?",
+			options: [
+				{ id: "a", optionText: "O(1)" },
+				{ id: "b", optionText: "O(log n)" },
+				{ id: "c", optionText: "O(n)" },
+				{ id: "d", optionText: "O(n²)" },
+			],
+		},
+		{
+			id: 5,
+			type: "multiple-choice",
+			text: "In React, what hook would you use to run code after a component renders?",
+			options: [
+				{ id: "a", optionText: "useState" },
+				{ id: "b", optionText: "useContext" },
+				{ id: "c", optionText: "useEffect" },
+				{ id: "d", optionText: "useCallback" },
+			],
+		},
+		{
+			id: 6,
+			type: "multiple-choice",
+			text: "What concept does the 'S' in SOLID principles stand for?",
+			options: [
+				{ id: "a", optionText: "Stateless Design" },
+				{ id: "b", optionText: "Single Responsibility" },
+				{ id: "c", optionText: "Simplified Architecture" },
+				{ id: "d", optionText: "Scalable Programming" },
+			],
+		},
+		{
+			id: 7,
+			type: "multiple-choice",
+			text: "Which is NOT a principle of REST architecture?",
+			options: [
+				{ id: "a", optionText: "Stateless" },
+				{ id: "b", optionText: "Client-Server" },
+				{ id: "c", optionText: "Real-time Updates" },
+				{ id: "d", optionText: "Uniform Interface" },
+			],
+		},
+		{
+			id: 8,
+			type: "multiple-choice",
+			text: "Select the correct pattern that should go in the empty space:",
+			imageUrl: "/images/assessment/pattern-question.png",
+			options: [
+				{ id: "a", optionText: "" },
+				{ id: "b", optionText: "This is a text option" },
+				{ id: "c", optionText: "This is a text option" },
+				{ id: "d", optionText: "This is a text option" },
+			],
+		},
+		{
+			id: 9,
+			type: "multiple-choice",
+			text: "Select the correct pattern that should go in the empty space:",
+			imageUrl: "/images/assessment/pattern-question.png",
+			options: [
+				{ id: "a", optionImageUrl: "/images/assessment/pattern-a.png" },
+				{ id: "b", optionImageUrl: "/images/assessment/pattern-b.png" },
+				{ id: "c", optionImageUrl: "/images/assessment/pattern-c.png" },
+				{ id: "d", optionImageUrl: "/images/assessment/pattern-d.png" },
+			],
+		},
+		{
+			id: 10,
+			type: "multiple-choice",
+			text: "Select the correct pattern that should go in the empty space:",
+			imageUrl: "/images/assessment/pattern-question.png",
+			options: [
+				{ id: "a", optionImageUrl: "/images/assessment/pattern-a.png" },
+				{ id: "b", optionImageUrl: "/images/assessment/pattern-b.png" },
+				{ id: "c", optionImageUrl: "/images/assessment/pattern-c.png" },
+				{ id: "d", optionImageUrl: "/images/assessment/pattern-d.png" },
+			],
+		},
+		{
+			id: 11,
+			type: "multiple-choice",
+			text: "What problem does the MVC architecture pattern solve?",
+			options: [
+				{ id: "a", optionText: "Database performance" },
+				{ id: "b", optionText: "Network latency" },
+				{ id: "c", optionText: "Separation of concerns" },
+				{ id: "d", optionText: "Memory management" },
+			],
+		},
+		{
+			id: 12,
+			type: "multiple-choice",
+			text: "What is the purpose of dependency injection?",
+			options: [
+				{ id: "a", optionText: "To reduce memory usage" },
+				{ id: "b", optionText: "To make code more testable" },
+				{ id: "c", optionText: "To improve rendering performance" },
+				{ id: "d", optionText: "To simplify deployment" },
+			],
+		},
+		{
+			id: 13,
+			type: "multiple-choice",
+			text: "Which of the following is a valid way to optimize React rendering?",
+			options: [
+				{ id: "a", optionText: "Always use class components" },
+				{ id: "b", optionText: "Add more state variables" },
+				{
+					id: "c",
+					optionText: "Use React.memo for pure functional components",
+				},
+				{ id: "d", optionText: "Avoid using keys in lists" },
+			],
+		},
+		{
+			id: 14,
+			type: "multiple-choice",
+			text: "Which design pattern is React's context API most similar to?",
+			options: [
+				{ id: "a", optionText: "Factory Pattern" },
+				{ id: "b", optionText: "Observer Pattern" },
+				{ id: "c", optionText: "Singleton Pattern" },
+				{ id: "d", optionText: "Decorator Pattern" },
+			],
+		},
+		{
+			id: 15,
+			type: "multiple-choice",
+			text: "What is the primary purpose of TypeScript?",
+			options: [
+				{ id: "a", optionText: "To make JavaScript run faster" },
+				{ id: "b", optionText: "To add static type checking to JavaScript" },
+				{ id: "c", optionText: "To replace JavaScript entirely" },
+				{ id: "d", optionText: "To provide UI components" },
 			],
 		},
 		// ... other multiple choice questions will be here

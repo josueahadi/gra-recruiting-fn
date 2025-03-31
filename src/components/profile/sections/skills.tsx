@@ -1,57 +1,56 @@
 import type React from "react";
 import { useState } from "react";
+import ProfileSection from "@/components/profile/core/profile-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ProfileInfoSection } from "@/components/profile/core/components";
 import { cn } from "@/lib/utils";
 import { Plus, X } from "lucide-react";
-
-export interface Skill {
-	id: string;
-	name: string;
-}
-
-export interface LanguageProficiency {
-	language: string;
-	level: number; // 1-10 scale
-}
+import type { Skill, LanguageProficiency } from "@/hooks/use-profile";
 
 interface SkillsSectionProps {
 	technicalSkills: Skill[];
 	softSkills: Skill[];
 	languages: LanguageProficiency[];
-	userType: "applicant" | "admin";
-	onSave?: (data: {
-		technicalSkills: Skill[];
-		softSkills: Skill[];
+	canEdit: boolean;
+	onUpdate: (data: {
+		technical: Skill[];
+		soft: Skill[];
 		languages: LanguageProficiency[];
 	}) => void;
 }
 
-/**
- * Reusable skills section component with technical skills, soft skills, and languages
- */
 const SkillsSection: React.FC<SkillsSectionProps> = ({
-	technicalSkills: initialTechnicalSkills,
-	softSkills: initialSoftSkills,
+	technicalSkills: initialTechnical,
+	softSkills: initialSoft,
 	languages: initialLanguages,
-	userType,
-	onSave,
+	canEdit,
+	onUpdate,
 }) => {
 	const [isEditingSkills, setIsEditingSkills] = useState(false);
 	const [isEditingLanguages, setIsEditingLanguages] = useState(false);
 
-	const [technicalSkills, setTechnicalSkills] = useState<Skill[]>(
-		initialTechnicalSkills,
-	);
-	const [softSkills, setSoftSkills] = useState<Skill[]>(initialSoftSkills);
+	const [technicalSkills, setTechnicalSkills] =
+		useState<Skill[]>(initialTechnical);
+	const [softSkills, setSoftSkills] = useState<Skill[]>(initialSoft);
 	const [languages, setLanguages] =
 		useState<LanguageProficiency[]>(initialLanguages);
 
 	const [newTechnicalSkill, setNewTechnicalSkill] = useState("");
 	const [newSoftSkill, setNewSoftSkill] = useState("");
 
-	const canEdit = userType === "applicant";
+	// Technical and soft skills handling
+	const handleEditSkills = () => {
+		setIsEditingSkills(true);
+	};
+
+	const handleSaveSkills = () => {
+		setIsEditingSkills(false);
+		onUpdate({
+			technical: technicalSkills,
+			soft: softSkills,
+			languages,
+		});
+	};
 
 	const handleAddTechnicalSkill = () => {
 		if (newTechnicalSkill.trim()) {
@@ -72,13 +71,26 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({
 			setNewSoftSkill("");
 		}
 	};
-
 	const handleRemoveTechnicalSkill = (id: string) => {
 		setTechnicalSkills(technicalSkills.filter((skill) => skill.id !== id));
 	};
 
 	const handleRemoveSoftSkill = (id: string) => {
 		setSoftSkills(softSkills.filter((skill) => skill.id !== id));
+	};
+
+	// Language proficiency handling
+	const handleEditLanguages = () => {
+		setIsEditingLanguages(true);
+	};
+
+	const handleSaveLanguages = () => {
+		setIsEditingLanguages(false);
+		onUpdate({
+			technical: technicalSkills,
+			soft: softSkills,
+			languages,
+		});
 	};
 
 	const handleLanguageLevelChange = (language: string, level: number) => {
@@ -89,36 +101,21 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({
 		);
 	};
 
-	const handleSaveSkills = () => {
-		setIsEditingSkills(false);
-		if (onSave) {
-			onSave({
-				technicalSkills,
-				softSkills,
-				languages,
-			});
-		}
+	const handleAddLanguage = () => {
+		setLanguages([...languages, { language: "New Language", level: 1 }]);
 	};
 
-	const handleSaveLanguages = () => {
-		setIsEditingLanguages(false);
-		if (onSave) {
-			onSave({
-				technicalSkills,
-				softSkills,
-				languages,
-			});
-		}
+	const handleRemoveLanguage = (language: string) => {
+		setLanguages(languages.filter((lang) => lang.language !== language));
 	};
 
-	// Skills Section Component
 	return (
 		<>
-			<ProfileInfoSection
+			<ProfileSection
 				title="Skills"
 				canEdit={canEdit}
 				isEditing={isEditingSkills}
-				onEdit={() => setIsEditingSkills(true)}
+				onEdit={handleEditSkills}
 				onSave={handleSaveSkills}
 			>
 				<div className="space-y-8">
@@ -204,13 +201,13 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({
 						)}
 					</div>
 				</div>
-			</ProfileInfoSection>
+			</ProfileSection>
 
-			<ProfileInfoSection
+			<ProfileSection
 				title="Language"
 				canEdit={canEdit}
 				isEditing={isEditingLanguages}
-				onEdit={() => setIsEditingLanguages(true)}
+				onEdit={handleEditLanguages}
 				onSave={handleSaveLanguages}
 			>
 				<div>
@@ -226,11 +223,7 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({
 											variant="ghost"
 											size="sm"
 											className="text-red-500 hover:text-red-700 p-0 h-auto"
-											onClick={() =>
-												setLanguages(
-													languages.filter((l) => l.language !== lang.language),
-												)
-											}
+											onClick={() => handleRemoveLanguage(lang.language)}
 										>
 											Remove
 										</Button>
@@ -266,15 +259,7 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({
 
 						{isEditingLanguages && (
 							<div className="pt-4">
-								<Button
-									variant="outline"
-									onClick={() =>
-										setLanguages([
-											...languages,
-											{ language: "New Language", level: 1 },
-										])
-									}
-								>
+								<Button variant="outline" onClick={handleAddLanguage}>
 									<Plus className="h-4 w-4 mr-2" />
 									Add Language
 								</Button>
@@ -282,7 +267,7 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({
 						)}
 					</div>
 				</div>
-			</ProfileInfoSection>
+			</ProfileSection>
 		</>
 	);
 };
