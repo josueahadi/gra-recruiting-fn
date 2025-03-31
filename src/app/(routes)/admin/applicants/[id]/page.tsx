@@ -1,31 +1,13 @@
-"use client";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ApplicantProfileClient } from "./client";
+import AppLayout from "@/components/layout/app-layout";
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { ProfileContainer } from '@/components/profile';
-import AppLayout from '@/components/layout/app-layout';
-
-interface ApplicantProfilePageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function ApplicantProfilePage({ params }: ApplicantProfilePageProps) {
-  const router = useRouter();
-  
-  const handleGoBack = () => {
-    router.push('/admin/applicants');
-  };
-  
-  return (
-    <AppLayout userType="admin">
-        <ProfileContainer
-        userId={params.id}
-        userType="admin"
-        onNavigateBack={handleGoBack}
-        wrapperClassName=""
-        />
-    </AppLayout>
-  );
+// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+export default function ApplicantProfilePage(props: any) {
+	const { params } = props as { params: { id: string } };
+	return (
+		<AppLayout userType="admin">
+			<ApplicantProfileClient id={params.id} />
+		</AppLayout>
+	);
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 
+// Types for profile data
 export interface ProfileInfo {
 	firstName: string;
 	lastName: string;
@@ -52,17 +53,15 @@ export interface PortfolioLinks {
 	portfolio?: string;
 	github?: string;
 	behance?: string;
-	[key: string]: string | undefined;
+	linkedin?: string;
 }
 
-// Complete profile data structure
-export interface ProfileData {
+export interface ApplicantData {
 	id: string;
+	name: string;
 	personalInfo: ProfileInfo;
 	addressInfo: AddressInfo;
 	department?: string;
-	dateApplied?: string;
-	status?: string;
 	skills: {
 		technical: Skill[];
 		soft: Skill[];
@@ -76,7 +75,6 @@ export interface ProfileData {
 	};
 	portfolioLinks: PortfolioLinks;
 	avatarSrc?: string;
-	completionPercentage?: number;
 }
 
 interface UseProfileOptions {
@@ -85,14 +83,17 @@ interface UseProfileOptions {
 }
 
 /**
- * Custom hook for managing profile data and operations
- * Works for both applicant (self-view) and admin (viewing others) contexts
+ * Custom hook for managing profile data across the application
  */
-export function useProfile({ id, userType }: UseProfileOptions) {
-	const [profileData, setProfileData] = useState<ProfileData | null>(null);
+export function useProfile(options: UseProfileOptions) {
+	const { id, userType } = options;
+	const [profileData, setProfileData] = useState<ApplicantData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const { toast } = useToast();
+
+	// Determine if current user can edit this profile
+	const canEdit = userType === "applicant" || !id;
 
 	// Fetch profile data on initial load
 	useEffect(() => {
@@ -101,21 +102,17 @@ export function useProfile({ id, userType }: UseProfileOptions) {
 			setError(null);
 
 			try {
-				// In a real app, endpoint would depend on context:
-				// For admin: /api/applicants/{id}
-				// For applicant: /api/me/profile
-				// const endpoint = userType === 'admin' && id
-				//   ? `/api/applicants/${id}`
-				//   : '/api/me/profile';
-				// const response = await fetch(endpoint);
+				// In a real app, this would be an API call
+				// const response = await fetch(`/api/profile${id ? `/${id}` : ''}`);
 				// const data = await response.json();
 
-				// Simulate API delay for demonstration
-				await new Promise((resolve) => setTimeout(resolve, 800));
+				// Simulate API delay
+				await new Promise((resolve) => setTimeout(resolve, 500));
 
 				// Mock data for demonstration
-				const mockData: ProfileData = {
+				const mockData: ApplicantData = {
 					id: id || "current-user",
+					name: "John Doe",
 					personalInfo: {
 						firstName: "John",
 						lastName: "Doe",
@@ -129,15 +126,17 @@ export function useProfile({ id, userType }: UseProfileOptions) {
 						postalCode: "00000",
 						address: "KN 21 Ave",
 					},
-					department: userType === "admin" ? "Marketing" : undefined,
-					dateApplied: userType === "admin" ? "12/06/2025" : undefined,
-					status: userType === "admin" ? "success" : undefined,
+					department: "Software Development",
 					skills: {
 						technical: [
-							{ id: "1", name: "React" },
-							{ id: "2", name: "TypeScript" },
-							{ id: "3", name: "Node.js" },
-							{ id: "4", name: "NextJS" },
+							{ id: "1", name: "Software Engineering" },
+							{ id: "2", name: "Frontend Development" },
+							{ id: "3", name: "Backend Development" },
+							{ id: "4", name: "Data Analysis" },
+							{ id: "5", name: "Database" },
+							{ id: "6", name: "MySQL" },
+							{ id: "7", name: "AI" },
+							{ id: "8", name: "Machine Learning" },
 						],
 						soft: [
 							{ id: "1", name: "Communication" },
@@ -146,9 +145,9 @@ export function useProfile({ id, userType }: UseProfileOptions) {
 						],
 					},
 					languages: [
-						{ language: "English", level: 8 },
-						{ language: "French", level: 5 },
 						{ language: "Kinyarwanda", level: 10 },
+						{ language: "French", level: 5 },
+						{ language: "English", level: 6 },
 					],
 					education: [
 						{
@@ -179,7 +178,6 @@ export function useProfile({ id, userType }: UseProfileOptions) {
 						behance: "https://behance.net/yourprofile",
 					},
 					avatarSrc: "/images/avatar.jpg",
-					completionPercentage: 75,
 				};
 
 				setProfileData(mockData);
@@ -197,227 +195,325 @@ export function useProfile({ id, userType }: UseProfileOptions) {
 		};
 
 		fetchProfileData();
-	}, [toast, userType, id]);
+	}, [id, toast]);
 
 	/**
-	 * Update profile data - handles both partial and full updates
+	 * Update personal information
 	 */
-	const updateProfile = useCallback(
-		async (updates: Partial<ProfileData>) => {
+	const updatePersonalInfo = useCallback(
+		async (info: ProfileInfo) => {
 			if (!profileData) return;
 
 			try {
-				// In a real app, this would make an API call:
-				// await fetch('/api/profile', {
-				//   method: 'PATCH',
-				//   headers: { 'Content-Type': 'application/json' },
-				//   body: JSON.stringify(updates)
-				// });
+				// In a real app, this would be an API call
+				// await fetch(`/api/profile/personal`, { method: 'PUT', body: JSON.stringify(info) });
 
 				// Optimistic update
-				setProfileData((prevData) => {
-					if (!prevData) return null;
-					return { ...prevData, ...updates };
-				});
+				setProfileData((prev) =>
+					prev
+						? {
+								...prev,
+								personalInfo: info,
+								name: `${info.firstName} ${info.lastName}`,
+							}
+						: null,
+				);
 
-				// Show success message
 				toast({
-					title: "Profile Updated",
-					description: "Your profile has been updated successfully",
+					title: "Success",
+					description: "Personal information updated",
 				});
-
-				return true;
 			} catch (err) {
-				console.error("Error updating profile:", err);
+				console.error("Error updating personal info:", err);
 				toast({
-					title: "Update Failed",
-					description: "Could not update your profile. Please try again.",
+					title: "Error",
+					description: "Failed to update personal information",
 					variant: "destructive",
 				});
-				return false;
 			}
 		},
 		[profileData, toast],
 	);
 
 	/**
-	 * Update personal information
-	 */
-	const updatePersonalInfo = useCallback(
-		(personalInfo: ProfileInfo) => {
-			return updateProfile({ personalInfo });
-		},
-		[updateProfile],
-	);
-
-	/**
 	 * Update address information
 	 */
 	const updateAddress = useCallback(
-		(addressInfo: AddressInfo) => {
-			return updateProfile({ addressInfo });
+		async (info: AddressInfo) => {
+			if (!profileData) return;
+
+			try {
+				// In a real app, this would be an API call
+				// await fetch(`/api/profile/address`, { method: 'PUT', body: JSON.stringify(info) });
+
+				// Optimistic update
+				setProfileData((prev) =>
+					prev ? { ...prev, addressInfo: info } : null,
+				);
+
+				toast({
+					title: "Success",
+					description: "Address information updated",
+				});
+			} catch (err) {
+				console.error("Error updating address:", err);
+				toast({
+					title: "Error",
+					description: "Failed to update address information",
+					variant: "destructive",
+				});
+			}
 		},
-		[updateProfile],
+		[profileData, toast],
 	);
 
 	/**
 	 * Update skills and languages
 	 */
 	const updateSkills = useCallback(
-		(data: {
+		async (data: {
 			technical: Skill[];
 			soft: Skill[];
 			languages: LanguageProficiency[];
+			department?: string;
 		}) => {
-			return updateProfile({
-				skills: {
-					technical: data.technical,
-					soft: data.soft,
-				},
-				languages: data.languages,
-			});
+			if (!profileData) return;
+
+			try {
+				// In a real app, this would be an API call
+				// await fetch(`/api/profile/skills`, { method: 'PUT', body: JSON.stringify(data) });
+
+				// Optimistic update
+				setProfileData((prev) =>
+					prev
+						? {
+								...prev,
+								skills: {
+									technical: data.technical,
+									soft: data.soft,
+								},
+								languages: data.languages,
+								department: data.department,
+							}
+						: null,
+				);
+
+				toast({
+					title: "Success",
+					description: "Skills and languages updated",
+				});
+			} catch (err) {
+				console.error("Error updating skills:", err);
+				toast({
+					title: "Error",
+					description: "Failed to update skills and languages",
+					variant: "destructive",
+				});
+			}
 		},
-		[updateProfile],
+		[profileData, toast],
 	);
 
 	/**
-	 * Update education and work experience
+	 * Update work and education information
 	 */
 	const updateWorkEducation = useCallback(
-		(data: {
+		async (data: {
 			education: Education[];
 			experience: WorkExperience[];
 		}) => {
-			return updateProfile({
-				education: data.education,
-				experience: data.experience,
-			});
+			if (!profileData) return;
+
+			try {
+				// In a real app, this would be an API call
+				// await fetch(`/api/profile/background`, { method: 'PUT', body: JSON.stringify(data) });
+
+				// Optimistic update
+				setProfileData((prev) =>
+					prev
+						? {
+								...prev,
+								education: data.education,
+								experience: data.experience,
+							}
+						: null,
+				);
+
+				toast({
+					title: "Success",
+					description: "Work and education information updated",
+				});
+			} catch (err) {
+				console.error("Error updating work/education:", err);
+				toast({
+					title: "Error",
+					description: "Failed to update work and education information",
+					variant: "destructive",
+				});
+			}
 		},
-		[updateProfile],
+		[profileData, toast],
 	);
 
 	/**
-	 * Upload a file (avatar, resume, sample)
+	 * Upload a file (avatar, resume, or sample document)
 	 */
 	const uploadFile = useCallback(
-		async (fileType: "avatar" | "resume" | "sample", file: File) => {
-			if (!profileData) return false;
+		async (type: "avatar" | "resume" | "sample", file: File) => {
+			if (!profileData) return;
 
 			try {
-				// In a real app, this would create a FormData and upload the file:
+				// In a real app, this would be an API call with FormData
 				// const formData = new FormData();
 				// formData.append('file', file);
-				// const response = await fetch(`/api/profile/upload/${fileType}`, {
-				//   method: 'POST',
-				//   body: formData
-				// });
-				// const data = await response.json();
+				// await fetch(`/api/profile/upload/${type}`, { method: 'POST', body: formData });
 
-				if (fileType === "avatar") {
-					// Create a temporary URL to preview the image
-					const reader = new FileReader();
-					reader.onload = (e) => {
-						if (e.target?.result) {
-							updateProfile({ avatarSrc: e.target.result as string });
-						}
-					};
-					reader.readAsDataURL(file);
-				} else if (fileType === "resume" && profileData) {
-					// Mock file upload response
-					const fakeDocument = {
-						name: file.name,
-						url: URL.createObjectURL(file), // This would be a real URL in production
-					};
+				// Simulate upload response
+				const uploadedUrl = URL.createObjectURL(file);
 
-					updateProfile({
-						documents: {
-							...profileData.documents,
-							resume: fakeDocument,
-						},
-					});
-				} else if (fileType === "sample" && profileData) {
-					// Mock file upload response
-					const fakeDocument = {
-						name: file.name,
-						url: URL.createObjectURL(file), // This would be a real URL in production
-					};
-
-					updateProfile({
-						documents: {
-							...profileData.documents,
-							samples: [...profileData.documents.samples, fakeDocument],
-						},
-					});
+				// Optimistic update based on file type
+				if (type === "avatar") {
+					setProfileData((prev) =>
+						prev ? { ...prev, avatarSrc: uploadedUrl } : null,
+					);
+				} else if (type === "resume") {
+					setProfileData((prev) =>
+						prev
+							? {
+									...prev,
+									documents: {
+										...prev.documents,
+										resume: { name: file.name, url: uploadedUrl },
+									},
+								}
+							: null,
+					);
+				} else if (type === "sample") {
+					setProfileData((prev) =>
+						prev
+							? {
+									...prev,
+									documents: {
+										...prev.documents,
+										samples: [
+											...prev.documents.samples,
+											{ name: file.name, url: uploadedUrl },
+										],
+									},
+								}
+							: null,
+					);
 				}
 
 				toast({
-					title: "File Uploaded",
-					description: `Your ${fileType} has been uploaded successfully`,
+					title: "Success",
+					description: `${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully`,
 				});
-				return true;
 			} catch (err) {
-				console.error(`Error uploading ${fileType}:`, err);
+				console.error(`Error uploading ${type}:`, err);
 				toast({
-					title: "Upload Failed",
-					description: `Could not upload your ${fileType}. Please try again.`,
+					title: "Error",
+					description: `Failed to upload ${type}`,
 					variant: "destructive",
 				});
-				return false;
 			}
 		},
-		[profileData, toast, updateProfile],
+		[profileData, toast],
 	);
 
 	/**
 	 * Remove a document (resume or sample)
 	 */
 	const removeDocument = useCallback(
-		(type: "resume" | "sample", index?: number) => {
-			if (!profileData) return false;
+		async (type: "resume" | "sample", index?: number) => {
+			if (!profileData) return;
 
 			try {
-				if (type === "resume") {
-					updateProfile({
-						documents: {
-							...profileData.documents,
-							resume: null,
-						},
-					});
-				} else if (type === "sample" && typeof index === "number") {
-					const newSamples = [...profileData.documents.samples];
-					newSamples.splice(index, 1);
+				// In a real app, this would be an API call
+				// await fetch(`/api/profile/document/${type}${index !== undefined ? `/${index}` : ''}`, { method: 'DELETE' });
 
-					updateProfile({
-						documents: {
-							...profileData.documents,
-							samples: newSamples,
-						},
-					});
+				// Optimistic update
+				if (type === "resume") {
+					setProfileData((prev) =>
+						prev
+							? {
+									...prev,
+									documents: {
+										...prev.documents,
+										resume: null,
+									},
+								}
+							: null,
+					);
+				} else if (type === "sample" && index !== undefined) {
+					setProfileData((prev) =>
+						prev
+							? {
+									...prev,
+									documents: {
+										...prev.documents,
+										samples: prev.documents.samples.filter(
+											(_, i) => i !== index,
+										),
+									},
+								}
+							: null,
+					);
 				}
-				return true;
+
+				toast({
+					title: "Success",
+					description: `${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`,
+				});
 			} catch (err) {
 				console.error(`Error removing ${type}:`, err);
-				return false;
+				toast({
+					title: "Error",
+					description: `Failed to remove ${type}`,
+					variant: "destructive",
+				});
 			}
 		},
-		[profileData, updateProfile],
+		[profileData, toast],
 	);
 
 	/**
 	 * Update portfolio links
 	 */
 	const updatePortfolioLinks = useCallback(
-		(links: PortfolioLinks) => {
-			return updateProfile({ portfolioLinks: links });
+		async (links: PortfolioLinks) => {
+			if (!profileData) return;
+
+			try {
+				// In a real app, this would be an API call
+				// await fetch(`/api/profile/links`, { method: 'PUT', body: JSON.stringify(links) });
+
+				// Optimistic update
+				setProfileData((prev) =>
+					prev ? { ...prev, portfolioLinks: links } : null,
+				);
+
+				toast({
+					title: "Success",
+					description: "Portfolio links updated",
+				});
+			} catch (err) {
+				console.error("Error updating links:", err);
+				toast({
+					title: "Error",
+					description: "Failed to update portfolio links",
+					variant: "destructive",
+				});
+			}
 		},
-		[updateProfile],
+		[profileData, toast],
 	);
 
 	return {
 		profileData,
 		isLoading,
 		error,
-		updateProfile,
+		canEdit,
 		updatePersonalInfo,
 		updateAddress,
 		updateSkills,
@@ -425,6 +521,5 @@ export function useProfile({ id, userType }: UseProfileOptions) {
 		uploadFile,
 		removeDocument,
 		updatePortfolioLinks,
-		canEdit: userType === "applicant", // Only applicants can edit their own profiles
 	};
 }

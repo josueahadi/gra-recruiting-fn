@@ -1,6 +1,6 @@
+import type React from "react";
 import { cn } from "@/lib/utils";
 import { X } from "lucide-react";
-import type React from "react";
 
 interface SkillPillProps {
 	skill: string;
@@ -18,7 +18,7 @@ const SkillPill: React.FC<SkillPillProps> = ({
 	return (
 		<div
 			className={cn(
-				"bg-blue-400 text-white px-5 py-2 rounded-full inline-flex items-center",
+				"bg-slate-500 text-white px-4 py-2 rounded-full inline-flex items-center",
 				isEditing ? "pr-3" : "",
 				className,
 			)}

@@ -60,9 +60,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 					</Button>
 					<Button
 						onClick={onSave}
-						className="bg-primary-base hover:bg-primary-dark"
+						className="bg-primary-base hover:bg-custom-skyBlue"
 					>
-						<Check className="h-4 w-4 mr-2" />
 						Save Changes
 					</Button>
 				</div>

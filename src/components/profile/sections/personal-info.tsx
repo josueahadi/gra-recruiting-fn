@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Edit1 } from "@/components/icons/edit-1";
 import type { ProfileInfo } from "@/hooks/use-profile";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 
 interface PersonalInfoSectionProps {
 	personalInfo: ProfileInfo;
@@ -30,7 +31,9 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 	const [personalInfo, setPersonalInfo] = useState<ProfileInfo>(initialInfo);
 	const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-	const handleInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+	const handleInfoChange = (
+		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+	) => {
 		const { name, value } = e.target;
 		setPersonalInfo((prev) => ({ ...prev, [name]: value }));
 	};
@@ -70,10 +73,10 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 
 	// User profile header with avatar
 	const profileHeader = (
-		<div className="px-4 md:px-10">
-			<div className="flex flex-col items-center md:flex-row md:gap-6 mb-8 ">
-				<div className="relative group">
-					<Avatar className="h-24 w-24 mb-4 md:mb-0">
+		<div className="md:px-10">
+			<div className="flex flex-row items-center gap-6 mb-8 ">
+				<div className="relative group flex items-center justify-center">
+					<Avatar className="h-24 w-24 mb-4 md:mb-0 my-auto">
 						<AvatarImage
 							src={avatarSrc}
 							alt={`${personalInfo.firstName} ${personalInfo.lastName}`}
@@ -91,7 +94,7 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 							className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
 							onClick={handleAvatarClick}
 						>
-							<Edit1 className="h-8 w-8 text-white" />
+							<Edit1 className="h-8 w-8 !text-white" />
 						</div>
 					)}
 
@@ -104,18 +107,18 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 					/>
 				</div>
 
-				<div className="text-center md:text-left">
-					<h2 className="text-xl font-semibold">
+				<div className="text-left">
+					<h2 className="text-xl md:text-2xl font-semibold">
 						{personalInfo.firstName} {personalInfo.lastName}
 					</h2>
 					{locationLabel && (
-						<p className="text-gray-600 font-regular text-base">
+						<p className="text-sm text-custom-darkGray font-regular">
 							{locationLabel}
 						</p>
 					)}
 				</div>
 			</div>
-			<Separator className="my-6" />
+			<Separator className="my-8 bg-custom-separator bg-opacity-50" />
 		</div>
 	);
 
@@ -131,76 +134,88 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 				onSave={handleSave}
 				onCancel={handleCancel}
 			>
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-8 md:px-10">
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 md:gap-x-8 md:px-4">
 					<div>
-						<h3 className="text-sm text-gray-500 mb-1">First Name</h3>
+						<h3 className="text-sm md:text-base text-custom-darkGray font-semibold mb-1">
+							First Name
+						</h3>
 						{isEditing ? (
 							<Input
 								name="firstName"
 								value={personalInfo.firstName}
 								onChange={handleInfoChange}
-								className="mt-1"
+								className="mt-1 border-gray-400/95"
 							/>
 						) : (
-							<p className="font-medium">{personalInfo.firstName}</p>
+							<p className="font-normal">{personalInfo.firstName}</p>
 						)}
 					</div>
 
 					<div>
-						<h3 className="text-sm text-gray-500 mb-1">Last Name</h3>
+						<h3 className="text-sm md:text-base text-custom-darkGray font-semibold mb-1">
+							Last Name
+						</h3>
 						{isEditing ? (
 							<Input
 								name="lastName"
 								value={personalInfo.lastName}
 								onChange={handleInfoChange}
-								className="mt-1"
+								className="mt-1 border-gray-400/95"
 							/>
 						) : (
-							<p className="font-medium">{personalInfo.lastName}</p>
+							<p className="font-normal">{personalInfo.lastName}</p>
 						)}
 					</div>
 
 					<div>
-						<h3 className="text-sm text-gray-500 mb-1">Email Address</h3>
+						<h3 className="text-sm md:text-base text-custom-darkGray font-semibold mb-1">
+							Email Address
+						</h3>
 						{isEditing ? (
 							<Input
 								name="email"
 								value={personalInfo.email}
 								onChange={handleInfoChange}
-								className="mt-1"
+								className="mt-1 border-gray-400/95"
 								type="email"
 							/>
 						) : (
-							<p className="font-medium">{personalInfo.email}</p>
+							<p className="font-normal">{personalInfo.email}</p>
 						)}
 					</div>
 
 					<div>
-						<h3 className="text-sm text-gray-500 mb-1">Phone Number</h3>
+						<h3 className="text-sm md:text-base text-custom-darkGray font-semibold mb-1">
+							Phone Number
+						</h3>
 						{isEditing ? (
 							<Input
 								name="phone"
 								value={personalInfo.phone}
 								onChange={handleInfoChange}
-								className="mt-1"
+								className="mt-1 border-gray-400/95"
 								type="tel"
 							/>
 						) : (
-							<p className="font-medium">{personalInfo.phone}</p>
+							<p className="font-normal">{personalInfo.phone}</p>
 						)}
 					</div>
 
 					<div className="md:col-span-2">
-						<h3 className="text-sm text-gray-500 mb-1">Bio</h3>
+						<h3 className="text-sm md:text-base text-custom-darkGray font-semibold mb-1">
+							Bio
+						</h3>
 						{isEditing ? (
-							<Input
+							<Textarea
 								name="bio"
 								value={personalInfo.bio}
 								onChange={handleInfoChange}
-								className="mt-1"
+								className="mt-1 border-gray-400/95"
+								rows={3}
+								style={{ resize: "none" }}
 							/>
 						) : (
-							<p className="font-medium">{personalInfo.bio}</p>
+							<p className="font-normal">{personalInfo.bio}</p>
 						)}
 					</div>
 				</div>
