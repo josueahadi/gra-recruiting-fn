@@ -20,7 +20,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (company && role) {
+		if (company && role && startDate) {
 			// Format dates to "Month Year" format (e.g., "Jun 2021")
 			const formatDate = (dateStr: string) => {
 				if (!dateStr) return "";
@@ -31,13 +31,52 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 				});
 			};
 
+			// Calculate duration
+			const calculateDuration = () => {
+				try {
+					const start = new Date(startDate);
+					const end = endDate ? new Date(endDate) : new Date();
+
+					// Get total months
+					const months =
+						(end.getFullYear() - start.getFullYear()) * 12 +
+						(end.getMonth() - start.getMonth());
+
+					// Calculate years and remaining months
+					const years = Math.floor(months / 12);
+					const remainingMonths = months % 12;
+
+					const yearsText =
+						years > 0 ? `${years} ${years === 1 ? "yr" : "yrs"}` : "";
+					const monthsText =
+						remainingMonths > 0
+							? `${remainingMonths} ${remainingMonths === 1 ? "mo" : "mos"}`
+							: "";
+
+					if (yearsText && monthsText) {
+						return `${yearsText} ${monthsText}`;
+					}
+					if (yearsText) {
+						return yearsText;
+					}
+					if (monthsText) {
+						return monthsText;
+					}
+					return "Less than a month";
+				} catch (e) {
+					console.error("Error calculating duration:", e);
+					return "";
+				}
+			};
+
 			const formattedStartDate = formatDate(startDate);
 			const formattedEndDate = endDate ? formatDate(endDate) : "Present";
+			const duration = calculateDuration();
 
 			onAddExperience({
 				company,
 				role,
-				duration: `${formattedStartDate} - ${formattedEndDate}`,
+				duration: `${formattedStartDate} - ${formattedEndDate}${duration ? ` (${duration})` : ""}`,
 				responsibilities: employmentType || "Full-time",
 			});
 
@@ -55,7 +94,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 			<div>
 				<Label className="block text-sm font-medium mb-1">Company Name</Label>
 				<Input
-					placeholder="Enter your institution's name"
+					placeholder="Enter company name"
 					value={company}
 					onChange={(e) => setCompany(e.target.value)}
 					required
@@ -81,13 +120,16 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 						value={endDate}
 						onChange={(e) => setEndDate(e.target.value)}
 					/>
+					<p className="text-xs text-gray-500 mt-1">
+						Leave empty if this is your current position
+					</p>
 				</div>
 			</div>
 
 			<div>
 				<Label className="block text-sm font-medium mb-1">Role</Label>
 				<Input
-					placeholder="Enter your program"
+					placeholder="Your position or title"
 					value={role}
 					onChange={(e) => setRole(e.target.value)}
 					required

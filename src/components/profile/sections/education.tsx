@@ -1,9 +1,10 @@
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProfileSection from "@/components/profile/core/profile-section";
 import EducationForm from "./education/education-form";
 import EducationCard from "./education/education-card";
 import type { Education } from "@/hooks/use-profile";
+import { formatDateString } from "@/lib/utils";
 
 interface EducationSectionProps {
 	education: Education[];
@@ -20,6 +21,18 @@ const EducationSection: React.FC<EducationSectionProps> = ({
 	const [education, setEducation] = useState<Education[]>(
 		initialEducation || [],
 	);
+
+	// Format existing date values when component mounts
+	useEffect(() => {
+		if (initialEducation && initialEducation.length > 0) {
+			const formattedEducation = initialEducation.map((edu) => ({
+				...edu,
+				startYear: formatDateString(edu.startYear),
+				endYear: formatDateString(edu.endYear),
+			}));
+			setEducation(formattedEducation);
+		}
+	}, [initialEducation]);
 
 	const handleEdit = () => {
 		setIsEditing(true);

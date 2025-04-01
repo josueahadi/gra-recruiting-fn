@@ -1,9 +1,10 @@
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProfileSection from "@/components/profile/core/profile-section";
 import ExperienceForm from "./experience/experience-form";
 import ExperienceCard from "./experience/experience-card";
 import type { WorkExperience } from "@/hooks/use-profile";
+import { formatDateRange } from "@/lib/utils";
 
 interface ExperienceSectionProps {
 	experience: WorkExperience[];
@@ -20,6 +21,32 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 	const [experience, setExperience] = useState<WorkExperience[]>(
 		initialExperience || [],
 	);
+
+	// Format existing duration values when component mounts
+	useEffect(() => {
+		if (initialExperience && initialExperience.length > 0) {
+			const formattedExperience = initialExperience.map((exp) => {
+				// Handle various duration formats
+				// Check if duration already has the (X yrs Y mos) format
+				if (exp.duration.includes("(") && exp.duration.includes(")")) {
+					return exp;
+				}
+
+				// Extract dates if in "Start - End" format
+				const durationParts = exp.duration.split("-").map((p) => p.trim());
+				if (durationParts.length === 2) {
+					return {
+						...exp,
+						duration: formatDateRange(durationParts[0], durationParts[1]),
+					};
+				}
+
+				// Just pass through if not in a standard format
+				return exp;
+			});
+			setExperience(formattedExperience);
+		}
+	}, [initialExperience]);
 
 	const handleEdit = () => {
 		setIsEditing(true);

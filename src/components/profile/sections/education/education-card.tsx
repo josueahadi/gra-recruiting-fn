@@ -22,7 +22,7 @@ const EducationCard: React.FC<EducationCardProps> = ({
 					</h3>
 					<p className="text-gray-600">{education.program}</p>
 					<p className="text-sm text-gray-500">
-						{education.startYear} - {education.endYear}
+						{education.startYear} - {education.endYear || "Present"}
 					</p>
 				</div>
 
