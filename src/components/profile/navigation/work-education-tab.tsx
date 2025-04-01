@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
-import { WorkEducationSection } from "@/components/profile";
-import { type Education, type WorkExperience } from "@/hooks/use-profile";
-import ProfileNavigationButtons from "./profile-nav-buttons";
+import type React from "react";
+import type { Education, WorkExperience } from "@/hooks/use-profile";
+import WorkEducationSection from "@/components/profile/sections/work-education";
+import ProfileNavigationButtons from "@/components/profile/navigation/profile-nav-buttons";
 
 interface WorkEducationTabProps {
 	education: Education[];

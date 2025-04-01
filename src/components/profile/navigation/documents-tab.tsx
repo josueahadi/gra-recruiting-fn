@@ -1,9 +1,7 @@
-"use client";
-
-import React from "react";
-import { DocumentsSection } from "@/components/profile";
-import { type Document, type PortfolioLinks } from "@/hooks/use-profile";
-import ProfileNavigationButtons from "./profile-nav-buttons";
+import type React from "react";
+import type { Document, PortfolioLinks } from "@/hooks/use-profile";
+import ProfileNavigationButtons from "@/components/profile/navigation/profile-nav-buttons";
+import DocumentsSection from "@/components/profile/sections/documents";
 
 interface DocumentsTabProps {
 	resume: Document | null;
@@ -27,9 +25,7 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
 }) => {
 	return (
 		<>
-			<h1 className="text-2xl font-bold text-primary-base mb-6">
-				Documents & Portfolio
-			</h1>
+			<h1 className="text-2xl font-bold text-primary-base mb-6">Documents</h1>
 
 			<DocumentsSection
 				resume={resume}
@@ -41,7 +37,9 @@ const DocumentsTab: React.FC<DocumentsTabProps> = ({
 				onLinksUpdate={onLinksUpdate}
 			/>
 
-			<ProfileNavigationButtons />
+			<div className="mt-12">
+				<ProfileNavigationButtons />
+			</div>
 		</>
 	);
 };

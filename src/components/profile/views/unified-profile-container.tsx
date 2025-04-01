@@ -8,7 +8,7 @@ import AddressSection from "../sections/address";
 import DepartmentSection from "@/components/profile/sections/department";
 import SkillsSection from "@/components/profile/sections/skills";
 import LanguagesSection from "@/components/profile/sections/languages";
-import WorkEducationSection from "../sections/work-education";
+import { WorkEducationSection } from "@/components/profile";
 import DocumentsSection from "../sections/documents";
 import { useProfile } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
@@ -191,7 +191,9 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 					onUpdate={handleLanguagesUpdate}
 				/>
 
-				<Separator className="my-6" />
+				<div className="md:px-10">
+					<Separator className="my-6 bg-custom-separator bg-opacity-50" />
+				</div>
 
 				{/* Work & Education Section */}
 				<WorkEducationSection
@@ -203,7 +205,9 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 					}
 				/>
 
-				<Separator className="my-6" />
+				<div className="md:px-10">
+					<Separator className="my-6 bg-custom-separator bg-opacity-50" />
+				</div>
 
 				{/* Documents & Portfolio Section */}
 				<DocumentsSection
