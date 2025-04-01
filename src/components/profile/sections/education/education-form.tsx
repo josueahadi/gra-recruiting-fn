@@ -21,12 +21,22 @@ const EducationForm: React.FC<EducationFormProps> = ({ onAddEducation }) => {
 		e.preventDefault();
 
 		if (institution && level) {
+			// Format dates to "Month Year" format (e.g., "Jun 2021")
+			const formatDate = (dateStr: string) => {
+				if (!dateStr) return "";
+				const date = new Date(dateStr);
+				return date.toLocaleDateString("en-US", {
+					month: "short",
+					year: "numeric",
+				});
+			};
+
 			onAddEducation({
 				institution,
 				degree: level,
 				program,
-				startYear: startDate.split("-")[0] || "",
-				endYear: endDate.split("-")[0] || "",
+				startYear: formatDate(startDate),
+				endYear: formatDate(endDate) || "Present",
 			});
 
 			// Reset form

@@ -21,17 +21,23 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 		e.preventDefault();
 
 		if (company && role) {
-			const startYear = startDate
-				? new Date(startDate).getFullYear().toString()
-				: "";
-			const endYear = endDate
-				? new Date(endDate).getFullYear().toString()
-				: "Present";
+			// Format dates to "Month Year" format (e.g., "Jun 2021")
+			const formatDate = (dateStr: string) => {
+				if (!dateStr) return "";
+				const date = new Date(dateStr);
+				return date.toLocaleDateString("en-US", {
+					month: "short",
+					year: "numeric",
+				});
+			};
+
+			const formattedStartDate = formatDate(startDate);
+			const formattedEndDate = endDate ? formatDate(endDate) : "Present";
 
 			onAddExperience({
 				company,
 				role,
-				duration: `${startYear} - ${endYear}`,
+				duration: `${formattedStartDate} - ${formattedEndDate}`,
 				responsibilities: employmentType || "Full-time",
 			});
 
