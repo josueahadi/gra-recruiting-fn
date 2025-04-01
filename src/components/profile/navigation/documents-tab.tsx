@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import type React from "react";
 import { DocumentsSection } from "@/components/profile";
-import { type Document, type PortfolioLinks } from "@/hooks/use-profile";
+import type { Document, PortfolioLinks } from "@/hooks/use-profile";
 import ProfileNavigationButtons from "./profile-nav-buttons";
 
 interface DocumentsTabProps {
