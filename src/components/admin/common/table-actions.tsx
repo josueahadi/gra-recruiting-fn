@@ -1,63 +1,87 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Eye, FileEdit, Trash2 } from "lucide-react";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Eye, Trash2, FileEdit, Bot } from "lucide-react";
 import type React from "react";
 
-export interface ActionButton {
-	icon: "view" | "edit" | "delete" | "custom";
-	customIcon?: React.ReactNode;
+export type ActionIcon = "view" | "delete" | "edit" | "robot";
+
+interface Action {
+	icon: ActionIcon;
 	onClick: () => void;
-	className?: string;
-	label?: string;
 	tooltip?: string;
+	disabled?: boolean;
 }
 
 interface TableActionsProps {
-	actions: ActionButton[];
+	actions: Action[];
 	className?: string;
 }
 
-/**
- * Reusable component for rendering action buttons in tables
- */
+const getIcon = (type: ActionIcon) => {
+	switch (type) {
+		case "view":
+			return <Eye className="h-4 w-4" />;
+		case "delete":
+			return <Trash2 className="h-4 w-4" />;
+		case "edit":
+			return <FileEdit className="h-4 w-4" />;
+		case "robot":
+			return <Bot className="h-4 w-4" />;
+		default:
+			return null;
+	}
+};
+
+const getIconColor = (type: ActionIcon) => {
+	switch (type) {
+		case "view":
+			return "text-blue-500 hover:text-blue-700";
+		case "delete":
+			return "text-red-500 hover:text-red-700";
+		case "edit":
+			return "text-amber-500 hover:text-amber-700";
+		case "robot":
+			return "text-indigo-500 hover:text-indigo-700";
+		default:
+			return "";
+	}
+};
+
 const TableActions: React.FC<TableActionsProps> = ({ actions, className }) => {
-	// Map of icons to their components
-	const iconMap = {
-		view: <Eye className="h-4 w-4" />,
-		edit: <FileEdit className="h-4 w-4" />,
-		delete: <Trash2 className="h-4 w-4" />,
-	};
-
-	// Map of default colors for different action types
-	const colorMap = {
-		view: "text-blue-500 hover:text-blue-700",
-		edit: "text-amber-500 hover:text-amber-700",
-		delete: "text-red-500 hover:text-red-700",
-	};
-
 	return (
-		<div className={cn("flex items-center gap-2", className)}>
-			{actions.map((action, index) => (
-				<Button
-					key={`action-${
-						// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-						index
-					}`}
-					variant="ghost"
-					size="icon"
-					onClick={action.onClick}
-					className={cn(
-						action.icon !== "custom" && colorMap[action.icon],
-						action.className,
-					)}
-					title={action.tooltip}
-					aria-label={action.label || action.icon}
-				>
-					{action.icon === "custom" ? action.customIcon : iconMap[action.icon]}
-				</Button>
-			))}
+		<div className={`flex items-center gap-2 ${className}`}>
+			<TooltipProvider>
+				{actions.map((action, index) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+					<Tooltip key={index}>
+						<TooltipTrigger asChild>
+							<Button
+								variant="ghost"
+								size="icon"
+								className={`${getIconColor(action.icon)} ${
+									action.disabled ? "opacity-50 cursor-not-allowed" : ""
+								}`}
+								onClick={action.onClick}
+								disabled={action.disabled}
+							>
+								{getIcon(action.icon)}
+							</Button>
+						</TooltipTrigger>
+						{action.tooltip && (
+							<TooltipContent>
+								<p>{action.tooltip}</p>
+							</TooltipContent>
+						)}
+					</Tooltip>
+				))}
+			</TooltipProvider>
 		</div>
 	);
 };

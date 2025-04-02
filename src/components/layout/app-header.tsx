@@ -46,7 +46,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 							<Menu className="h-6 w-6" />
 						</Button>
 					)}
-					<h1 className="text-2xl font-semibold text-primary-shades-800">
+					<h1 className="text-lg sm:text-2xl font-semibold text-primary-shades-800">
 						{title}
 					</h1>
 				</div>

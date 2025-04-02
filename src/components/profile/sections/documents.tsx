@@ -91,9 +91,9 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 			>
 				<div className="border border-dashed border-primary-base rounded-md p-10 bg-primary-base bg-opacity-10">
 					{resume ? (
-						<div className="flex justify-center">
+						<div className="flex flex-col sm:flex-row justify-center gap-2">
 							<Button
-								className="bg-primary-base text-white font-semibold hover:bg-custom-skyBlue flex items-center gap-2 md:px-8"
+								className="bg-primary-base text-white font-semibold hover:bg-custom-skyBlue flex items-center justify-center gap-2 px-4 md:px-8 w-full sm:w-auto"
 								onClick={() => window.open(resume.url, "_blank")}
 							>
 								Download Resume <Download className="h-4 w-4" />
@@ -102,7 +102,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 							{canEdit && (
 								<Button
 									variant="ghost"
-									className="ml-4 text-red-500 hover:text-red-700 hover:bg-red-50"
+									className="text-red-500 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto md:ml-2"
 									onClick={() => onFileRemove("resume")}
 								>
 									Remove
@@ -161,9 +161,9 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 			>
 				<div className="space-y-4 md:px-4">
 					{/* GitHub Link */}
-					<div className="flex items-center gap-4">
-						<div className="flex items-center gap-2 w-28">
-							<FaGithub className="w-5 h-5 text-primary-base" />
+					<div className="flex flex-wrap items-start gap-2 sm:gap-4">
+						<div className="flex items-center gap-2 w-full sm:w-28">
+							<FaGithub className="w-5 h-5 text-primary-base flex-shrink-0" />
 							<span className="font-medium">GitHub</span>
 						</div>
 
@@ -176,15 +176,17 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 								className="w-full"
 							/>
 						) : links.github ? (
-							<div className="flex items-center">
+							<div className="flex-1 min-w-0">
 								<a
 									href={links.github}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="text-primary-dark hover:underline flex items-center gap-1"
+									className="text-primary-dark hover:underline inline-flex items-center gap-1 break-all"
 								>
-									{links.github}
-									<ExternalLink className="h-3 w-3" />
+									<span className="break-words">
+										{links.github.replace(/^https?:\/\/(www\.)?/i, "")}
+									</span>
+									<ExternalLink className="h-3 w-3 flex-shrink-0 inline align-text-bottom" />
 								</a>
 							</div>
 						) : (
@@ -193,9 +195,9 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 					</div>
 
 					{/* Behance Link */}
-					<div className="flex items-center gap-4">
-						<div className="flex items-center gap-2 w-28">
-							<FaBehance className="w-5 h-5 text-primary-base" />
+					<div className="flex flex-wrap items-start gap-2 sm:gap-4">
+						<div className="flex items-center gap-2 w-full sm:w-28">
+							<FaBehance className="w-5 h-5 text-primary-base flex-shrink-0" />
 							<span className="font-medium">Behance</span>
 						</div>
 
@@ -208,15 +210,17 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 								className="w-full"
 							/>
 						) : links.behance ? (
-							<div className="flex items-center">
+							<div className="flex-1 min-w-0">
 								<a
 									href={links.behance}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="text-primary-dark hover:underline flex items-center gap-1"
+									className="text-primary-dark hover:underline inline-flex items-center gap-1 break-all"
 								>
-									{links.behance}
-									<ExternalLink className="h-3 w-3" />
+									<span className="break-words">
+										{links.behance.replace(/^https?:\/\/(www\.)?/i, "")}
+									</span>
+									<ExternalLink className="h-3 w-3 flex-shrink-0 inline align-text-bottom" />
 								</a>
 							</div>
 						) : (
@@ -225,9 +229,9 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 					</div>
 
 					{/* Portfolio Link */}
-					<div className="flex items-center gap-4">
-						<div className="flex items-center gap-2 w-28">
-							<BiWorld className="w-5 h-5 text-primary-base" />
+					<div className="flex flex-wrap items-start gap-2 sm:gap-4">
+						<div className="flex items-center gap-2 w-full sm:w-28">
+							<BiWorld className="w-5 h-5 text-primary-base flex-shrink-0" />
 							<span className="font-medium">Website</span>
 						</div>
 
@@ -240,15 +244,17 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 								className="w-full"
 							/>
 						) : links.portfolio ? (
-							<div className="flex items-center">
+							<div className="flex-1 min-w-0">
 								<a
 									href={links.portfolio}
 									target="_blank"
 									rel="noopener noreferrer"
-									className="text-blue-600 hover:underline flex items-center gap-1"
+									className="text-blue-600 hover:underline inline-flex items-center gap-1 break-all"
 								>
-									{links.portfolio}
-									<ExternalLink className="h-3 w-3" />
+									<span className="break-words">
+										{links.portfolio.replace(/^https?:\/\/(www\.)?/i, "")}
+									</span>
+									<ExternalLink className="h-3 w-3 flex-shrink-0 inline align-text-bottom" />
 								</a>
 							</div>
 						) : (
