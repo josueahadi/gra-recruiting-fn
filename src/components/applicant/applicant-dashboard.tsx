@@ -24,7 +24,7 @@ const ApplicantDashboard = () => {
 	const router = useRouter();
 
 	// State for profile completion and assessment results
-	const [completionPercentage, setCompletionPercentage] = useState(75);
+	const [completionPercentage, setCompletionPercentage] = useState(100);
 	const [showResults, setShowResults] = useState(false);
 	const [resultsData, setResultsData] = useState<ResultData>({
 		sectionOne: {
