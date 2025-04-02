@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Badge } from "@/components/ui/badge";
@@ -9,12 +8,12 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import type React from "react";
+import { type TestResult, MOCK_EXAM_DATA } from "@/hooks/use-results";
 
 interface ResultDetailProps {
 	isOpen: boolean;
 	onClose: () => void;
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	result: any;
+	result: TestResult;
 }
 
 const ResultDetail: React.FC<ResultDetailProps> = ({
@@ -22,37 +21,8 @@ const ResultDetail: React.FC<ResultDetailProps> = ({
 	onClose,
 	result,
 }) => {
-	// Mock exam questions and answers
-	const examData = {
-		questions: [
-			{
-				id: "q1",
-				text: "What is the most important aspect of a well-structured resume?",
-				type: "multiple-choice",
-				applicantAnswer: "Clear formatting and organization",
-				correctAnswer: "Clear formatting and organization",
-				isCorrect: true,
-			},
-			{
-				id: "q2",
-				text: "Which of the following is NOT a recommended practice for technical interviews?",
-				type: "multiple-choice",
-				applicantAnswer: "Memorizing answers to common questions",
-				correctAnswer: "Memorizing answers to common questions",
-				isCorrect: true,
-			},
-			{
-				id: "q3",
-				text: "Explain the difference between synchronous and asynchronous programming.",
-				type: "essay",
-				applicantAnswer:
-					"Synchronous programming executes tasks sequentially, blocking until each operation completes before moving to the next one. Asynchronous programming allows operations to be executed independently without blocking the main thread, enabling better performance and responsiveness in applications.",
-				score: 9,
-				maxScore: 10,
-				feedback: "Excellent explanation with good practical context.",
-			},
-		],
-	};
+	// Use the exam data from the hook
+	const examData = MOCK_EXAM_DATA;
 
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
@@ -63,10 +33,10 @@ const ResultDetail: React.FC<ResultDetailProps> = ({
 						<Badge
 							className={
 								result.status === "success"
-									? "bg-green-100 text-green-800"
+									? "bg-green-100 text-green-800 hover:bg-green-100 hover:text-green-800"
 									: result.status === "fail"
-										? "bg-red-100 text-red-800"
-										: "bg-yellow-100 text-yellow-800"
+										? "bg-red-100 text-red-800 hover:bg-red-100 hover:text-red-800hover:"
+										: "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 hover:text-yellow-800"
 							}
 						>
 							{result.status === "success"
@@ -91,6 +61,32 @@ const ResultDetail: React.FC<ResultDetailProps> = ({
 							</div>
 						)}
 					</div>
+
+					{/* Show graded by information if available */}
+					{result.gradedBy && (
+						<div className="bg-gray-50 p-4 rounded-md">
+							<div className="flex justify-between">
+								<div>
+									<h3 className="font-medium">Graded By</h3>
+									<p className="text-gray-600">{result.gradedBy}</p>
+								</div>
+								{result.gradedAt && (
+									<div className="text-right">
+										<h3 className="font-medium">Graded On</h3>
+										<p className="text-gray-600">{result.gradedAt}</p>
+									</div>
+								)}
+							</div>
+							{result.feedback && (
+								<div className="mt-4">
+									<h3 className="font-medium">Feedback</h3>
+									<p className="mt-1 p-3 bg-white rounded border border-gray-200">
+										{result.feedback}
+									</p>
+								</div>
+							)}
+						</div>
+					)}
 
 					<div>
 						<h3 className="text-lg font-medium mb-3">Exam Responses</h3>
