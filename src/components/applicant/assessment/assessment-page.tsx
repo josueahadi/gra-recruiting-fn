@@ -147,10 +147,10 @@ const questionBank: { [key: string]: Question[] } = {
 			text: "Select the correct pattern that should go in the empty space:",
 			imageUrl: "/images/assessment/pattern-question.png",
 			options: [
-				{ id: "a", optionText: "" },
-				{ id: "b", optionText: "This is a text option" },
-				{ id: "c", optionText: "This is a text option" },
-				{ id: "d", optionText: "This is a text option" },
+				{ id: "a", optionImageUrl: "/images/assessment/pattern-a.png" },
+				{ id: "b", optionImageUrl: "/images/assessment/pattern-b.png" },
+				{ id: "c", optionImageUrl: "/images/assessment/pattern-c.png" },
+				{ id: "d", optionImageUrl: "/images/assessment/pattern-d.png" },
 			],
 		},
 		{
