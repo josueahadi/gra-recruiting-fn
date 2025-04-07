@@ -14,6 +14,7 @@ import TextEditor from "@/components/admin/questions/text-editor";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
+import { Upload } from "lucide-react";
 
 export default function AddQuestionPage() {
 	const router = useRouter();
@@ -97,36 +98,23 @@ export default function AddQuestionPage() {
 			<div className="w-full max-w-6xl mx-auto">
 				<div className="bg-white rounded-lg p-6 shadow-sm">
 					<div className="flex justify-between items-center mb-8">
-						<h1 className="text-2xl font-medium text-[#4A90B9]">
+						<h1 className="text-2xl font-semibold text-primary-base">
 							Add Question
 						</h1>
 						<Button
 							onClick={handlePublish}
 							disabled={isPublishing}
-							className="bg-[#4A90B9] hover:bg-[#3A80A9] text-white"
+							className="bg-primary-base hover:bg-custom-skyBlue text-white text-base font-semibold rounded-md px-6 h-10 shadow-sm transition duration-200 ease-in-out"
 						>
 							{isPublishing ? "Publishing..." : "Publish"}
-							<svg
-								className="ml-2 h-4 w-4"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<title>Publishing</title>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									strokeWidth={2}
-									d="M5 10l5 5 9-9"
-								/>
-							</svg>
+							<Upload className="!h-5 !w-5" />
 						</Button>
 					</div>
 
 					<div className="space-y-6">
 						{/* Question Type Selection */}
 						<div>
-							<Label className="block text-sm font-medium text-gray-600 mb-2">
+							<Label className="block text-base font-semibold text-black mb-2">
 								Question Type
 							</Label>
 							<Select
@@ -154,7 +142,7 @@ export default function AddQuestionPage() {
 
 						{/* Question Content */}
 						<div>
-							<Label className="block text-sm font-medium text-gray-600 mb-2">
+							<Label className="block text-base font-semibold text-black mb-2">
 								Question
 							</Label>
 
@@ -172,7 +160,7 @@ export default function AddQuestionPage() {
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 								{choices.map((choice, index) => (
 									<div key={choice.id}>
-										<Label className="block text-sm font-medium text-gray-600 mb-2">
+										<Label className="block text-base font-semibold text-black mb-2">
 											Choice {index + 1}
 										</Label>
 										<TextEditor

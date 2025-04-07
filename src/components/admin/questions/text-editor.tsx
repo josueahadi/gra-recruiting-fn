@@ -9,6 +9,25 @@ import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import Underline from "@tiptap/extension-underline";
+import {
+	Bold,
+	Italic,
+	Underline as UnderlineIcon,
+	Link as LinkIcon,
+	Image as ImageIcon,
+	List,
+	ListOrdered,
+	Heading1,
+	Heading2,
+	Heading3,
+	ChevronDown,
+} from "lucide-react";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // Define a toolbar button component
 const ToolbarButton = ({
@@ -16,19 +35,22 @@ const ToolbarButton = ({
 	isActive = false,
 	disabled = false,
 	children,
+	title,
 }: {
 	onClick: () => void;
 	isActive?: boolean;
 	disabled?: boolean;
 	children: React.ReactNode;
+	title?: string;
 }) => (
 	<button
 		type="button"
 		onClick={onClick}
 		disabled={disabled}
+		title={title}
 		className={cn(
 			"p-2 rounded hover:bg-gray-200 transition-colors",
-			isActive && "bg-gray-200 text-[#4A90B9]",
+			isActive && "bg-gray-200 text-primary-base",
 			disabled && "opacity-50 cursor-not-allowed",
 		)}
 	>
@@ -81,9 +103,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
 	});
 
 	if (!editor) {
-		return (
-			<div className="h-52 w-full bg-gray-50 animate-pulse rounded-md"></div>
-		);
+		return <div className="h-52 w-full bg-gray-50 animate-pulse rounded-md" />;
 	}
 
 	// Helper functions for toolbar actions
@@ -94,6 +114,14 @@ const TextEditor: React.FC<TextEditorProps> = ({
 		editor.chain().focus().toggleBulletList().run();
 	const toggleOrderedList = () =>
 		editor.chain().focus().toggleOrderedList().run();
+
+	// Add new heading functions
+	const toggleH1 = () =>
+		editor.chain().focus().toggleHeading({ level: 1 }).run();
+	const toggleH2 = () =>
+		editor.chain().focus().toggleHeading({ level: 2 }).run();
+	const toggleH3 = () =>
+		editor.chain().focus().toggleHeading({ level: 3 }).run();
 
 	const addLink = () => {
 		const previousUrl = editor.getAttributes("link").href;
@@ -150,85 +178,107 @@ const TextEditor: React.FC<TextEditorProps> = ({
 					<ToolbarButton
 						onClick={toggleBold}
 						isActive={editor.isActive("bold")}
+						title="Bold"
 					>
-						<span className="font-bold">B</span>
+						<Bold className="h-4 w-4" />
 					</ToolbarButton>
 
 					<ToolbarButton
 						onClick={toggleItalic}
 						isActive={editor.isActive("italic")}
+						title="Italic"
 					>
-						<span className="italic">I</span>
+						<Italic className="h-4 w-4" />
 					</ToolbarButton>
 
 					<ToolbarButton
 						onClick={toggleUnderline}
 						isActive={editor.isActive("underline")}
+						title="Underline"
 					>
-						<span className="underline">U</span>
+						<UnderlineIcon className="h-4 w-4" />
 					</ToolbarButton>
+
+					<span className="mx-1 h-6 w-px bg-gray-300" />
+
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<button
+								type="button"
+								className={cn(
+									"flex items-center p-2 rounded hover:bg-gray-200 transition-colors",
+									(editor.isActive("heading", { level: 1 }) ||
+										editor.isActive("heading", { level: 2 }) ||
+										editor.isActive("heading", { level: 3 })) &&
+										"bg-gray-200 text-[#4A90B9]",
+								)}
+							>
+								{editor.isActive("heading", { level: 1 }) && (
+									<Heading1 className="h-4 w-4 mr-1" />
+								)}
+								{editor.isActive("heading", { level: 2 }) && (
+									<Heading2 className="h-4 w-4 mr-1" />
+								)}
+								{editor.isActive("heading", { level: 3 }) && (
+									<Heading3 className="h-4 w-4 mr-1" />
+								)}
+								{!editor.isActive("heading") && (
+									<span className="mr-1">Normal</span>
+								)}
+								<ChevronDown className="h-3 w-3" />
+							</button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="start">
+							<DropdownMenuItem
+								onClick={() => editor.chain().focus().setParagraph().run()}
+							>
+								Normal
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={toggleH1}>
+								<Heading1 className="h-4 w-4 mr-2" /> Heading 1
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={toggleH2}>
+								<Heading2 className="h-4 w-4 mr-2" /> Heading 2
+							</DropdownMenuItem>
+							<DropdownMenuItem onClick={toggleH3}>
+								<Heading3 className="h-4 w-4 mr-2" /> Heading 3
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+
+					<span className="mx-1 h-6 w-px bg-gray-300" />
 
 					<ToolbarButton
 						onClick={toggleBulletList}
 						isActive={editor.isActive("bulletList")}
+						title="Bullet List"
 					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-						>
-							<title>List</title>
-							<line x1="8" y1="6" x2="21" y2="6"></line>
-							<line x1="8" y1="12" x2="21" y2="12"></line>
-							<line x1="8" y1="18" x2="21" y2="18"></line>
-							<line x1="3" y1="6" x2="3.01" y2="6"></line>
-							<line x1="3" y1="12" x2="3.01" y2="12"></line>
-							<line x1="3" y1="18" x2="3.01" y2="18"></line>
-						</svg>
+						<List className="h-4 w-4" />
 					</ToolbarButton>
 
-					<ToolbarButton onClick={addLink} isActive={editor.isActive("link")}>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-						>
-							<title>Link</title>
-							<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-							<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-						</svg>
+					<ToolbarButton
+						onClick={toggleOrderedList}
+						isActive={editor.isActive("orderedList")}
+						title="Numbered List"
+					>
+						<ListOrdered className="h-4 w-4" />
 					</ToolbarButton>
 
-					<ToolbarButton onClick={handleImageUpload}>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="16"
-							height="16"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-						>
-							<title>Image</title>
-							<rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-							<circle cx="8.5" cy="8.5" r="1.5"></circle>
-							<polyline points="21 15 16 10 5 21"></polyline>
-						</svg>
+					<span className="mx-1 h-6 w-px bg-gray-300" />
+
+					<ToolbarButton
+						onClick={addLink}
+						isActive={editor.isActive("link")}
+						title="Add Link"
+					>
+						<LinkIcon className="h-4 w-4" />
 					</ToolbarButton>
+
+					{enableImageUpload && (
+						<ToolbarButton onClick={handleImageUpload} title="Add Image">
+							<ImageIcon className="h-4 w-4" />
+						</ToolbarButton>
+					)}
 				</div>
 			)}
 
@@ -277,6 +327,27 @@ const TextEditor: React.FC<TextEditorProps> = ({
         .ProseMirror a {
           color: #4A90B9;
           text-decoration: underline;
+        }
+
+        .ProseMirror h1 {
+          font-size: 1.75em;
+          font-weight: bold;
+          margin-top: 1em;
+          margin-bottom: 0.5em;
+        }
+
+        .ProseMirror h2 {
+          font-size: 1.5em;
+          font-weight: bold;
+          margin-top: 1em;
+          margin-bottom: 0.5em;
+        }
+
+        .ProseMirror h3 {
+          font-size: 1.25em;
+          font-weight: bold;
+          margin-top: 1em;
+          margin-bottom: 0.5em;
         }
       `}</style>
 		</div>

@@ -1,14 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useRouter } from "next/navigation";
 import ContentCard from "@/components/admin/common/content-card";
 import FilterBar, {
 	type FilterConfig,
 } from "@/components/admin/common/filter-bar";
 import TableActions from "@/components/admin/common/table-actions";
-import AddQuestionForm, {
-	type QuestionFormValues,
-} from "./questions/add-question-form";
 import QuestionDetail from "./questions/question-detail";
 import ConfirmationDialog from "@/components/common/confirm-dialog";
 import DataTable from "@/components/common/data-table";
@@ -75,7 +72,6 @@ const adaptQuestionForDetail = (question: Question): DetailQuestion => {
 		}
 	} else if (question.section === "Essay") {
 		// For essay questions, you might need to add the maxScore property
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		baseQuestion.maxScore = (question as any).maxScore;
 	}
 
@@ -83,6 +79,7 @@ const adaptQuestionForDetail = (question: Question): DetailQuestion => {
 };
 
 const QuestionsManagement = () => {
+	const router = useRouter();
 	const [searchValue, setSearchValue] = useState("");
 	const [typeFilter, setTypeFilter] = useState("all");
 
@@ -91,15 +88,12 @@ const QuestionsManagement = () => {
 		useState<DetailQuestion | null>(null);
 	const [isQuestionDetailOpen, setIsQuestionDetailOpen] = useState(false);
 
-	// Add question modal state
-	const [isAddQuestionOpen, setIsAddQuestionOpen] = useState(false);
-
 	// Delete confirmation dialog state
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
 
 	// Use the questions hook with filters
-	const { questions, metadata, deleteQuestion, createQuestion } = useQuestions({
+	const { questions, metadata, deleteQuestion } = useQuestions({
 		search: searchValue,
 		type: typeFilter,
 	});
@@ -135,22 +129,13 @@ const QuestionsManagement = () => {
 	// Handle edit question
 	const handleEditQuestion = (id: string) => {
 		console.log("Edit question", id);
-		// In a real app, you would open the edit form with the question data
+		// In a real app, you would navigate to the edit form with the question data
+		// router.push(`/admin/questions/edit/${id}`);
 	};
 
-	// Handle add question
+	// Handle add question - Navigate to the dedicated add question page
 	const handleAddQuestion = () => {
-		setIsAddQuestionOpen(true);
-	};
-
-	// Handle submit new question
-	const handleSubmitQuestion = (values: QuestionFormValues) => {
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		createQuestion.mutate(values as any, {
-			onSuccess: () => {
-				setIsAddQuestionOpen(false);
-			},
-		});
+		router.push("/admin/questions/add");
 	};
 
 	// Handle delete question
@@ -299,13 +284,6 @@ const QuestionsManagement = () => {
 					/>
 				)}
 			</ContentCard>
-
-			{/* Add Question Form Modal */}
-			<AddQuestionForm
-				isOpen={isAddQuestionOpen}
-				onClose={() => setIsAddQuestionOpen(false)}
-				onSubmit={handleSubmitQuestion}
-			/>
 
 			{/* Question Detail Modal */}
 			{selectedQuestion && (
