@@ -38,3 +38,8 @@ export interface IconProps extends SVGProps<SVGSVGElement> {
 	size?: number;
 	color?: string;
 }
+
+// export the types in question-types.ts
+export * from "./question-types";
+export * from "./auth";
+// export * from "./api";

@@ -6,6 +6,15 @@ import MultipleChoiceQuestion from "@/components/applicant/assessment/questions/
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import AssessmentLayout from "./assessment-layout";
+import { useQuestions } from "@/hooks/use-questions";
+import {
+	type Question,
+	type MultipleChoiceQuestion as MCQuestion,
+	type Choice,
+	EXAM_COMPLETION_KEY,
+	EXAM_SECTION_ANSWERS_KEY,
+	QUESTION_MAPPING_KEY,
+} from "@/types";
 
 interface AssessmentPageProps {
 	params?: {
@@ -13,247 +22,12 @@ interface AssessmentPageProps {
 	};
 }
 
-interface BaseQuestion {
-	id: number;
-	text: string;
-	imageUrl?: string;
-	displayId?: number;
-	originalId?: number;
-	type: string; // This is important for type narrowing
-}
-
-interface MultipleChoiceQuestionType extends BaseQuestion {
-	type: "multiple-choice";
-	options: Array<{
-		id: string;
-		optionText?: string;
-		optionImageUrl?: string;
-	}>;
-}
-
-interface EssayQuestionType extends BaseQuestion {
-	type: "essay";
-	// No options for essay questions
-}
-
-// Union type for all question types
-type Question = MultipleChoiceQuestionType | EssayQuestionType;
-
-// Constants for localStorage keys
-const EXAM_COMPLETION_KEY = "examCompletion";
-const EXAM_SECTION_ANSWERS_KEY = "examSectionAnswers";
-const QUESTION_MAPPING_KEY = "questionMapping";
-
-// Define question bank with all possible questions
-const questionBank: { [key: string]: Question[] } = {
-	"1": [
-		// Section 1 - Multiple Choice questions
-
-		{
-			id: 1,
-			type: "multiple-choice",
-			text: "Which of the following best defines function composition in programming?",
-			options: [
-				{
-					id: "a",
-					optionText:
-						"The process of combining two or more functions to create a new function",
-				},
-				{
-					id: "b",
-					optionText:
-						"Writing comments in your code to explain what a function does",
-				},
-				{
-					id: "c",
-					optionText:
-						"Creating multiple similar functions with different names",
-				},
-				{
-					id: "d",
-					optionText: "A design pattern for organizing code into modules",
-				},
-			],
-		},
-		{
-			id: 2,
-			type: "multiple-choice",
-			text: "What does the acronym API stand for?",
-			options: [
-				{ id: "a", optionText: "Application Programming Interface" },
-				{ id: "b", optionText: "Automated Programming Interface" },
-				{ id: "c", optionText: "Application Protocol Interface" },
-				{ id: "d", optionText: "Advanced Programming Interface" },
-			],
-		},
-		{
-			id: 3,
-			type: "multiple-choice",
-			text: "Which data structure would be most efficient for implementing a dictionary?",
-			options: [
-				{ id: "a", optionText: "Array" },
-				{ id: "b", optionText: "Hash Table" },
-				{ id: "c", optionText: "Linked List" },
-				{ id: "d", optionText: "Stack" },
-			],
-		},
-		{
-			id: 4,
-			type: "multiple-choice",
-			text: "What is the time complexity of binary search on a sorted array?",
-			options: [
-				{ id: "a", optionText: "O(1)" },
-				{ id: "b", optionText: "O(log n)" },
-				{ id: "c", optionText: "O(n)" },
-				{ id: "d", optionText: "O(n²)" },
-			],
-		},
-		{
-			id: 5,
-			type: "multiple-choice",
-			text: "In React, what hook would you use to run code after a component renders?",
-			options: [
-				{ id: "a", optionText: "useState" },
-				{ id: "b", optionText: "useContext" },
-				{ id: "c", optionText: "useEffect" },
-				{ id: "d", optionText: "useCallback" },
-			],
-		},
-		{
-			id: 6,
-			type: "multiple-choice",
-			text: "What concept does the 'S' in SOLID principles stand for?",
-			options: [
-				{ id: "a", optionText: "Stateless Design" },
-				{ id: "b", optionText: "Single Responsibility" },
-				{ id: "c", optionText: "Simplified Architecture" },
-				{ id: "d", optionText: "Scalable Programming" },
-			],
-		},
-		{
-			id: 7,
-			type: "multiple-choice",
-			text: "Which is NOT a principle of REST architecture?",
-			options: [
-				{ id: "a", optionText: "Stateless" },
-				{ id: "b", optionText: "Client-Server" },
-				{ id: "c", optionText: "Real-time Updates" },
-				{ id: "d", optionText: "Uniform Interface" },
-			],
-		},
-		{
-			id: 8,
-			type: "multiple-choice",
-			text: "Select the correct pattern that should go in the empty space:",
-			imageUrl: "/images/assessment/pattern-question.png",
-			options: [
-				{ id: "a", optionImageUrl: "/images/assessment/pattern-a.png" },
-				{ id: "b", optionImageUrl: "/images/assessment/pattern-b.png" },
-				{ id: "c", optionImageUrl: "/images/assessment/pattern-c.png" },
-				{ id: "d", optionImageUrl: "/images/assessment/pattern-d.png" },
-			],
-		},
-		{
-			id: 9,
-			type: "multiple-choice",
-			text: "Select the correct pattern that should go in the empty space:",
-			imageUrl: "/images/assessment/pattern-question.png",
-			options: [
-				{ id: "a", optionImageUrl: "/images/assessment/pattern-a.png" },
-				{ id: "b", optionImageUrl: "/images/assessment/pattern-b.png" },
-				{ id: "c", optionImageUrl: "/images/assessment/pattern-c.png" },
-				{ id: "d", optionImageUrl: "/images/assessment/pattern-d.png" },
-			],
-		},
-		{
-			id: 10,
-			type: "multiple-choice",
-			text: "Select the correct pattern that should go in the empty space:",
-			imageUrl: "/images/assessment/pattern-question.png",
-			options: [
-				{ id: "a", optionImageUrl: "/images/assessment/pattern-a.png" },
-				{ id: "b", optionImageUrl: "/images/assessment/pattern-b.png" },
-				{ id: "c", optionImageUrl: "/images/assessment/pattern-c.png" },
-				{ id: "d", optionImageUrl: "/images/assessment/pattern-d.png" },
-			],
-		},
-		{
-			id: 11,
-			type: "multiple-choice",
-			text: "What problem does the MVC architecture pattern solve?",
-			options: [
-				{ id: "a", optionText: "Database performance" },
-				{ id: "b", optionText: "Network latency" },
-				{ id: "c", optionText: "Separation of concerns" },
-				{ id: "d", optionText: "Memory management" },
-			],
-		},
-		{
-			id: 12,
-			type: "multiple-choice",
-			text: "What is the purpose of dependency injection?",
-			options: [
-				{ id: "a", optionText: "To reduce memory usage" },
-				{ id: "b", optionText: "To make code more testable" },
-				{ id: "c", optionText: "To improve rendering performance" },
-				{ id: "d", optionText: "To simplify deployment" },
-			],
-		},
-		{
-			id: 13,
-			type: "multiple-choice",
-			text: "Which of the following is a valid way to optimize React rendering?",
-			options: [
-				{ id: "a", optionText: "Always use class components" },
-				{ id: "b", optionText: "Add more state variables" },
-				{
-					id: "c",
-					optionText: "Use React.memo for pure functional components",
-				},
-				{ id: "d", optionText: "Avoid using keys in lists" },
-			],
-		},
-		{
-			id: 14,
-			type: "multiple-choice",
-			text: "Which design pattern is React's context API most similar to?",
-			options: [
-				{ id: "a", optionText: "Factory Pattern" },
-				{ id: "b", optionText: "Observer Pattern" },
-				{ id: "c", optionText: "Singleton Pattern" },
-				{ id: "d", optionText: "Decorator Pattern" },
-			],
-		},
-		{
-			id: 15,
-			type: "multiple-choice",
-			text: "What is the primary purpose of TypeScript?",
-			options: [
-				{ id: "a", optionText: "To make JavaScript run faster" },
-				{ id: "b", optionText: "To add static type checking to JavaScript" },
-				{ id: "c", optionText: "To replace JavaScript entirely" },
-				{ id: "d", optionText: "To provide UI components" },
-			],
-		},
-		// ... other multiple choice questions will be here
-	],
-	"2": [
-		// Section 2 - Essay Questions
-		// (Keeping the existing essay questions)
-		{
-			id: 1,
-			type: "essay",
-			text: "A well-structured resume is one of the most important tools for job seekers. It helps employers quickly assess a candidate's qualifications and suitability for a role. When creating a resume, what is the primary purpose it should serve in a job application?",
-		},
-		// ... other essay questions will be here
-	],
-};
-
 /**
- * The main assessment page component using state-based navigation instead of URL params
+ * The main assessment page component using shared question data from the useQuestions hook
  */
 export default function AssessmentPage({ params }: AssessmentPageProps) {
 	const router = useRouter();
+	const { getQuestionsBySection } = useQuestions();
 
 	// Replace URL parameters with state
 	const [currentSectionId, setCurrentSectionId] = useState(1);
@@ -302,11 +76,14 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 				// Use existing mapping
 				setQuestionMapping(JSON.parse(savedMapping));
 			} else {
+				// Get questions from our centralized data source
+				const questionsBySection = getQuestionsBySection();
+
 				// Create new randomized mapping
-				const section1Questions = [...questionBank["1"]].sort(
+				const section1Questions = [...questionsBySection["1"]].sort(
 					() => Math.random() - 0.5,
 				);
-				const section2Questions = [...questionBank["2"]].sort(
+				const section2Questions = [...questionsBySection["2"]].sort(
 					() => Math.random() - 0.5,
 				);
 
@@ -341,7 +118,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		}
 
 		initializeQuestionMapping();
-	}, [params]);
+	}, [params, getQuestionsBySection]);
 
 	// Fetch question data when section or question changes
 	useEffect(() => {
@@ -385,11 +162,26 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 						setQuestionText(mappedQuestion.text);
 						setQuestionImageUrl(mappedQuestion.imageUrl);
 
-						if (
-							currentSectionId === 1 &&
-							mappedQuestion.type === "multiple-choice"
-						) {
-							setOptions(mappedQuestion.options || []);
+						if (mappedQuestion.section === "Multiple Choice") {
+							// Properly type-check and handle multiple choice questions
+							const mcQuestion = mappedQuestion as MCQuestion;
+							if (mcQuestion.choices && Array.isArray(mcQuestion.choices)) {
+								// Map the choices to the format expected by the MultipleChoiceQuestion component
+								const formattedOptions = mcQuestion.choices.map(
+									(choice: Choice) => ({
+										id: choice.id,
+										optionText: choice.text, // Map 'text' to 'optionText' as expected by your component
+										optionImageUrl: choice.imageUrl, // Map 'imageUrl' to 'optionImageUrl'
+									}),
+								);
+								setOptions(formattedOptions);
+							} else {
+								console.error(
+									"Choices property is missing or not an array",
+									mcQuestion,
+								);
+								setOptions([]);
+							}
 						}
 					} else {
 						// Fallback to generic question if mapping failed
@@ -500,7 +292,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 
 	// Handle option selection for multiple choice questions
 	const handleSelectOption = (optionId: string | number) => {
-		setSelectedOptionId(optionId);
+		setSelectedOptionId(optionId.toString());
 		// Save selected option to localStorage with shorter key
 		localStorage.setItem(
 			`s${currentSectionId}_q${currentQuestionNum}_mc`,
@@ -646,7 +438,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		);
 	}
 
-	// Render the main assessment interface with the new AssessmentLayout
+	// Render the main assessment interface with the AssessmentLayout
 	return (
 		<AssessmentLayout
 			userName="John Doe"
