@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import ContentCard from "@/components/admin/common/content-card";
@@ -7,63 +8,15 @@ import FilterBar, {
 import TableActions from "@/components/admin/common/table-actions";
 import ConfirmationDialog from "@/components/common/confirm-dialog";
 import DataTable from "@/components/common/data-table";
-import StatusBadge, { type StatusType } from "@/components/common/status-badge";
+import StatusBadge from "@/components/common/status-badge";
+import StatsSection, { type StatCardProps } from "./common/stats-section";
+import { Users, CheckCircle, XCircle, Clock } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/hooks/use-toast";
-
-// Mock data for demonstration
-const MOCK_APPLICANTS = [
-	{
-		id: "1",
-		name: "Johnny Doe",
-		email: "johndoe12@yahoo.com",
-		phone: "+250 781 234 567",
-		status: "success" as StatusType,
-		department: "Design",
-		dateApplied: "12/06/2025",
-	},
-	{
-		id: "2",
-		name: "Jack Black",
-		email: "johndoe12@outlook.com",
-		phone: "+250 782 345 678",
-		status: "success" as StatusType,
-		department: "Development",
-		dateApplied: "12/06/2025",
-	},
-	{
-		id: "3",
-		name: "James Brown",
-		email: "johndoe12@hotmail.com",
-		phone: "+250 783 456 789",
-		status: "success" as StatusType,
-		department: "Design",
-		dateApplied: "12/06/2025",
-	},
-	{
-		id: "4",
-		name: "Jack Dixon",
-		email: "johndoe12@outlook.com",
-		phone: "+250 784 567 890",
-		status: "fail" as StatusType,
-		department: "Accounting",
-		dateApplied: "12/06/2025",
-	},
-	{
-		id: "5",
-		name: "Jonny Deer",
-		email: "johndoe12@hotmail.com",
-		phone: "+250 785 678 901",
-		status: "waiting" as StatusType,
-		department: "Marketing",
-		dateApplied: "12/06/2025",
-	},
-];
+import { useApplicants, type Applicant } from "@/hooks/use-applicants";
 
 const ApplicantsManagement = () => {
 	const router = useRouter();
-	const { toast } = useToast();
 	const [searchValue, setSearchValue] = useState("");
 	const [statusFilter, setStatusFilter] = useState("all");
 	const [departmentFilter, setDepartmentFilter] = useState("all");
@@ -73,6 +26,15 @@ const ApplicantsManagement = () => {
 	const [applicantToDelete, setApplicantToDelete] = useState<string | null>(
 		null,
 	);
+
+	// Use the applicants hook with filters
+	const { applicants, stats, deleteApplicant } = useApplicants({
+		search: searchValue,
+		status: statusFilter,
+		department: departmentFilter,
+		fromDate,
+		toDate,
+	});
 
 	const handleSearch = (value: string) => {
 		setSearchValue(value);
@@ -99,7 +61,7 @@ const ApplicantsManagement = () => {
 		router.push(`/admin/applicants/${id}`);
 	};
 
-	// Navigate to edit page (could be same as view page with edit state)
+	// Navigate to edit page
 	const handleEditApplicant = (id: string) => {
 		router.push(`/admin/applicants/${id}?edit=true`);
 	};
@@ -112,15 +74,39 @@ const ApplicantsManagement = () => {
 
 	// Confirm deletion
 	const confirmDeleteApplicant = () => {
-		toast({
-			title: "Applicant deleted",
-			description: `Applicant ${applicantToDelete} has been deleted successfully.`,
-		});
-
-		setIsDeleteDialogOpen(false);
-		setApplicantToDelete(null);
-		// In a real app, you would call an API here
+		if (applicantToDelete) {
+			deleteApplicant.mutate(applicantToDelete, {
+				onSuccess: () => {
+					setIsDeleteDialogOpen(false);
+					setApplicantToDelete(null);
+				},
+			});
+		}
 	};
+
+	// Stats configuration for the stats section
+	const statsData: StatCardProps[] = [
+		{
+			title: "Total Applicants",
+			value: stats.total.toString(),
+			icon: <Users className="w-8 h-8" />,
+		},
+		{
+			title: "Successful",
+			value: stats.success.toString(),
+			icon: <CheckCircle className="w-8 h-8" />,
+		},
+		{
+			title: "Failed",
+			value: stats.failed.toString(),
+			icon: <XCircle className="w-8 h-8" />,
+		},
+		{
+			title: "Waiting",
+			value: stats.waiting.toString(),
+			icon: <Clock className="w-8 h-8" />,
+		},
+	];
 
 	// Filter configurations
 	const filterConfigs: FilterConfig[] = [
@@ -185,8 +171,9 @@ const ApplicantsManagement = () => {
 		{
 			accessorKey: "status",
 			header: "Status",
-			cell: ({ row }: { row: { original: { status: StatusType } } }) => (
-				<StatusBadge status={row.original.status} />
+			cell: ({ row }: { row: { original: { status: string } } }) => (
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+				<StatusBadge status={row.original.status as any} />
 			),
 		},
 		{
@@ -200,7 +187,7 @@ const ApplicantsManagement = () => {
 		{
 			id: "actions",
 			header: "Actions",
-			cell: ({ row }: { row: { original: { id: string } } }) => (
+			cell: ({ row }: { row: { original: Applicant } }) => (
 				<TableActions
 					actions={[
 						{
@@ -224,41 +211,11 @@ const ApplicantsManagement = () => {
 		},
 	];
 
-	// Filter applicants based on search and filters
-	const filteredApplicants = MOCK_APPLICANTS.filter((applicant) => {
-		// Filter by search
-		const matchesSearch =
-			searchValue === "" ||
-			applicant.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-			applicant.email.toLowerCase().includes(searchValue.toLowerCase());
-
-		// Filter by status
-		const matchesStatus =
-			statusFilter === "all" || applicant.status === statusFilter;
-
-		// Filter by department
-		const matchesDepartment =
-			departmentFilter === "all" || applicant.department === departmentFilter;
-
-		// Filter by date range
-		let matchesDateRange = true;
-		if (fromDate || toDate) {
-			const applicantDate = new Date(applicant.dateApplied);
-			if (fromDate && applicantDate < fromDate) matchesDateRange = false;
-			if (toDate) {
-				const nextDay = new Date(toDate);
-				nextDay.setDate(nextDay.getDate() + 1);
-				if (applicantDate >= nextDay) matchesDateRange = false;
-			}
-		}
-
-		return (
-			matchesSearch && matchesStatus && matchesDepartment && matchesDateRange
-		);
-	});
-
 	return (
 		<div className="space-y-6">
+			{/* Stats Section */}
+			<StatsSection stats={statsData} gridClassName="md:grid-cols-4" />
+
 			<ContentCard title="Applicants">
 				{/* Filter Controls */}
 				<FilterBar
@@ -274,12 +231,22 @@ const ApplicantsManagement = () => {
 				/>
 
 				{/* Applicants Table */}
-				<DataTable
-					columns={columns}
-					data={filteredApplicants}
-					searchColumn="name"
-					showSearch={false}
-				/>
+				{applicants.isLoading ? (
+					<div className="flex justify-center py-8">
+						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+					</div>
+				) : applicants.error ? (
+					<div className="py-8 text-center text-red-500">
+						Error loading applicants. Please try again.
+					</div>
+				) : (
+					<DataTable
+						columns={columns}
+						data={applicants.data?.data || []}
+						searchColumn="name"
+						showSearch={false}
+					/>
+				)}
 			</ContentCard>
 
 			{/* Delete Confirmation Dialog */}

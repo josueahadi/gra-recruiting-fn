@@ -103,7 +103,7 @@ const MOCK_APPLICANTS: Applicant[] = [
 		dateApplied: "01/04/2025",
 	},
 	{
-		id: "9",
+		id: "9	",
 		name: "Dave Smith",
 		email: "d.smith@gmail.com",
 		phone: "+250 123 456 789",
