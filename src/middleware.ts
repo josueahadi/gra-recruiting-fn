@@ -1,35 +1,52 @@
-// import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-// Uncomment this block when you're ready to implement authentication
-// import { getToken } from "next-auth/jwt";
-// import { NextResponse } from "next/server";
-//
-// const publicPaths = [
-//   "/",
-//   "/about",
-//   "/solution",
-//   "/contact",
-//   "/api",
-//   "/favicon.ico",
-// ];
+const publicPaths = [
+	"/",
+	"/auth",
+	"/about",
+	"/contact",
+	"/api",
+	"/favicon.ico",
+];
 
-// export async function middleware(req:NextRequest) {
-// Authentication logic would go here when needed
-// Uncomment and implement when ready to use authentication
-// const { pathname } = req.nextUrl;
-// if (pathname.startsWith("/dashboard")) {
-//   const token = await getToken({ req });
-//   if (!token) {
-//     const loginUrl = new URL("/login", req.url);
-//     loginUrl.searchParams.set("callbackUrl", req.url);
-//     return NextResponse.redirect(loginUrl);
-//   }
-// }
-// return NextResponse.next();
-// }
+const isPublicPath = (path: string) => {
+	return publicPaths.some(
+		(publicPath) => path === publicPath || path.startsWith(`${publicPath}?`),
+	);
+};
 
-// export const config = {
-// 	matcher: ["/dashboard/:path*"],
-// };
+export function middleware(request: NextRequest) {
+	const { pathname } = request.nextUrl;
 
-export async function middleware() {}
+	const authCookie = request.cookies.get("persist:gra-auth");
+	let token = null;
+
+	if (authCookie) {
+		try {
+			const authData = JSON.parse(authCookie.value);
+			const tokenData = JSON.parse(authData.token);
+			token = tokenData;
+		} catch (error) {
+			console.error("Error parsing auth cookie:", error);
+		}
+	}
+
+	if (
+		(pathname.startsWith("/applicant") || pathname.startsWith("/admin")) &&
+		!isPublicPath(pathname)
+	) {
+		if (!token) {
+			const url = new URL("/auth", request.url);
+			url.searchParams.set("mode", "login");
+			url.searchParams.set("callbackUrl", pathname);
+			return NextResponse.redirect(url);
+		}
+	}
+
+	return NextResponse.next();
+}
+
+export const config = {
+	matcher: ["/applicant/:path*", "/admin/:path*"],
+};

@@ -167,20 +167,15 @@ export function useResults(filterParams: ResultsFilterParams = {}) {
 	const { toast } = useToast();
 	const queryClient = useQueryClient();
 
-	// Default to page 1 and 10 results per page
 	const page = filterParams.page || 1;
 	const limit = filterParams.limit || 10;
 
-	// In a real application, we would fetch this data from the API
 	const fetchResults = async () => {
 		try {
-			// Simulate API call
 			// const response = await api.get(`/results?page=${page}&limit=${limit}`);
 			// return response.data;
 
-			// For now, return mock data with filtering
 			const filteredResults = MOCK_RESULTS.filter((result) => {
-				// Filter by search
 				const matchesSearch =
 					!filterParams.search ||
 					result.applicantName

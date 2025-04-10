@@ -41,7 +41,6 @@ interface ResultGradingProps {
 	applicant: any;
 }
 
-// Mock exam data for demonstration
 const MOCK_EXAM_DATA = {
 	questions: [
 		{
@@ -102,7 +101,6 @@ const ResultGrading: React.FC<ResultGradingProps> = ({
 }) => {
 	const [isAutoGrading, setIsAutoGrading] = useState(false);
 
-	// Initialize the form with default values
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
@@ -122,9 +120,7 @@ const ResultGrading: React.FC<ResultGradingProps> = ({
 	const handleAutoGrade = () => {
 		setIsAutoGrading(true);
 
-		// Simulate AI grading with a delay
 		setTimeout(() => {
-			// In a real app, this would come from an AI service
 			const aiGradedEssays = [
 				{
 					id: "q3",
@@ -133,7 +129,6 @@ const ResultGrading: React.FC<ResultGradingProps> = ({
 				},
 			];
 
-			// Calculate final score
 			const multipleChoiceQuestions = MOCK_EXAM_DATA.questions.filter(
 				(q) => q.type === "multiple-choice",
 			);
@@ -147,12 +142,11 @@ const ResultGrading: React.FC<ResultGradingProps> = ({
 				(score, essay) => score + essay.score,
 				0,
 			);
-			const totalPossibleScore = multipleChoiceQuestions.length + 10; // assuming max essay score is 10
+			const totalPossibleScore = multipleChoiceQuestions.length + 10;
 			const finalScore = Math.round(
 				((multipleChoiceScore + essayScore) / totalPossibleScore) * 100,
 			);
 
-			// Update form values
 			form.setValue("essays", aiGradedEssays);
 			form.setValue("finalScore", finalScore);
 			form.setValue(

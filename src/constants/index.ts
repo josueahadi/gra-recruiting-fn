@@ -46,7 +46,7 @@ export const AUTH_CONSTANTS = {
 			submitting: "Creating Account...",
 			google: "Continue with Google",
 		},
-		terms: "I agree to the terms & conditions",
+		terms: "I agree to the",
 	},
 	FORMS: {
 		labels: {

@@ -29,7 +29,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-// Define a toolbar button component
 const ToolbarButton = ({
 	onClick,
 	isActive = false,
@@ -58,7 +57,6 @@ const ToolbarButton = ({
 	</button>
 );
 
-// Main text editor component
 interface TextEditorProps {
 	value: string;
 	onChange: (value: string) => void;
@@ -78,10 +76,8 @@ const TextEditor: React.FC<TextEditorProps> = ({
 	readOnly = false,
 	enableImageUpload = false,
 }) => {
-	// Reference for file input
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	// Initialize the Tiptap editor
 	const editor = useEditor({
 		extensions: [
 			StarterKit,
@@ -106,7 +102,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
 		return <div className="h-52 w-full bg-gray-50 animate-pulse rounded-md" />;
 	}
 
-	// Helper functions for toolbar actions
 	const toggleBold = () => editor.chain().focus().toggleBold().run();
 	const toggleItalic = () => editor.chain().focus().toggleItalic().run();
 	const toggleUnderline = () => editor.chain().focus().toggleUnderline().run();
@@ -115,7 +110,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
 	const toggleOrderedList = () =>
 		editor.chain().focus().toggleOrderedList().run();
 
-	// Add new heading functions
 	const toggleH1 = () =>
 		editor.chain().focus().toggleHeading({ level: 1 }).run();
 	const toggleH2 = () =>
@@ -139,27 +133,20 @@ const TextEditor: React.FC<TextEditorProps> = ({
 		editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
 	};
 
-	// Function to handle image upload
 	const handleImageUpload = () => {
 		fileInputRef.current?.click();
 	};
 
-	// Function to process the selected image file
 	const processImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
 		if (!file) return;
 
-		// Create a preview URL for the image
 		const reader = new FileReader();
 		reader.onload = (event) => {
 			if (!event.target) return;
-
-			// In a real application, you would upload the file to a server here
-			// and use the returned URL. For now, we're using the data URL.
 			const imageUrl = event.target.result as string;
 			editor.chain().focus().setImage({ src: imageUrl }).run();
 
-			// Reset the file input so the same file can be selected again
 			e.target.value = "";
 		};
 		reader.readAsDataURL(file);
@@ -172,7 +159,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
 				className,
 			)}
 		>
-			{/* Editor toolbar */}
 			{!readOnly && (
 				<div className="bg-gray-50 p-2 border-b flex flex-wrap items-center gap-1">
 					<ToolbarButton
@@ -282,7 +268,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
 				</div>
 			)}
 
-			{/* Hidden file input for image uploads */}
 			<input
 				type="file"
 				ref={fileInputRef}
@@ -291,7 +276,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
 				onChange={processImageFile}
 			/>
 
-			{/* Editor content area */}
 			<EditorContent
 				editor={editor}
 				className={cn(
@@ -303,7 +287,6 @@ const TextEditor: React.FC<TextEditorProps> = ({
 				}}
 			/>
 
-			{/* Custom styling */}
 			<style jsx global>{`
         .ProseMirror {
           padding: 1rem;

@@ -19,11 +19,9 @@ interface ResultData {
 	assessmentCompleted: boolean;
 }
 
-// Main dashboard content
 const ApplicantDashboard = () => {
 	const router = useRouter();
 
-	// State for profile completion and assessment results
 	const [completionPercentage, setCompletionPercentage] = useState(100);
 	const [showResults, setShowResults] = useState(false);
 	const [resultsData, setResultsData] = useState<ResultData>({
@@ -39,28 +37,16 @@ const ApplicantDashboard = () => {
 	});
 	const [isLoading, setIsLoading] = useState(true);
 
-	// Simulate loading profile and result data from API
 	useEffect(() => {
-		// Simulate API call
 		const fetchDashboardData = async () => {
 			setIsLoading(true);
 			try {
-				// In a real app, these would be actual API calls
-				// const profileResponse = await fetch('/api/profile/status');
-				// const profileData = await profileResponse.json();
-
-				// const resultsResponse = await fetch('/api/assessment/results');
-				// const resultsData = await resultsResponse.json();
-
-				// Simulate API response delay
 				await new Promise((resolve) => setTimeout(resolve, 800));
 
-				// For demonstration, check URL parameters to toggle between states
 				const urlParams = new URLSearchParams(window.location.search);
 				const completionParam = urlParams.get("completion");
 				const showResultsParam = urlParams.get("showResults");
 
-				// Update state based on URL parameters or localStorage
 				const savedCompletion = localStorage.getItem("profileCompletion");
 				if (completionParam) {
 					const newCompletion = Number.parseInt(completionParam, 10);
@@ -70,11 +56,9 @@ const ApplicantDashboard = () => {
 					setCompletionPercentage(Number.parseInt(savedCompletion, 10));
 				}
 
-				// Check if we should show results
 				if (showResultsParam === "true") {
 					setShowResults(true);
 
-					// Simulate different result states based on URL parameter
 					const resultState = urlParams.get("resultState") || "section1";
 					if (resultState === "section1") {
 						setResultsData({
@@ -102,8 +86,6 @@ const ApplicantDashboard = () => {
 						});
 					}
 				} else {
-					// Check if the user has completed any assessments
-					// This would be determined by the API in a real app
 					const hasCompletedAssessment = localStorage.getItem(
 						"assessmentCompleted",
 					);
@@ -122,7 +104,6 @@ const ApplicantDashboard = () => {
 		fetchDashboardData();
 	}, []);
 
-	// Button label changes based on profile completion
 	const getActionButtonLabel = () => {
 		if (showResults) {
 			return resultsData.assessmentCompleted
@@ -134,39 +115,30 @@ const ApplicantDashboard = () => {
 			: "Complete Your Profile";
 	};
 
-	// Handle main CTA button click
 	const handleActionButtonClick = () => {
 		if (showResults) {
 			if (resultsData.assessmentCompleted) {
-				// Go to full results page
 				router.push("/applicant/results");
 			} else {
-				// Continue to next section of assessment
 				router.push("/applicant/exam");
 			}
 		} else {
 			if (completionPercentage < 100) {
-				// Redirect to profile page
 				router.push("/applicant");
 			} else {
-				// Redirect to exam page
 				router.push("/applicant/exam");
 			}
 		}
 	};
 
-	// Toggle between results view and profile/assessment view
 	const toggleResultsView = () => {
 		setShowResults(!showResults);
 	};
 
-	// Handle the button in the profile completion card
 	// const handleCompleteProfileClick = () => {
-	// 	// Redirect to profile page
 	// 	router.push("/applicant");
 	// };
 
-	// Format results data for ResultsDisplay component
 	const formatResultsForDisplay = () => {
 		return [
 			{
@@ -186,9 +158,7 @@ const ApplicantDashboard = () => {
 		];
 	};
 
-	// Determine which main content to render based on completion percentage
 	const renderMainContent = () => {
-		// For 100% completion, show assessment info
 		if (completionPercentage === 100) {
 			return (
 				<div className="bg-white rounded-lg p-8 md:py-16 w-full text-center">
@@ -212,7 +182,6 @@ const ApplicantDashboard = () => {
 			);
 		}
 
-		// For incomplete profiles, show the checklist card
 		return (
 			<ProfileBlockMessage
 				title="First complete your profile to unlock the assessment"
@@ -265,7 +234,6 @@ const ApplicantDashboard = () => {
 					detailedResultsPath="/applicant/results"
 				/>
 			) : (
-				// Show profile completion or assessment info
 				renderMainContent()
 			)}
 		</div>

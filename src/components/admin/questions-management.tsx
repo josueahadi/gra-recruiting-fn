@@ -37,7 +37,7 @@ interface DetailQuestion {
 
 interface DetailChoice {
 	id: string;
-	text: string; // Note: this is required in the DetailChoice but optional in your source Choice
+	text: string;
 	isCorrect: boolean;
 	imageUrl?: string;
 }
@@ -83,68 +83,55 @@ const QuestionsManagement = () => {
 	const [searchValue, setSearchValue] = useState("");
 	const [typeFilter, setTypeFilter] = useState("all");
 
-	// Question detail modal state
 	const [selectedQuestion, setSelectedQuestion] =
 		useState<DetailQuestion | null>(null);
 	const [isQuestionDetailOpen, setIsQuestionDetailOpen] = useState(false);
 
-	// Delete confirmation dialog state
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
 
-	// Use the questions hook with filters
 	const { questions, metadata, deleteQuestion } = useQuestions({
 		search: searchValue,
 		type: typeFilter,
 	});
 
-	// Handle search
 	const handleSearch = (value: string) => {
 		setSearchValue(value);
 	};
 
-	// Handle filter change
 	const handleTypeChange = (value: string) => {
 		setTypeFilter(value);
 	};
 
-	// Handle clear filters
 	const handleClearFilters = () => {
 		setSearchValue("");
 		setTypeFilter("all");
 	};
 
-	// Handle viewing question details
 	const handleViewQuestion = (id: string) => {
 		if (questions.data) {
 			const question = questions.data.data.find((q) => q.id === id);
 			if (question) {
-				// Convert the question to the format QuestionDetail expects
 				setSelectedQuestion(adaptQuestionForDetail(question));
 				setIsQuestionDetailOpen(true);
 			}
 		}
 	};
 
-	// Handle edit question
 	const handleEditQuestion = (id: string) => {
 		console.log("Edit question", id);
-		// In a real app, you would navigate to the edit form with the question data
 		// router.push(`/admin/questions/edit/${id}`);
 	};
 
-	// Handle add question - Navigate to the dedicated add question page
 	const handleAddQuestion = () => {
 		router.push("/admin/questions/add");
 	};
 
-	// Handle delete question
 	const handleDeleteQuestion = (id: string) => {
 		setQuestionToDelete(id);
 		setIsDeleteDialogOpen(true);
 	};
 
-	// Confirm delete question
 	const confirmDeleteQuestion = () => {
 		if (questionToDelete) {
 			deleteQuestion.mutate(questionToDelete, {
@@ -156,7 +143,6 @@ const QuestionsManagement = () => {
 		}
 	};
 
-	// Stats for the stats section
 	const statsData: StatCardProps[] = [
 		{
 			title: "Total Questions",
@@ -175,7 +161,6 @@ const QuestionsManagement = () => {
 		},
 	];
 
-	// Filter configurations with metadata-driven options
 	const filterConfigs: FilterConfig[] = [
 		{
 			type: "search",
@@ -202,7 +187,6 @@ const QuestionsManagement = () => {
 		},
 	];
 
-	// Table columns
 	const columns = [
 		{
 			accessorKey: "id",
@@ -249,11 +233,9 @@ const QuestionsManagement = () => {
 
 	return (
 		<div className="space-y-6">
-			{/* Stats Cards */}
 			<StatsSection stats={statsData} />
 
 			<ContentCard title="Questions">
-				{/* Filter Controls */}
 				<FilterBar
 					filters={filterConfigs}
 					hasAddButton={true}
@@ -266,7 +248,6 @@ const QuestionsManagement = () => {
 					clearDisabled={!searchValue && typeFilter === "all"}
 				/>
 
-				{/* Questions Table */}
 				{questions.isLoading ? (
 					<div className="flex justify-center py-8">
 						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -285,7 +266,6 @@ const QuestionsManagement = () => {
 				)}
 			</ContentCard>
 
-			{/* Question Detail Modal */}
 			{selectedQuestion && (
 				<QuestionDetail
 					isOpen={isQuestionDetailOpen}
@@ -296,7 +276,6 @@ const QuestionsManagement = () => {
 				/>
 			)}
 
-			{/* Delete Confirmation Dialog */}
 			<ConfirmationDialog
 				isOpen={isDeleteDialogOpen}
 				onClose={() => setIsDeleteDialogOpen(false)}

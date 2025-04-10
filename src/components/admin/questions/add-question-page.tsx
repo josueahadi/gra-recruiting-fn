@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import AppLayout from "@/components/layout/app-layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,31 +14,48 @@ import TextEditor from "@/components/admin/questions/text-editor";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
-import { Upload } from "lucide-react";
+import { Upload, ArrowLeft } from "lucide-react";
+import { useQuestions } from "@/hooks/use-questions";
+import { Question } from "@/types";
 
 export default function AddQuestionPage() {
 	const router = useRouter();
+	const [formData, setFormData] = useState<Partial<Question>>({
+		text: "",
+		excerpt: "",
+		section: "Multiple Choice",
+		type: "multiple-choice",
+	});
 	const { toast } = useToast();
-	const [questionType, setQuestionType] = useState<string>("Essay");
+	const { createQuestion } = useQuestions();
 	const [isPublishing, setIsPublishing] = useState(false);
 
-	// State for the question text and choices
+	// State for the question details
+	const [questionType, setQuestionType] = useState<string>("Problem Solving");
 	const [questionText, setQuestionText] = useState("");
+
+	// State for multiple choice questions
 	const [choices, setChoices] = useState([
-		{ id: 1, text: "", isCorrect: true },
-		{ id: 2, text: "", isCorrect: false },
-		{ id: 3, text: "", isCorrect: false },
-		{ id: 4, text: "", isCorrect: false },
+		{ id: "1", text: "", isCorrect: true },
+		{ id: "2", text: "", isCorrect: false },
+		{ id: "3", text: "", isCorrect: false },
+		{ id: "4", text: "", isCorrect: false },
 	]);
 
-	// File upload related refs
-	const fileInputRef = useRef<HTMLInputElement>(null);
-
-	const handleChoiceChange = (id: number, value: string) => {
+	const handleChoiceChange = (id: string, value: string) => {
 		setChoices(
 			choices.map((choice) =>
 				choice.id === id ? { ...choice, text: value } : choice,
 			),
+		);
+	};
+
+	const handleCorrectAnswerChange = (id: string) => {
+		setChoices(
+			choices.map((choice) => ({
+				...choice,
+				isCorrect: choice.id === id,
+			})),
 		);
 	};
 
@@ -69,11 +86,40 @@ export default function AddQuestionPage() {
 		setIsPublishing(true);
 
 		try {
-			// In a real implementation, this would be an API call
-			// await addQuestion({ type: questionType, text: questionText, choices });
+			// Create an excerpt from the question text
+			const tempDiv = document.createElement("div");
+			tempDiv.innerHTML = questionText;
+			const textContent = tempDiv.textContent || tempDiv.innerText || "";
+			const excerpt =
+				textContent.substring(0, 97) + (textContent.length > 97 ? "..." : "");
 
-			// Simulate API call delay
-			await new Promise((resolve) => setTimeout(resolve, 1000));
+			// Prepare the question data - type it correctly for the API
+			let questionData;
+
+			if (questionType === "Essay") {
+				questionData = {
+					type: "essay" as const, // Use as const to ensure correct typing
+					section: "Essay",
+					text: questionText,
+					excerpt,
+					difficulty: "Medium", // Default to Medium difficulty
+					active: true,
+					maxScore: 10, // Default max score for essay questions
+				};
+			} else {
+				questionData = {
+					type: questionType.toLowerCase().replace(/\s+/g, "-"),
+					section: "Multiple Choice",
+					text: questionText,
+					excerpt,
+					difficulty: "Medium", // Default to Medium difficulty
+					active: true,
+					choices,
+				};
+			}
+
+			// Submit the question - casting to Partial<Question> to satisfy the API
+			await createQuestion.mutateAsync(questionData);
 
 			toast({
 				title: "Success",
@@ -107,7 +153,7 @@ export default function AddQuestionPage() {
 							className="bg-primary-base hover:bg-custom-skyBlue text-white text-base font-semibold rounded-md px-6 h-10 shadow-sm transition duration-200 ease-in-out"
 						>
 							{isPublishing ? "Publishing..." : "Publish"}
-							<Upload className="!h-5 !w-5" />
+							<Upload className="h-5 w-5 ml-2" />
 						</Button>
 					</div>
 
@@ -160,9 +206,23 @@ export default function AddQuestionPage() {
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 								{choices.map((choice, index) => (
 									<div key={choice.id}>
-										<Label className="block text-base font-semibold text-black mb-2">
-											Choice {index + 1}
-										</Label>
+										<div className="flex items-center mb-2">
+											<input
+												type="radio"
+												id={`choice-${choice.id}`}
+												name="correctAnswer"
+												checked={choice.isCorrect}
+												onChange={() => handleCorrectAnswerChange(choice.id)}
+												className="mr-2"
+											/>
+											<Label
+												htmlFor={`choice-${choice.id}`}
+												className="text-base font-semibold text-black"
+											>
+												Choice {index + 1}{" "}
+												{choice.isCorrect && "(Correct Answer)"}
+											</Label>
+										</div>
 										<TextEditor
 											value={choice.text}
 											onChange={(value) => handleChoiceChange(choice.id, value)}
@@ -174,18 +234,21 @@ export default function AddQuestionPage() {
 								))}
 							</div>
 						)}
+
+						{/* Back button at the bottom */}
+						<div className="mt-8 flex justify-start">
+							<Button
+								onClick={() => router.push("/admin/questions")}
+								variant="outline"
+								className="flex items-center"
+							>
+								<ArrowLeft className="h-5 w-5 mr-2" />
+								Back to Questions
+							</Button>
+						</div>
 					</div>
 				</div>
 			</div>
-
-			{/* Hidden file input for image uploads */}
-			<input
-				type="file"
-				ref={fileInputRef}
-				style={{ display: "none" }}
-				accept="image/*"
-				onChange={() => {}} // Will be handled by the TextEditor component
-			/>
 		</AppLayout>
 	);
 }

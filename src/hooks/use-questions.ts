@@ -18,7 +18,6 @@ const MOCK_QUESTIONS: Question[] = [
 			"A well-structured resume is one of the most important tools for job seekers. It helps...",
 		section: "Multiple Choice",
 		type: "multiple-choice",
-		difficulty: "Medium",
 		active: true,
 		createdAt: "01/02/2025",
 		choices: [
@@ -35,7 +34,6 @@ const MOCK_QUESTIONS: Question[] = [
 			"Professional communication requires understanding key email components...",
 		section: "Multiple Choice",
 		type: "Computer Skills",
-		difficulty: "Easy",
 		active: true,
 		createdAt: "03/02/2025",
 		choices: [
@@ -51,7 +49,6 @@ const MOCK_QUESTIONS: Question[] = [
 		excerpt: "Data structure selection impacts application performance...",
 		section: "Multiple Choice",
 		type: "Computer Skills",
-		difficulty: "Medium",
 		active: true,
 		createdAt: "05/02/2025",
 		choices: [
@@ -67,7 +64,6 @@ const MOCK_QUESTIONS: Question[] = [
 		excerpt: "Algorithm efficiency is measured by time complexity...",
 		section: "Multiple Choice",
 		type: "Math",
-		difficulty: "Medium",
 		active: true,
 		createdAt: "10/02/2025",
 		choices: [
@@ -83,7 +79,6 @@ const MOCK_QUESTIONS: Question[] = [
 		excerpt: "React hooks provide capabilities for functional components...",
 		section: "Multiple Choice",
 		type: "Computer Skills",
-		difficulty: "Medium",
 		active: true,
 		createdAt: "15/02/2025",
 		choices: [
@@ -99,7 +94,6 @@ const MOCK_QUESTIONS: Question[] = [
 		excerpt: "Software design principles guide development practices...",
 		section: "Multiple Choice",
 		type: "Computer Skills",
-		difficulty: "Hard",
 		active: true,
 		createdAt: "18/02/2025",
 		choices: [
@@ -115,7 +109,6 @@ const MOCK_QUESTIONS: Question[] = [
 		excerpt: "REST architecture defines standards for web services...",
 		section: "Multiple Choice",
 		type: "Computer Skills",
-		difficulty: "Medium",
 		active: true,
 		createdAt: "22/02/2025",
 		choices: [
@@ -131,7 +124,6 @@ const MOCK_QUESTIONS: Question[] = [
 		excerpt: "Design patterns provide reusable solutions to common problems...",
 		section: "Multiple Choice",
 		type: "Computer Skills",
-		difficulty: "Medium",
 		active: true,
 		createdAt: "01/03/2025",
 		choices: [
@@ -147,7 +139,6 @@ const MOCK_QUESTIONS: Question[] = [
 		excerpt: "TypeScript extends JavaScript with additional features...",
 		section: "Multiple Choice",
 		type: "Computer Skills",
-		difficulty: "Easy",
 		active: true,
 		createdAt: "05/03/2025",
 		choices: [
@@ -167,7 +158,6 @@ const MOCK_QUESTIONS: Question[] = [
 		excerpt: "Pattern recognition tests spatial reasoning abilities...",
 		section: "Multiple Choice",
 		type: "Problem Solving",
-		difficulty: "Medium",
 		active: true,
 		createdAt: "10/03/2025",
 		imageUrl: "/images/assessment/pattern-question.png",
@@ -200,7 +190,6 @@ const MOCK_QUESTIONS: Question[] = [
 		excerpt: "Functional programming uses composition of functions...",
 		section: "Multiple Choice",
 		type: "Computer Skills",
-		difficulty: "Medium",
 		active: true,
 		createdAt: "15/03/2025",
 		choices: [
@@ -216,7 +205,6 @@ const MOCK_QUESTIONS: Question[] = [
 		excerpt: "APIs facilitate communication between software components...",
 		section: "Multiple Choice",
 		type: "Computer Skills",
-		difficulty: "Easy",
 		active: true,
 		createdAt: "20/03/2025",
 		choices: [
@@ -232,7 +220,6 @@ const MOCK_QUESTIONS: Question[] = [
 		excerpt: "Effective resume creation is a crucial professional skill...",
 		section: "Essay",
 		type: "essay",
-		difficulty: "Medium",
 		active: true,
 		createdAt: "25/03/2025",
 		maxScore: 10,
@@ -243,7 +230,6 @@ const MOCK_QUESTIONS: Question[] = [
 		excerpt: "OOP is a programming paradigm based on objects...",
 		section: "Essay",
 		type: "essay",
-		difficulty: "Medium",
 		active: true,
 		createdAt: "01/04/2025",
 		maxScore: 10,
@@ -254,7 +240,6 @@ const MOCK_QUESTIONS: Question[] = [
 		excerpt: "Programming paradigms affect execution flow...",
 		section: "Essay",
 		type: "essay",
-		difficulty: "Hard",
 		active: true,
 		createdAt: "05/04/2025",
 		maxScore: 10,
@@ -313,15 +298,8 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 					filterParams.type === "all" ||
 					question.type.toLowerCase().replace(" ", "-") === filterParams.type;
 
-				// Filter by difficulty
-				const matchesDifficulty =
-					!filterParams.difficulty ||
-					filterParams.difficulty === "all" ||
-					question.difficulty === filterParams.difficulty;
-
-				return (
-					matchesSearch && matchesSection && matchesType && matchesDifficulty
-				);
+				// Combine all filters
+				return matchesSearch && matchesSection && matchesType;
 			});
 
 			// Create paginated response
@@ -348,13 +326,6 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 	const getQuestionMetadata = () => {
 		const sections = [...new Set(MOCK_QUESTIONS.map((q) => q.section))];
 		const types = [...new Set(MOCK_QUESTIONS.map((q) => q.type))];
-		const difficulties = [
-			...new Set(
-				MOCK_QUESTIONS.filter((q) => q.difficulty).map(
-					(q) => q.difficulty as string,
-				),
-			),
-		];
 
 		// Count by type
 		const typeCounts = MOCK_QUESTIONS.reduce(
@@ -377,7 +348,6 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 		return {
 			sections,
 			types,
-			difficulties,
 			typeCounts,
 			sectionCounts,
 			total: MOCK_QUESTIONS.length,
@@ -430,8 +400,6 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 						(newQuestion.text
 							? `${newQuestion.text.substring(0, 50)}...`
 							: "New essay question..."),
-					difficulty:
-						(newQuestion.difficulty as "Easy" | "Medium" | "Hard") || "Medium",
 					active: true,
 					createdAt: new Date().toLocaleDateString(),
 					maxScore: (newQuestion as Partial<EssayQuestion>).maxScore || 10,
@@ -460,8 +428,6 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 						(newQuestion.text
 							? `${newQuestion.text.substring(0, 50)}...`
 							: "New multiple choice question..."),
-					difficulty:
-						(newQuestion.difficulty as "Easy" | "Medium" | "Hard") || "Medium",
 					active: true,
 					createdAt: new Date().toLocaleDateString(),
 					choices: (newQuestion as Partial<MultipleChoiceQuestion>).choices || [

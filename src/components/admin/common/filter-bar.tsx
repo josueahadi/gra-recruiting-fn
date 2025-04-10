@@ -31,9 +31,6 @@ interface FilterBarProps {
 	};
 }
 
-/**
- * Reusable filter bar component that can be configured with different filter types
- */
 const FilterBar: React.FC<FilterBarProps> = ({
 	filters,
 	onClear,

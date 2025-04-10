@@ -1,30 +1,46 @@
 import axios from "axios";
+import { store } from "@/redux/store";
+import { logout } from "@/redux/slices/auth-slice";
 
-// Create axios instance with default config
+const BASE_URL = "https://jobs-staging.api.growrwanda.com/api/v1";
+
 export const api = axios.create({
-	baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api",
+	baseURL: BASE_URL,
 	headers: {
 		"Content-Type": "application/json",
 	},
-	withCredentials: true, // Important for handling authentication cookies
 });
 
-// Add request interceptor to handle auth tokens if needed
-api.interceptors.request.use((config) => {
-	// You can add auth token logic here if needed
-	return config;
-});
+api.interceptors.request.use(
+	(config) => {
+		const state = store.getState();
+		const token = state.auth.token;
 
-// Add response interceptor to handle common errors
-api.interceptors.response.use(
-	(response) => response,
-	(error) => {
-		if (error.response?.status === 401) {
-			// Handle unauthorized access
-			// You might want to redirect to login or clear auth state
+		if (token) {
+			config.headers.Authorization = `Bearer ${token}`;
 		}
+		return config;
+	},
+	(error) => {
 		return Promise.reject(error);
 	},
 );
 
-export default api;
+api.interceptors.response.use(
+	(response) => response,
+	async (error) => {
+		const originalRequest = error.config;
+
+		if (error.response?.status === 401 && !originalRequest._retry) {
+			originalRequest._retry = true;
+
+			store.dispatch(logout());
+
+			if (typeof window !== "undefined") {
+				window.location.href = "/auth?mode=login";
+			}
+		}
+
+		return Promise.reject(error);
+	},
+);
