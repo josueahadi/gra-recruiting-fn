@@ -59,7 +59,6 @@ export function DataTable<TData, TValue>({
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 	const [searchValue, setSearchValue] = useState<string>("");
 
-	// Ensure data and columns are properly initialized
 	const tableData = React.useMemo(() => data || [], [data]);
 	const tableColumns = React.useMemo(() => columns || [], [columns]);
 
@@ -80,12 +79,10 @@ export function DataTable<TData, TValue>({
 		},
 	});
 
-	// Set initial page size
 	React.useEffect(() => {
 		table.setPageSize(defaultPageSize);
 	}, [defaultPageSize, table]);
 
-	// Apply search filter when searchValue or searchColumn changes
 	React.useEffect(() => {
 		if (searchColumn && searchValue) {
 			table.getColumn(searchColumn)?.setFilterValue(searchValue);
@@ -94,19 +91,16 @@ export function DataTable<TData, TValue>({
 		}
 	}, [searchValue, searchColumn, table]);
 
-	// Handle search input change
 	const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		setSearchValue(e.target.value);
 	};
 
-	// Clear search
 	const handleClearSearch = () => {
 		setSearchValue("");
 	};
 
 	return (
 		<div className={cn("space-y-4", className)}>
-			{/* Search Input */}
 			{showSearch && searchColumn && (
 				<div className="flex items-center relative">
 					<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -130,7 +124,6 @@ export function DataTable<TData, TValue>({
 				</div>
 			)}
 
-			{/* Table */}
 			<div className="rounded-md border">
 				<Table>
 					<TableHeader>
@@ -184,7 +177,7 @@ export function DataTable<TData, TValue>({
 						) : (
 							<TableRow>
 								<TableCell
-									colSpan={tableColumns?.length || 1} // Use tableColumns which we know is an array
+									colSpan={tableColumns?.length || 1}
 									className="h-24 text-center"
 								>
 									No results.
@@ -195,7 +188,6 @@ export function DataTable<TData, TValue>({
 				</Table>
 			</div>
 
-			{/* Pagination */}
 			<div className="flex items-center justify-between">
 				<div className="flex-1 text-sm text-muted-foreground">
 					{table.getFilteredSelectedRowModel().rows.length} of{" "}
@@ -203,7 +195,6 @@ export function DataTable<TData, TValue>({
 				</div>
 
 				<div className="flex items-center space-x-6 lg:space-x-8">
-					{/* Page size selector */}
 					<div className="flex items-center space-x-2">
 						<p className="text-sm font-medium">Rows per page</p>
 						<select
@@ -221,7 +212,6 @@ export function DataTable<TData, TValue>({
 						</select>
 					</div>
 
-					{/* Page navigation */}
 					<div className="flex w-[100px] items-center justify-center text-sm font-medium">
 						Page {table.getState().pagination.pageIndex + 1} of{" "}
 						{table.getPageCount()}

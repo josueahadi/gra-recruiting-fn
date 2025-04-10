@@ -23,13 +23,12 @@ const AdminDashboard = () => {
 	const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
 	const [toDate, setToDate] = useState<Date | undefined>(undefined);
 
-	// Use our hooks to get data and stats from all sections for the dashboard
 	const { applicants, stats: applicantStats } = useApplicants({
 		search: searchValue,
 		status: statusFilter,
 		fromDate,
 		toDate,
-		limit: 5, // Limit to 5 most recent applicants for dashboard
+		limit: 5,
 	});
 
 	const { stats: resultsStats } = useResults();
@@ -50,22 +49,18 @@ const AdminDashboard = () => {
 		setToDate(undefined);
 	};
 
-	// View applicant by navigating to their profile page
 	const handleViewApplicant = (id: string) => {
 		router.push(`/admin/applicants/${id}`);
 	};
 
-	// Navigate to edit page
 	const handleEditApplicant = (id: string) => {
 		router.push(`/admin/applicants/${id}?edit=true`);
 	};
 
-	// Delete applicant
 	const handleDeleteApplicant = (id: string) => {
 		router.push(`/admin/applicants?delete=${id}`);
 	};
 
-	// Stats configuration for the stats section
 	const statsData: StatCardProps[] = [
 		{
 			title: "Applicants Applied",
@@ -175,12 +170,9 @@ const AdminDashboard = () => {
 
 	return (
 		<div className="space-y-8">
-			{/* Stats Cards */}
 			<StatsSection stats={statsData} />
 
-			{/* Recent Applicants */}
 			<ContentCard title="Recent Applicants">
-				{/* Filter Controls */}
 				<FilterBar
 					filters={filterConfigs}
 					onClear={handleClearFilters}
@@ -189,7 +181,6 @@ const AdminDashboard = () => {
 					}
 				/>
 
-				{/* Applicants Table */}
 				{applicants.isLoading ? (
 					<div className="flex justify-center py-8">
 						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />

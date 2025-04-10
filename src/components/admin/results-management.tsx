@@ -24,7 +24,6 @@ const ResultsManagement = () => {
 	const [selectedResult, setSelectedResult] = useState<TestResult | null>(null);
 	const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-	// Use the results hook with filters
 	const { results, stats, triggerAIGrading } = useResults({
 		search: searchValue,
 		status: statusFilter,

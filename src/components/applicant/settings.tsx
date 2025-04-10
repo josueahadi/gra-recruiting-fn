@@ -57,7 +57,6 @@ const SettingsSection = () => {
 	const handlePasswordSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		console.log("Password change submitted:", passwordForm);
-		// Reset form after submission
 		setPasswordForm({
 			currentPassword: "",
 			newPassword: "",
@@ -74,7 +73,6 @@ const SettingsSection = () => {
 			</div>
 
 			<div className="space-y-8">
-				{/* Password Settings */}
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<Lock className="h-5 w-5 text-primary-500" />
@@ -141,7 +139,6 @@ const SettingsSection = () => {
 					</CardContent>
 				</Card>
 
-				{/* Notification Settings */}
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<Bell className="h-5 w-5 text-primary-500" />
@@ -224,7 +221,6 @@ const SettingsSection = () => {
 					</CardContent>
 				</Card>
 
-				{/* Privacy Settings */}
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<Shield className="h-5 w-5 text-primary-500" />
@@ -285,7 +281,6 @@ const SettingsSection = () => {
 					</CardContent>
 				</Card>
 
-				{/* Account Actions */}
 				<Card className="border-red-200">
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<Trash2 className="h-5 w-5 text-red-500" />

@@ -71,7 +71,6 @@ const EducationSection: React.FC<EducationSectionProps> = ({
 			onCancel={handleCancel}
 		>
 			<div className="space-y-6">
-				{/* Education List */}
 				<div className="space-y-2">
 					{education.length > 0 ? (
 						education.map((edu) => (
@@ -89,7 +88,6 @@ const EducationSection: React.FC<EducationSectionProps> = ({
 					)}
 				</div>
 
-				{/* Add Education Form (only shown when editing) */}
 				{isEditing && (
 					<div className="mt-6 p-4 border border-dashed rounded-md">
 						<h3 className="text-lg font-medium mb-4">Add Education</h3>

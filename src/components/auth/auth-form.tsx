@@ -303,7 +303,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 						/>
 					)}
 
-					{/* Submit button - not shown on step 2 as it's in the EducationBackgroundFields component */}
 					{(mode === "login" || (mode === "signup" && currentStep === 1)) && (
 						<Button
 							type="submit"
@@ -358,7 +357,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 
 						<GoogleAuthButton onClick={handleGoogleAuth} />
 
-						{/* Toggle between login and signup */}
 						<p className="text-center text-sm text-gray-600">
 							{mode === "login"
 								? AUTH_CONSTANTS.LOGIN.noAccount
@@ -374,7 +372,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 							</button>
 						</p>
 
-						{/* Forgot password link - login mode only */}
 						{mode === "login" && (
 							<p className="text-center text-sm">
 								<Link

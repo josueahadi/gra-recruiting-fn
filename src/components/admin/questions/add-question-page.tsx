@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Upload, ArrowLeft } from "lucide-react";
 import { useQuestions } from "@/hooks/use-questions";
-import { Question } from "@/types";
+import type { Question } from "@/types";
 
 export default function AddQuestionPage() {
 	const router = useRouter();
@@ -30,11 +30,9 @@ export default function AddQuestionPage() {
 	const { createQuestion } = useQuestions();
 	const [isPublishing, setIsPublishing] = useState(false);
 
-	// State for the question details
 	const [questionType, setQuestionType] = useState<string>("Problem Solving");
 	const [questionText, setQuestionText] = useState("");
 
-	// State for multiple choice questions
 	const [choices, setChoices] = useState([
 		{ id: "1", text: "", isCorrect: true },
 		{ id: "2", text: "", isCorrect: false },
@@ -60,7 +58,6 @@ export default function AddQuestionPage() {
 	};
 
 	const handlePublish = async () => {
-		// Validate inputs
 		if (!questionText.trim()) {
 			toast({
 				title: "Missing information",
@@ -71,7 +68,6 @@ export default function AddQuestionPage() {
 		}
 
 		if (questionType !== "Essay") {
-			// For multiple choice questions, ensure at least one choice is entered
 			const hasChoices = choices.some((choice) => choice.text.trim() !== "");
 			if (!hasChoices) {
 				toast({
@@ -86,25 +82,23 @@ export default function AddQuestionPage() {
 		setIsPublishing(true);
 
 		try {
-			// Create an excerpt from the question text
 			const tempDiv = document.createElement("div");
 			tempDiv.innerHTML = questionText;
 			const textContent = tempDiv.textContent || tempDiv.innerText || "";
 			const excerpt =
 				textContent.substring(0, 97) + (textContent.length > 97 ? "..." : "");
 
-			// Prepare the question data - type it correctly for the API
 			let questionData;
 
 			if (questionType === "Essay") {
 				questionData = {
-					type: "essay" as const, // Use as const to ensure correct typing
+					type: "essay" as const,
 					section: "Essay",
 					text: questionText,
 					excerpt,
-					difficulty: "Medium", // Default to Medium difficulty
+					difficulty: "Medium",
 					active: true,
-					maxScore: 10, // Default max score for essay questions
+					maxScore: 10,
 				};
 			} else {
 				questionData = {
@@ -112,13 +106,12 @@ export default function AddQuestionPage() {
 					section: "Multiple Choice",
 					text: questionText,
 					excerpt,
-					difficulty: "Medium", // Default to Medium difficulty
+					difficulty: "Medium",
 					active: true,
 					choices,
 				};
 			}
 
-			// Submit the question - casting to Partial<Question> to satisfy the API
 			await createQuestion.mutateAsync(questionData);
 
 			toast({
@@ -126,7 +119,6 @@ export default function AddQuestionPage() {
 				description: "Question published successfully",
 			});
 
-			// Redirect to questions list
 			router.push("/admin/questions");
 		} catch (error) {
 			toast({
@@ -158,7 +150,6 @@ export default function AddQuestionPage() {
 					</div>
 
 					<div className="space-y-6">
-						{/* Question Type Selection */}
 						<div>
 							<Label className="block text-base font-semibold text-black mb-2">
 								Question Type
@@ -186,7 +177,6 @@ export default function AddQuestionPage() {
 							</Select>
 						</div>
 
-						{/* Question Content */}
 						<div>
 							<Label className="block text-base font-semibold text-black mb-2">
 								Question
@@ -201,7 +191,6 @@ export default function AddQuestionPage() {
 							/>
 						</div>
 
-						{/* Answer Choices - Only show for non-essay question types */}
 						{questionType !== "Essay" && (
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 								{choices.map((choice, index) => (
@@ -235,7 +224,6 @@ export default function AddQuestionPage() {
 							</div>
 						)}
 
-						{/* Back button at the bottom */}
 						<div className="mt-8 flex justify-start">
 							<Button
 								onClick={() => router.push("/admin/questions")}

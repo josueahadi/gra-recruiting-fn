@@ -1,5 +1,3 @@
-// Shared types for questions across the application
-
 export interface BaseQuestion {
 	id: string;
 	text: string;
@@ -38,10 +36,8 @@ export interface EssayQuestion extends BaseQuestion {
 	maxScore?: number;
 }
 
-// Union type for all question types
 export type Question = MultipleChoiceQuestion | EssayQuestion;
 
-// Interface for paginated questions response
 export interface PaginatedQuestions {
 	data: Question[];
 	meta: {
@@ -52,7 +48,6 @@ export interface PaginatedQuestions {
 	};
 }
 
-// Interface for filter parameters
 export interface QuestionFilterParams {
 	search?: string;
 	section?: string;
@@ -62,7 +57,6 @@ export interface QuestionFilterParams {
 	limit?: number;
 }
 
-// Constants for localStorage keys in assessment
 export const EXAM_COMPLETION_KEY = "examCompletion";
 export const EXAM_SECTION_ANSWERS_KEY = "examSectionAnswers";
 export const QUESTION_MAPPING_KEY = "questionMapping";

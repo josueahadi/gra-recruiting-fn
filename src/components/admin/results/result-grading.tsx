@@ -194,7 +194,6 @@ const ResultGrading: React.FC<ResultGradingProps> = ({
 						onSubmit={form.handleSubmit(handleSubmitForm)}
 						className="space-y-6"
 					>
-						{/* Multiple Choice Questions Section */}
 						{multipleChoiceQuestions.length > 0 && (
 							<div>
 								<h3 className="text-lg font-medium mb-3">
@@ -241,7 +240,6 @@ const ResultGrading: React.FC<ResultGradingProps> = ({
 							</div>
 						)}
 
-						{/* Essay Questions Section */}
 						{essayQuestions.length > 0 && (
 							<div>
 								<h3 className="text-lg font-medium mb-3">Essay Questions</h3>
@@ -320,7 +318,6 @@ const ResultGrading: React.FC<ResultGradingProps> = ({
 							</div>
 						)}
 
-						{/* Final Score and Overall Feedback */}
 						<div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-gray-200">
 							<div className="md:col-span-2">
 								<FormField

@@ -41,7 +41,6 @@ const ContactSection = () => {
 	return (
 		<section className="max-w-screen-2xl px-5 md:px-20 py-16 mb-8 flex justify-center items-center">
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
-				{/* Left Section */}
 				<div className="rounded-2xl flex items-center justify-center w-full">
 					<div className="rounded-2xl overflow-hidden w-full h-full">
 						<Image
@@ -53,7 +52,6 @@ const ContactSection = () => {
 						/>
 					</div>
 				</div>
-				{/* Right Section */}
 				<div className="flex flex-col justify-between">
 					<h2 className="text-2xl md:text-3xl font-semibold text-black capitalize mb-4">
 						Send Us A Message

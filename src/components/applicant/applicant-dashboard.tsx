@@ -203,7 +203,6 @@ const ApplicantDashboard = () => {
 	return (
 		<div className="space-y-8">
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-				{/* Welcome Card - spans 2/3 of the width */}
 				<div className="md:col-span-2">
 					<WelcomeBanner
 						userName="John Doe"
@@ -217,7 +216,6 @@ const ApplicantDashboard = () => {
 					/>
 				</div>
 
-				{/* Profile Completion Card - 1/3 of the width */}
 				<div className="md:col-span-1">
 					<ProfileCompletionCard
 						className="h-full"
@@ -226,7 +224,6 @@ const ApplicantDashboard = () => {
 				</div>
 			</div>
 
-			{/* Bottom content area - shows different content based on completion */}
 			{showResults ? (
 				<ResultsDisplay
 					sectionResults={formatResultsForDisplay()}

@@ -85,7 +85,6 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 			onCancel={handleCancel}
 		>
 			<div className="space-y-6">
-				{/* Experience List */}
 				<div className="space-y-2">
 					{experience.length > 0 ? (
 						experience.map((exp) => (
@@ -103,7 +102,6 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 					)}
 				</div>
 
-				{/* Add Experience Form (only shown when editing) */}
 				{isEditing && (
 					<div className="mt-6 p-4 border border-dashed rounded-md">
 						<h3 className="text-lg font-medium mb-4">Add Experience</h3>

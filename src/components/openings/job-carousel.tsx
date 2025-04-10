@@ -69,8 +69,6 @@ export const JobCarousel = () => {
 	];
 
 	const [swiper, setSwiper] = useState<SwiperType | null>(null);
-	// We're keeping the activeIndex for potential future use but we're not using it now
-	// If truly unused, you could remove this state entirely
 	const [, setActiveIndex] = useState(0);
 
 	return (
@@ -137,9 +135,7 @@ export const JobCarousel = () => {
 					</Swiper>
 				</div>
 
-				{/* Navigation controls and pagination grouped together */}
 				<div className="flex items-center justify-center mt-10 gap-2">
-					{/* Left navigation button */}
 					<button
 						type="button"
 						onClick={() => swiper?.slidePrev()}
@@ -149,10 +145,8 @@ export const JobCarousel = () => {
 						<ArrowLeft className="h-5 w-5 text-primary-base" />
 					</button>
 
-					{/* Pagination dots */}
 					<div className="swiper-pagination !w-fit !flex !items-center" />
 
-					{/* Right navigation button */}
 					<button
 						type="button"
 						onClick={() => swiper?.slideNext()}
@@ -164,7 +158,6 @@ export const JobCarousel = () => {
 				</div>
 			</div>
 
-			{/* Custom CSS for Swiper */}
 			<style jsx global>{`
 				.swiper-slide {
 				transition: transform 0.3s;

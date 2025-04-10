@@ -1,4 +1,3 @@
-// File: components/profile/sections/applicant/PersonalInfoTab.tsx
 "use client";
 
 import type React from "react";

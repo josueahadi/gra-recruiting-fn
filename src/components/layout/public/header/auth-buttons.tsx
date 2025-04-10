@@ -14,7 +14,7 @@ export const AuthButtons = ({
 	className,
 	buttonClassName,
 }: AuthButtonsProps) => {
-	const { signIn, signUp } = useAuth();
+	const { handleAuth } = useAuth();
 	return (
 		<div className={cn("flex items-center gap-4", className)}>
 			<Button
@@ -23,12 +23,15 @@ export const AuthButtons = ({
 					"text-primary-base border-2 border-primary-base !rounded-50 px-8 py-5 hover:text-primary-base font-bold text-base",
 					buttonClassName,
 				)}
-				onClick={() => signIn}
+				onClick={() => handleAuth("login")}
 			>
 				Sign In
 			</Button>
 
-			<PrimaryCTAButton className={cn(buttonClassName)} onClick={() => signUp}>
+			<PrimaryCTAButton
+				className={cn(buttonClassName)}
+				onClick={() => handleAuth("signup")}
+			>
 				Apply
 			</PrimaryCTAButton>
 		</div>

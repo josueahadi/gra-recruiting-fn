@@ -73,7 +73,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 		router.push(`/auth?mode=${type}`);
 	};
 
-	// Sign in mutation
 	const signInMutation = useMutation({
 		mutationFn: async (credentials: SignInCredentials) => {
 			dispatch(setLoading(true));
@@ -112,7 +111,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 		},
 	});
 
-	// Sign up mutation
 	const signUpMutation = useMutation({
 		mutationFn: async (data: SignUpData) => {
 			dispatch(setLoading(true));
@@ -274,12 +272,10 @@ export const useAuth = (options?: UseAuthOptions) => {
 		}
 	};
 
-	// Check if a route is protected
 	const isProtectedRoute = (path: string) => {
 		return path.startsWith("/applicant") || path.startsWith("/admin");
 	};
 
-	// Update token in API interceptor when it changes
 	useEffect(() => {
 		if (token) {
 			// biome-ignore lint/complexity/useLiteralKeys: <explanation>

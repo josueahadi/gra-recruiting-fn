@@ -27,7 +27,6 @@ const ApplicantsManagement = () => {
 		null,
 	);
 
-	// Use the applicants hook with filters
 	const { applicants, stats, deleteApplicant } = useApplicants({
 		search: searchValue,
 		status: statusFilter,

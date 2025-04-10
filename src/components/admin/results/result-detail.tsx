@@ -62,7 +62,6 @@ const ResultDetail: React.FC<ResultDetailProps> = ({
 						)}
 					</div>
 
-					{/* Show graded by information if available */}
 					{result.gradedBy && (
 						<div className="bg-gray-50 p-4 rounded-md">
 							<div className="flex justify-between">

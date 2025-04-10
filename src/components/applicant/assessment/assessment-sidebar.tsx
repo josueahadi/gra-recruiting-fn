@@ -36,7 +36,6 @@ export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 	className,
 	mobileClassName,
 }) => {
-	// Render sidebar for both mobile and desktop
 	const renderSidebar = (mobile = false) => (
 		<aside
 			className={cn(
@@ -47,7 +46,6 @@ export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 			)}
 		>
 			<div className="pt-5 px-5 flex flex-col items-center">
-				{/* Header with logo and close button for mobile */}
 				<div
 					className={cn(
 						"mb-12 w-full flex items-center justify-center",
@@ -68,7 +66,6 @@ export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 					)}
 				</div>
 
-				{/* Timer */}
 				<div className="bg-[#E0F5FF] rounded-lg p-6 mb-10">
 					<div className="text-[#009879] text-3xl font-bold flex items-center justify-center">
 						<Timer className="mr-2" />
@@ -76,7 +73,6 @@ export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 					</div>
 				</div>
 
-				{/* Sections with question navigation */}
 				{sections.map((section) => (
 					<div key={section.id} className="mb-6">
 						<h2 className="text-base font-medium mb-3">
