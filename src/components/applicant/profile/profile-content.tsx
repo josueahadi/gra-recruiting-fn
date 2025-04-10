@@ -10,15 +10,9 @@ import {
 	DocumentsTab,
 } from "@/components/profile/navigation";
 
-/**
- * Main profile content component that handles displaying the correct tab
- * This component is used inside the AppLayout, so it doesn't include
- * navigation or layout elements that AppLayout already provides
- */
 export default function ProfileContent() {
 	const pathname = usePathname();
 
-	// Use the shared profile hook with applicant context
 	const {
 		profileData,
 		isLoading,
@@ -34,17 +28,15 @@ export default function ProfileContent() {
 		userType: "applicant",
 	});
 
-	// Get the active section from the pathname
 	const getActiveSection = () => {
 		if (pathname.includes("/skills")) return "skills";
 		if (pathname.includes("/education")) return "education";
 		if (pathname.includes("/documents")) return "documents";
-		return "profile"; // Default to profile
+		return "profile";
 	};
 
 	const activeSection = getActiveSection();
 
-	// Format location label for display
 	const getLocationLabel = () => {
 		if (!profileData) return undefined;
 
@@ -52,7 +44,6 @@ export default function ProfileContent() {
 		return city && country ? `${city}/${country}` : undefined;
 	};
 
-	// Render loading state
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center h-96">
@@ -61,7 +52,6 @@ export default function ProfileContent() {
 		);
 	}
 
-	// Render error state
 	if (error || !profileData) {
 		return (
 			<div className="flex flex-col items-center justify-center h-96">
@@ -74,7 +64,6 @@ export default function ProfileContent() {
 
 	return (
 		<div className="bg-white rounded-lg p-6 md:px-10 shadow-sm w-full mx-auto">
-			{/* Active section based on the current tab */}
 			{activeSection === "profile" && (
 				<PersonalInfoTab
 					personalInfo={profileData.personalInfo}

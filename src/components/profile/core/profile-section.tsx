@@ -16,9 +16,6 @@ interface ProfileSectionProps {
 	contentClassName?: string;
 }
 
-/**
- * Consistent section wrapper for profile sections with edit functionality
- */
 const ProfileSection: React.FC<ProfileSectionProps> = ({
 	title,
 	children,

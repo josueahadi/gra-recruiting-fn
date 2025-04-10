@@ -20,9 +20,6 @@ interface SkillsTabProps {
 	}) => void;
 }
 
-/**
- * SkillsTab component to be used in the profile navigation
- */
 const SkillsTab: React.FC<SkillsTabProps> = ({
 	technicalSkills = [],
 	softSkills = [],
@@ -100,7 +97,6 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 				onUpdate={handleLanguagesUpdate}
 			/>
 
-			{/* Navigation buttons */}
 			<ProfileNavigationButtons />
 		</>
 	);

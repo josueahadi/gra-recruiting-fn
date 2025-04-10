@@ -7,27 +7,21 @@ interface ProfileCompletionCardProps {
 	size?: "small" | "medium" | "large";
 }
 
-/**
- * A component to display the profile completion percentage with a circular progress indicator
- */
 const ProfileCompletionCard: React.FC<ProfileCompletionCardProps> = ({
 	percentage,
 	className,
 	size = "medium",
 }) => {
-	// Validate percentage
 	if (percentage < 0 || percentage > 100) {
 		throw new Error("Percentage must be between 0 and 100.");
 	}
 
-	// Determine color based on percentage
 	const getColor = () => {
 		if (percentage < 30) return "#EF4444"; // Red
 		if (percentage < 100) return "#F59E0B"; // Amber/Yellow
 		return "#10B981"; // Green
 	};
 
-	// SVG circle calculations
 	const getSvgSize = () => {
 		switch (size) {
 			case "small":

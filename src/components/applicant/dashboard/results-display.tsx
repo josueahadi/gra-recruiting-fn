@@ -20,9 +20,6 @@ interface ResultsDisplayProps {
 	className?: string;
 }
 
-/**
- * Component to display assessment results
- */
 const ResultsDisplay: React.FC<ResultsDisplayProps> = ({
 	sectionResults,
 	assessmentCompleted = false,

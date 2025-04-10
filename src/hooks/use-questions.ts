@@ -9,7 +9,6 @@ import type {
 	QuestionFilterParams,
 } from "@/types";
 
-// Mock data for questions - shared between admin and assessment interfaces
 const MOCK_QUESTIONS: Question[] = [
 	{
 		id: "01",
@@ -246,7 +245,6 @@ const MOCK_QUESTIONS: Question[] = [
 	},
 ];
 
-// Group questions by section for the assessment
 export const getQuestionsBySection = () => {
 	const sections: { [key: string]: Question[] } = {
 		"1": MOCK_QUESTIONS.filter((q) => q.section === "Multiple Choice"),
@@ -260,20 +258,12 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 	const { toast } = useToast();
 	const queryClient = useQueryClient();
 
-	// Default to page 1 and 10 questions per page
 	const page = filterParams.page || 1;
 	const limit = filterParams.limit || 10;
 
-	// In a real application, we would fetch this data from the API
 	const fetchQuestions = async () => {
 		try {
-			// Simulate API call
-			// const response = await api.get(`/questions?page=${page}&limit=${limit}`);
-			// return response.data;
-
-			// For now, return mock data with filtering
 			const filteredQuestions = MOCK_QUESTIONS.filter((question) => {
-				// Filter by search
 				const matchesSearch =
 					!filterParams.search ||
 					question.text
@@ -286,23 +276,19 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 						.toLowerCase()
 						.includes(filterParams.search.toLowerCase());
 
-				// Filter by section
 				const matchesSection =
 					!filterParams.section ||
 					filterParams.section === "all" ||
 					question.section === filterParams.section;
 
-				// Filter by type
 				const matchesType =
 					!filterParams.type ||
 					filterParams.type === "all" ||
 					question.type.toLowerCase().replace(" ", "-") === filterParams.type;
 
-				// Combine all filters
 				return matchesSearch && matchesSection && matchesType;
 			});
 
-			// Create paginated response
 			const startIndex = (page - 1) * limit;
 			const endIndex = startIndex + limit;
 			const paginatedQuestions = filteredQuestions.slice(startIndex, endIndex);
@@ -322,12 +308,10 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 		}
 	};
 
-	// Get categories and types for filters
 	const getQuestionMetadata = () => {
 		const sections = [...new Set(MOCK_QUESTIONS.map((q) => q.section))];
 		const types = [...new Set(MOCK_QUESTIONS.map((q) => q.type))];
 
-		// Count by type
 		const typeCounts = MOCK_QUESTIONS.reduce(
 			(acc, curr) => {
 				acc[curr.type] = (acc[curr.type] || 0) + 1;
@@ -336,7 +320,6 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 			{} as Record<string, number>,
 		);
 
-		// Count by section
 		const sectionCounts = MOCK_QUESTIONS.reduce(
 			(acc, curr) => {
 				acc[curr.section] = (acc[curr.section] || 0) + 1;
@@ -359,41 +342,24 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 		};
 	};
 
-	// Fetch a single question by ID
 	const fetchQuestionById = async (id: string) => {
-		// In a real app, this would be an API call
-		// const response = await api.get(`/questions/${id}`);
-		// return response.data;
-
-		// For now, find the question in the mock data
 		const question = MOCK_QUESTIONS.find((q) => q.id === id);
 		if (!question) throw new Error(`Question with ID ${id} not found`);
 		return question;
 	};
 
-	// Create a new question
 	const createQuestion = useMutation({
 		mutationFn: async (newQuestion: Partial<Question>) => {
-			// In a real app, this would be an API call
-			// const response = await api.post("/questions", newQuestion);
-			// return response.data;
-
-			// Simulate a successful creation after a delay
 			await new Promise((resolve) => setTimeout(resolve, 500));
 
-			// Generate a random ID for the new question
 			const newId = `${Math.floor(Math.random() * 900) + 100}`;
 
-			// Determine the type of question to create
 			if (newQuestion.section === "Essay" || newQuestion.type === "essay") {
-				// Create an essay question with proper typing
 				const createdQuestion: EssayQuestion = {
-					// Spread the newQuestion first to get all properties
 					...newQuestion,
-					// Then override with required and default values
 					id: newId,
 					section: "Essay",
-					type: "essay", // Explicitly set to essay
+					type: "essay",
 					text: newQuestion.text || "New Essay Question",
 					excerpt:
 						newQuestion.excerpt ||
@@ -405,20 +371,16 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 					maxScore: (newQuestion as Partial<EssayQuestion>).maxScore || 10,
 				};
 
-				// In a real app, the backend would handle this
 				MOCK_QUESTIONS.push(createdQuestion);
 				return createdQuestion;
 				// biome-ignore lint/style/noUselessElse: <explanation>
 			} else {
-				// Create a multiple choice question with proper typing
 				const mcType =
 					(newQuestion.type as MultipleChoiceQuestion["type"]) ||
 					"multiple-choice";
 
 				const createdQuestion: MultipleChoiceQuestion = {
-					// Spread the newQuestion first to get all properties
 					...newQuestion,
-					// Then override with required and default values
 					id: newId,
 					section: "Multiple Choice",
 					type: mcType,
@@ -438,7 +400,6 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 					],
 				};
 
-				// In a real app, the backend would handle this
 				MOCK_QUESTIONS.push(createdQuestion);
 				return createdQuestion;
 			}
@@ -459,17 +420,11 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 		},
 	});
 
-	// Update an existing question
 	const updateQuestion = useMutation({
 		mutationFn: async ({
 			id,
 			data,
 		}: { id: string; data: Partial<Question> }) => {
-			// In a real app, this would be an API call
-			// const response = await api.put(`/questions/${id}`, data);
-			// return response.data;
-
-			// For mock data, simulate a successful update after a delay
 			await new Promise((resolve) => setTimeout(resolve, 500));
 
 			const questionIndex = MOCK_QUESTIONS.findIndex((q) => q.id === id);
@@ -478,41 +433,34 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 
 			const originalQuestion = MOCK_QUESTIONS[questionIndex];
 
-			// Handle essay questions
 			if (
 				originalQuestion.section === "Essay" ||
 				data.section === "Essay" ||
 				originalQuestion.type === "essay" ||
 				data.type === "essay"
 			) {
-				// Make sure we're creating a valid essay question
 				const updatedEssayQuestion: EssayQuestion = {
 					...(originalQuestion as EssayQuestion),
 					...data,
-					// Always apply these values last to ensure they override anything in data
-					section: "Essay", // Ensure section is correctly set
-					type: "essay", // Ensure type is correctly set
+					section: "Essay",
+					type: "essay",
 					updatedAt: new Date().toLocaleDateString(),
 				};
 
 				MOCK_QUESTIONS[questionIndex] = updatedEssayQuestion;
 				return updatedEssayQuestion;
 			}
-			// Handle multiple choice questions
 			// biome-ignore lint/style/noUselessElse: <explanation>
 			else {
-				// Get the current or new type, ensuring it's a valid MultipleChoiceQuestion type
 				const mcType =
 					(data.type as MultipleChoiceQuestion["type"]) ||
 					(originalQuestion as MultipleChoiceQuestion).type;
 
-				// Ensure we're creating a valid multiple choice question
 				const updatedMCQuestion: MultipleChoiceQuestion = {
 					...(originalQuestion as MultipleChoiceQuestion),
 					...data,
-					// Always apply these values last to ensure they override anything in data
-					section: "Multiple Choice", // Ensure section is correctly set
-					type: mcType, // Ensure type is correctly set
+					section: "Multiple Choice",
+					type: mcType,
 					choices:
 						(data as Partial<MultipleChoiceQuestion>).choices ||
 						(originalQuestion as MultipleChoiceQuestion).choices,
@@ -539,17 +487,10 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 		},
 	});
 
-	// Delete a question
 	const deleteQuestion = useMutation({
 		mutationFn: async (id: string) => {
-			// In a real app, this would be an API call
-			// await api.delete(`/questions/${id}`);
-			// return id;
-
-			// For mock data, simulate a successful deletion after a delay
 			await new Promise((resolve) => setTimeout(resolve, 500));
 
-			// Remove the question from our mock data
 			const index = MOCK_QUESTIONS.findIndex((q) => q.id === id);
 			if (index !== -1) {
 				MOCK_QUESTIONS.splice(index, 1);
@@ -573,7 +514,6 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 		},
 	});
 
-	// Export the queries and mutations
 	return {
 		questions: useQuery({
 			queryKey: ["questions", page, limit, filterParams],

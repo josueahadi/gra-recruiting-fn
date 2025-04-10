@@ -21,10 +21,6 @@ interface ProfileContainerProps {
 	contentClassName?: string;
 }
 
-/**
- * A container component that handles all profile sections with consistent layout
- * Works for both applicant (self-view) and admin (viewing others) contexts
- */
 const ProfileContainer: React.FC<ProfileContainerProps> = ({
 	userId,
 	userType,
@@ -50,7 +46,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 		userType,
 	});
 
-	// Format location label for display
 	const getLocationLabel = () => {
 		if (!profileData) return undefined;
 
@@ -58,7 +53,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 		return city && country ? `${city}/${country}` : undefined;
 	};
 
-	// Render loading state
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center h-96">
@@ -67,7 +61,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 		);
 	}
 
-	// Render error state
 	if (error || !profileData) {
 		return (
 			<div className="flex flex-col items-center justify-center h-96">
@@ -83,7 +76,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 		);
 	}
 
-	// Combine technical and soft skills for the skills section
 	const combinedSkills = [
 		...(Array.isArray(profileData.skills.technical)
 			? profileData.skills.technical
@@ -91,7 +83,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 		...(Array.isArray(profileData.skills.soft) ? profileData.skills.soft : []),
 	];
 
-	// Handlers for skills & competence section updates
 	const handleDepartmentUpdate = (department?: string) => {
 		updateSkills({
 			technical: profileData.skills.technical || [],
@@ -123,7 +114,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 
 	return (
 		<div className={cn("", wrapperClassName)}>
-			{/* Header with back button - only show for admin view */}
 			{userType === "admin" && onNavigateBack && (
 				<div className="flex items-center mb-4">
 					<Button variant="ghost" onClick={onNavigateBack} size="sm">
@@ -133,7 +123,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 				</div>
 			)}
 
-			{/* Main profile content */}
 			<div
 				className={`bg-white rounded-lg p-6 md:px-10 shadow-md ${contentClassName}`}
 			>
@@ -141,7 +130,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 					{userType === "admin" ? "Applicant Profile" : "User Profile"}
 				</h1>
 
-				{/* Personal Information Section */}
 				<PersonalInfoSection
 					personalInfo={profileData.personalInfo}
 					avatarSrc={profileData.avatarSrc}
@@ -151,7 +139,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 					onAvatarChange={(file) => uploadFile("avatar", file)}
 				/>
 
-				{/* Address Section */}
 				<AddressSection
 					addressInfo={profileData.addressInfo}
 					canEdit={canEdit}
@@ -162,7 +149,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 					<Separator className="my-6 bg-custom-separator bg-opacity-50" />
 				</div>
 
-				{/* Department Section */}
 				<DepartmentSection
 					department={profileData.department}
 					canEdit={canEdit}
@@ -173,7 +159,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 					<Separator className="my-6 bg-custom-separator bg-opacity-50" />
 				</div>
 
-				{/* Skills Section */}
 				<SkillsSection
 					skills={combinedSkills}
 					canEdit={canEdit}
@@ -184,7 +169,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 					<Separator className="my-6 bg-custom-separator bg-opacity-50" />
 				</div>
 
-				{/* Languages Section */}
 				<LanguagesSection
 					languages={profileData.languages || []}
 					canEdit={canEdit}
@@ -195,7 +179,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 					<Separator className="my-6 bg-custom-separator bg-opacity-50" />
 				</div>
 
-				{/* Work & Education Section */}
 				<WorkEducationSection
 					education={profileData.education}
 					experience={profileData.experience}
@@ -209,7 +192,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 					<Separator className="my-6 bg-custom-separator bg-opacity-50" />
 				</div>
 
-				{/* Documents & Portfolio Section */}
 				<DocumentsSection
 					resume={profileData.documents.resume}
 					samples={profileData.documents.samples}

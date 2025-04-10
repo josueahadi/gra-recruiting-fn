@@ -20,9 +20,6 @@ interface AssessmentLayoutProps {
 	pageTitle?: string;
 }
 
-/**
- * Inner component that uses the layout context
- */
 const AssessmentLayoutInner: React.FC<AssessmentLayoutProps> = ({
 	children,
 	userName = "John Doe",
@@ -96,9 +93,6 @@ const AssessmentLayoutInner: React.FC<AssessmentLayoutProps> = ({
 	);
 };
 
-/**
- * Main assessment layout component that wraps with context providers
- */
 const AssessmentLayout: React.FC<AssessmentLayoutProps> = (props) => {
 	return (
 		<LayoutProvider>

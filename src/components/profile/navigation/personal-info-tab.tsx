@@ -17,10 +17,6 @@ interface PersonalInfoTabProps {
 	onAvatarChange: (file: File) => void;
 }
 
-/**
- * Combined component for Personal Info tab in applicant view
- * Contains both personal info and address sections
- */
 const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
 	personalInfo,
 	addressInfo,
@@ -40,7 +36,7 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
 				personalInfo={personalInfo}
 				avatarSrc={avatarSrc}
 				locationLabel={locationLabel}
-				canEdit={true} // Applicants can always edit their own profile
+				canEdit={true}
 				onInfoUpdate={onPersonalInfoUpdate}
 				onAvatarChange={onAvatarChange}
 			/>

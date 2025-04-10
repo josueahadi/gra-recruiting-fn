@@ -10,7 +10,6 @@ interface LayoutContextType {
 	openMobileMenu: () => void;
 }
 
-// Create the context with a default value
 const LayoutContext = createContext<LayoutContextType>({
 	isMobileMenuOpen: false,
 	toggleMobileMenu: () => {},
@@ -18,16 +17,12 @@ const LayoutContext = createContext<LayoutContextType>({
 	openMobileMenu: () => {},
 });
 
-// Custom hook to use the layout context
 export const useLayout = () => useContext(LayoutContext);
 
 interface LayoutProviderProps {
 	children: React.ReactNode;
 }
 
-/**
- * Provider component that wraps the app and provides layout state
- */
 export const LayoutProvider: React.FC<LayoutProviderProps> = ({ children }) => {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 

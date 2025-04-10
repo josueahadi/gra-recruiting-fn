@@ -4,15 +4,25 @@ import AuthForm from "@/components/auth/auth-form";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
-// Client component that safely uses useSearchParams
 function AuthContent() {
 	const searchParams = useSearchParams();
 	const mode = (searchParams.get("mode") as "login" | "signup") || "login";
+	const { isAuthenticated, user } = useAuth();
+
+	useEffect(() => {
+		if (isAuthenticated && user) {
+			const redirectPath =
+				user.role.toLowerCase() === "admin"
+					? "/admin/dashboard"
+					: "/applicant/dashboard";
+			window.location.href = redirectPath;
+		}
+	}, [isAuthenticated, user]);
 
 	return (
 		<div className="min-h-screen flex">
-			{/* Image Section - Added fixed positioning */}
 			<div className="hidden lg:block lg:fixed lg:w-1/2 h-screen">
 				<Image
 					width={500}
@@ -30,7 +40,6 @@ function AuthContent() {
 				/>
 			</div>
 
-			{/* Form Section - Added margin to offset fixed image section */}
 			<div className="w-full lg:w-1/2 lg:ml-[50%] flex items-center justify-center p-8 bg-white">
 				<AuthForm mode={mode} />
 			</div>
@@ -38,7 +47,6 @@ function AuthContent() {
 	);
 }
 
-// Fallback component while suspense is loading
 function AuthFallback() {
 	return (
 		<div className="min-h-screen flex items-center justify-center">
@@ -56,9 +64,7 @@ function AuthFallback() {
 	);
 }
 
-// Main page component with suspense boundary
 export default function AuthPage() {
-	// Hydration solution: only show content after component mounts
 	const [isClient, setIsClient] = useState(false);
 
 	useEffect(() => {

@@ -9,7 +9,7 @@
 export const formatDateString = (dateStr: string): string => {
 	if (!dateStr) return "";
 
-	// If it's just a 4-digit year
+	// If it's just a 4-digit year (e.g., "2021"), return it as is
 	if (/^\d{4}$/.test(dateStr)) {
 		return dateStr;
 	}

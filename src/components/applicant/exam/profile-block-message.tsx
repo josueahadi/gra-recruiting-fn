@@ -11,10 +11,6 @@ interface ProfileBlockMessageProps {
 	className?: string;
 }
 
-/**
- * A reusable component that displays a message to complete profile
- * Used both in dashboard and when trying to access the exam before profile completion
- */
 const ProfileBlockMessage: React.FC<ProfileBlockMessageProps> = ({
 	title = "First complete your profile to unlock the assessment",
 	buttonText = "Complete Your Profile",

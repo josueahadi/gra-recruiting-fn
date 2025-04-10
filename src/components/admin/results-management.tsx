@@ -57,12 +57,10 @@ const ResultsManagement = () => {
 		}
 	};
 
-	// Function to trigger AI grading
 	const handleTriggerAIGrading = (id: string) => {
 		triggerAIGrading.mutate(id);
 	};
 
-	// Stats configuration for the stats section
 	const statsData: StatCardProps[] = [
 		{
 			title: "Total Submissions",
@@ -81,7 +79,6 @@ const ResultsManagement = () => {
 		},
 	];
 
-	// Filter configurations
 	const filterConfigs: FilterConfig[] = [
 		{
 			type: "search",
@@ -117,7 +114,6 @@ const ResultsManagement = () => {
 		},
 	];
 
-	// Table columns
 	const columns = [
 		{
 			accessorKey: "applicantName",
@@ -165,7 +161,6 @@ const ResultsManagement = () => {
 							onClick: () => handleViewResult(row.original.id),
 							tooltip: "View Details",
 						},
-						// Only show the AI grading action if status is "waiting"
 						...(row.original.status === "waiting"
 							? [
 									{
@@ -183,11 +178,9 @@ const ResultsManagement = () => {
 
 	return (
 		<div className="space-y-8">
-			{/* Stats Cards */}
 			<StatsSection stats={statsData} />
 
 			<ContentCard title="Exam Results">
-				{/* Filter Controls */}
 				<FilterBar
 					filters={filterConfigs}
 					onClear={handleClearFilters}
@@ -196,7 +189,6 @@ const ResultsManagement = () => {
 					}
 				/>
 
-				{/* Results Table */}
 				{results.isLoading ? (
 					<div className="flex justify-center py-8">
 						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -215,7 +207,6 @@ const ResultsManagement = () => {
 				)}
 			</ContentCard>
 
-			{/* Result Detail Dialog */}
 			{selectedResult && (
 				<ResultDetail
 					isOpen={isDetailOpen}

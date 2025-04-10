@@ -12,9 +12,6 @@ interface DocumentsTabProps {
 	onLinksUpdate: (links: PortfolioLinks) => void;
 }
 
-/**
- * Component for Documents tab in applicant view
- */
 const DocumentsTab: React.FC<DocumentsTabProps> = ({
 	resume,
 	samples,

@@ -11,7 +11,6 @@ const LanguageDisplay: React.FC<LanguageDisplayProps> = ({
 	languages,
 	className,
 }) => {
-	// Map proficiency level to a more readable format
 	const getProficiencyLabel = (level: number) => {
 		if (level >= 9) return "Native";
 		if (level >= 7) return "Advanced";
@@ -41,7 +40,6 @@ const LanguageDisplay: React.FC<LanguageDisplayProps> = ({
 							{getProficiencyLabel(lang.level)}
 						</div>
 
-						{/* Visual proficiency indicator */}
 						<div className="flex items-center mt-2">
 							{Array.from({ length: 10 }).map((_, i) => (
 								<div

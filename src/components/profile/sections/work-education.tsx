@@ -14,11 +14,6 @@ interface WorkEducationSectionProps {
 	}) => void;
 }
 
-/**
- * Combined Work & Education section that handles both education and work experience
- * This component follows the LinkedIn-style date formatting (Month Year - Month Year)
- * and includes duration calculation for work experiences
- */
 const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 	education,
 	experience,

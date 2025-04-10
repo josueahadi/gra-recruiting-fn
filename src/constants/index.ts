@@ -2,7 +2,7 @@
 export const AUTH_CONSTANTS = {
 	LOGIN: {
 		title: "Welcome Back!",
-		subtitle: "Please Enter Your Credentials to login to your account",
+		subtitle: "Sign in to your account to continue",
 		forgotPassword: "Forgot Password?",
 		noAccount: "Don't have an account?",
 		signUpLink: "Sign up",
@@ -11,16 +11,21 @@ export const AUTH_CONSTANTS = {
 			submitting: "Logging in...",
 			google: "Continue with Google",
 		},
+		errors: {
+			email: "Please enter a valid email address",
+			password: "Password is required",
+			invalid: "Invalid email or password",
+		},
 	},
 	SIGNUP: {
 		steps: {
 			contact: {
-				title: "Create Account",
-				subtitle: "Fill in your details",
+				title: "Create Your Account",
+				subtitle: "Enter your personal information to get started",
 			},
 			education: {
 				title: "Complete Your Profile",
-				subtitle: "Tell us about your education",
+				subtitle: "Tell us about your education and career path",
 				departments: [
 					"Software Development",
 					"Digital Marketing",
@@ -40,13 +45,23 @@ export const AUTH_CONSTANTS = {
 		hasAccount: "Already have an account?",
 		signInLink: "Sign in",
 		buttons: {
-			next: "Next Step",
+			next: "Continue",
 			back: "Back",
 			submit: "Create Account",
 			submitting: "Creating Account...",
 			google: "Continue with Google",
 		},
 		terms: "I agree to the",
+
+		errors: {
+			firstName: "First name is required",
+			lastName: "Last name is required",
+			email: "Please enter a valid email address",
+			password:
+				"Password must be at least 8 characters with letters and numbers",
+			passwordMatch: "Passwords don't match",
+			terms: "You must accept the terms and conditions",
+		},
 	},
 	FORMS: {
 		labels: {
@@ -73,25 +88,57 @@ export const AUTH_CONSTANTS = {
 			graduationYear: "2018",
 		},
 	},
-} as const;
-
-// errors
-export const ERROR_MESSAGES = {
-	auth: {
-		invalidCredentials: "Invalid credentials. Please try again.",
-		signupFailed: "Something went wrong. Please try again.",
-		googleAuthFailed: "Failed to authenticate with Google. Please try again.",
-	},
-} as const;
-
-// success
-export const SUCCESS_MESSAGES = {
-	auth: {
-		login: "You have been logged in successfully.",
-		signup: "Your account has been created successfully.",
-		googleAuth: {
-			login: "Successfully signed in with Google.",
-			signup: "Successfully signed up with Google.",
+	RESET_PASSWORD: {
+		title: "Reset Your Password",
+		subtitle: "We'll send you instructions to reset your password",
+		buttons: {
+			submit: "Send Reset Link",
+			back: "Back to Login",
+		},
+		steps: {
+			request: {
+				title: "Reset Your Password",
+				subtitle: "Enter your email and we'll send you a reset link",
+			},
+			verify: {
+				title: "Verify Your Email",
+				subtitle: "Enter the verification code sent to your email",
+			},
+			reset: {
+				title: "Create New Password",
+				subtitle: "Your password must be different from the previous one",
+			},
+			success: {
+				title: "Password Reset Successful",
+				subtitle: "Your password has been reset successfully",
+			},
 		},
 	},
-} as const;
+	VERIFICATION: {
+		title: "Verify Your Email",
+		subtitle: "We've sent a verification code to your email",
+		buttons: {
+			verify: "Verify Email",
+			resend: "Resend Code",
+			continue: "Continue to Dashboard",
+		},
+	},
+	ERRORS: {
+		general: "Something went wrong. Please try again.",
+		network: "Network error. Please check your connection.",
+		unauthorized: "Your session has expired. Please sign in again.",
+		server: "Server error. Please try again later.",
+	},
+	VALIDATION: {
+		password: {
+			minLength: 8,
+			requireUppercase: true,
+			requireLowercase: true,
+			requireNumber: true,
+			requireSpecial: true,
+		},
+		email: {
+			pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+		},
+	},
+};

@@ -56,23 +56,19 @@ const ApplicantsManagement = () => {
 		setToDate(undefined);
 	};
 
-	// View applicant by navigating to their profile page
 	const handleViewApplicant = (id: string) => {
 		router.push(`/admin/applicants/${id}`);
 	};
 
-	// Navigate to edit page
 	const handleEditApplicant = (id: string) => {
 		router.push(`/admin/applicants/${id}?edit=true`);
 	};
 
-	// Show delete confirmation
 	const handleDeleteApplicant = (id: string) => {
 		setApplicantToDelete(id);
 		setIsDeleteDialogOpen(true);
 	};
 
-	// Confirm deletion
 	const confirmDeleteApplicant = () => {
 		if (applicantToDelete) {
 			deleteApplicant.mutate(applicantToDelete, {
@@ -84,7 +80,6 @@ const ApplicantsManagement = () => {
 		}
 	};
 
-	// Stats configuration for the stats section
 	const statsData: StatCardProps[] = [
 		{
 			title: "Total Applicants",
@@ -108,7 +103,6 @@ const ApplicantsManagement = () => {
 		},
 	];
 
-	// Filter configurations
 	const filterConfigs: FilterConfig[] = [
 		{
 			type: "search",
@@ -158,7 +152,6 @@ const ApplicantsManagement = () => {
 		},
 	];
 
-	// Table columns
 	const columns = [
 		{
 			accessorKey: "name",
@@ -213,11 +206,9 @@ const ApplicantsManagement = () => {
 
 	return (
 		<div className="space-y-6">
-			{/* Stats Section */}
 			<StatsSection stats={statsData} gridClassName="md:grid-cols-4" />
 
 			<ContentCard title="Applicants">
-				{/* Filter Controls */}
 				<FilterBar
 					filters={filterConfigs}
 					onClear={handleClearFilters}
@@ -230,7 +221,6 @@ const ApplicantsManagement = () => {
 					}
 				/>
 
-				{/* Applicants Table */}
 				{applicants.isLoading ? (
 					<div className="flex justify-center py-8">
 						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -249,7 +239,6 @@ const ApplicantsManagement = () => {
 				)}
 			</ContentCard>
 
-			{/* Delete Confirmation Dialog */}
 			<ConfirmationDialog
 				isOpen={isDeleteDialogOpen}
 				onClose={() => setIsDeleteDialogOpen(false)}

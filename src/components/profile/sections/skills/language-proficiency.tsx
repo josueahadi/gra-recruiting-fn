@@ -35,7 +35,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 	className,
 }) => {
 	const [newLanguage, setNewLanguage] = useState("");
-	const [selectedProficiency, setSelectedProficiency] = useState("5"); // Default to Intermediate
+	const [selectedProficiency, setSelectedProficiency] = useState("5");
 
 	const handleAddLanguage = () => {
 		if (newLanguage.trim()) {
@@ -44,11 +44,10 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 				Number.parseInt(selectedProficiency, 10),
 			);
 			setNewLanguage("");
-			setSelectedProficiency("5"); // Reset to default
+			setSelectedProficiency("5");
 		}
 	};
 
-	// Map proficiency level to display text
 	const getProficiencyLabel = (level: number) => {
 		if (level >= 9) return "Native";
 		if (level >= 7) return "Advanced";

@@ -24,10 +24,6 @@ interface AssessmentSidebarProps {
 	mobileClassName?: string;
 }
 
-/**
- * Specialized sidebar component for the assessment/exam pages
- * with timer and question navigation
- */
 export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 	currentSectionId = 1,
 	currentQuestionNumber = 1,

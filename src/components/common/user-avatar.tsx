@@ -1,4 +1,3 @@
-// components/common/user-avatar.tsx
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -29,9 +28,6 @@ export interface UserAvatarProps {
 	className?: string;
 }
 
-/**
- * Reusable user avatar component with dropdown menu
- */
 export const UserAvatar: React.FC<UserAvatarProps> = ({
 	userType,
 	userName = "",
@@ -41,11 +37,9 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 }) => {
 	const router = useRouter();
 
-	// Generate fallback initials for avatar
 	const getInitials = (): string => {
 		if (userType === "admin") return "AD";
 
-		// If we have a username, use their initials
 		if (userName) {
 			return userName
 				.split(" ")
@@ -55,22 +49,18 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 				.substring(0, 2);
 		}
 
-		return "JD"; // John Doe default
+		return "JD";
 	};
 
-	// Default logout handler
 	const handleLogout = () => {
 		if (onLogout) {
 			onLogout();
 		} else {
 			console.log("Logging out...");
-			// Default logout implementation
-			// In a real app, this would call an API or auth service
 			router.push("/login");
 		}
 	};
 
-	// Default menu items if none are provided
 	const defaultMenuItems = [
 		{
 			icon: <User className="mr-2 h-4 w-4" />,

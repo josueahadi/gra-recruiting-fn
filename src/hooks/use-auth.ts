@@ -205,6 +205,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 				description: "Your email has been verified successfully.",
 			});
 		},
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
 			dispatch(
 				setError(error.response?.data?.message || "Verification failed"),
@@ -258,6 +259,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const handleGoogleAuth = async () => {
 		try {
 			window.location.href = `${api.defaults.baseURL}/auth/google`;
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		} catch (error: any) {
 			console.error("Google auth error:", error);
 			dispatch(setError("Google authentication failed"));
@@ -280,8 +282,11 @@ export const useAuth = (options?: UseAuthOptions) => {
 	// Update token in API interceptor when it changes
 	useEffect(() => {
 		if (token) {
+			// biome-ignore lint/complexity/useLiteralKeys: <explanation>
 			api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 		} else {
+			// biome-ignore lint/complexity/useLiteralKeys: <explanation>
+			// biome-ignore lint/performance/noDelete: <explanation>
 			delete api.defaults.headers.common["Authorization"];
 		}
 	}, [token]);

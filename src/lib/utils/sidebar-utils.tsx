@@ -9,9 +9,6 @@ import {
 	Users,
 } from "lucide-react";
 
-/**
- * Gets sidebar links based on user type
- */
 export function getSidebarLinks(
 	userType: "applicant" | "admin",
 ): SidebarItemType[] {
@@ -46,22 +43,14 @@ export function getSidebarLinks(
 	];
 }
 
-/**
- * Determines if a link is active based on the current pathname
- */
 export function isLinkActive(pathname: string, link: SidebarItemType): boolean {
-	// Exact match for paths
 	if (pathname === link.href) return true;
 
-	// For dashboard links, don't match with other sections
 	if (link.href.includes("dashboard") && pathname !== link.href) return false;
 
-	// For exam links, match any exam-related path
 	if (link.href.includes("/exam") && pathname.includes("/exam")) return true;
 
-	// For profile links, check the active section
 	if (link.activeSection && pathname.includes(link.activeSection)) {
-		// Don't mark profile as active when viewing dashboard or exam
 		if (pathname.includes("dashboard") || pathname.includes("exam"))
 			return false;
 

@@ -81,10 +81,9 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 
 	return (
 		<>
-			{/* Resume/CV Section */}
 			<ProfileSection
 				title="Resume"
-				canEdit={false} // No edit button for this section as it has its own upload interface
+				canEdit={false}
 				isEditing={false}
 				onEdit={() => {}}
 				onSave={() => {}}
@@ -150,7 +149,6 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 				<Separator className="my-8 bg-custom-separator bg-opacity-50" />
 			</div>
 
-			{/* Portfolio Links Section */}
 			<ProfileSection
 				title="Optional Links"
 				canEdit={canEdit}
@@ -160,7 +158,6 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 				onCancel={handleCancelLinks}
 			>
 				<div className="space-y-4 md:px-4">
-					{/* GitHub Link */}
 					<div className="flex flex-wrap items-start gap-2 sm:gap-4">
 						<div className="flex items-center gap-2 w-full sm:w-28">
 							<FaGithub className="w-5 h-5 text-primary-base flex-shrink-0" />
@@ -194,7 +191,6 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 						)}
 					</div>
 
-					{/* Behance Link */}
 					<div className="flex flex-wrap items-start gap-2 sm:gap-4">
 						<div className="flex items-center gap-2 w-full sm:w-28">
 							<FaBehance className="w-5 h-5 text-primary-base flex-shrink-0" />
@@ -228,7 +224,6 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 						)}
 					</div>
 
-					{/* Portfolio Link */}
 					<div className="flex flex-wrap items-start gap-2 sm:gap-4">
 						<div className="flex items-center gap-2 w-full sm:w-28">
 							<BiWorld className="w-5 h-5 text-primary-base flex-shrink-0" />

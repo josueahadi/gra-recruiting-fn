@@ -1,6 +1,3 @@
-/**
- * Gets the page title from the pathname based on user type
- */
 export function getPageTitle(
 	pathname: string,
 	userType: "applicant" | "admin",
@@ -20,7 +17,6 @@ export function getPageTitle(
 		if (pathname.includes("/education")) return "Work & Education";
 		if (pathname.includes("/documents")) return "Documents & Portfolio";
 
-		// Extract the last segment of the path and capitalize it
 		const lastPathSegment = pathname.split("/").pop() || "";
 		return (
 			lastPathSegment.charAt(0).toUpperCase() + lastPathSegment.slice(1) ||

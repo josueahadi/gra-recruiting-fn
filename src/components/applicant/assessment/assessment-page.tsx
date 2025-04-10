@@ -22,9 +22,6 @@ interface AssessmentPageProps {
 	};
 }
 
-/**
- * The main assessment page component using shared question data from the useQuestions hook
- */
 export default function AssessmentPage({ params }: AssessmentPageProps) {
 	const router = useRouter();
 	const { getQuestionsBySection } = useQuestions();

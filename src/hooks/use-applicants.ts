@@ -24,7 +24,6 @@ export interface PaginatedApplicants {
 	};
 }
 
-// Mock data for demonstration
 const MOCK_APPLICANTS: Applicant[] = [
 	{
 		id: "1",
@@ -127,20 +126,12 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 	const { toast } = useToast();
 	const queryClient = useQueryClient();
 
-	// Default to page 1 and 10 results per page
 	const page = filterParams.page || 1;
 	const limit = filterParams.limit || 10;
 
-	// In a real application, we would fetch this data from the API
 	const fetchApplicants = async () => {
 		try {
-			// Simulate API call
-			// const response = await api.get(`/applicants?page=${page}&limit=${limit}`);
-			// return response.data;
-
-			// For now, return mock data with filtering
 			const filteredApplicants = MOCK_APPLICANTS.filter((applicant) => {
-				// Filter by search
 				const matchesSearch =
 					!filterParams.search ||
 					applicant.name
@@ -150,19 +141,16 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 						.toLowerCase()
 						.includes(filterParams.search.toLowerCase());
 
-				// Filter by status
 				const matchesStatus =
 					!filterParams.status ||
 					filterParams.status === "all" ||
 					applicant.status === filterParams.status;
 
-				// Filter by department
 				const matchesDepartment =
 					!filterParams.department ||
 					filterParams.department === "all" ||
 					applicant.department === filterParams.department;
 
-				// Filter by date range
 				let matchesDateRange = true;
 				if (filterParams.fromDate || filterParams.toDate) {
 					const applicantDate = new Date(applicant.dateApplied);
@@ -183,7 +171,6 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 				);
 			});
 
-			// Create paginated response
 			const startIndex = (page - 1) * limit;
 			const endIndex = startIndex + limit;
 			const paginatedApplicants = filteredApplicants.slice(
@@ -206,7 +193,6 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 		}
 	};
 
-	// Get summary statistics
 	const getApplicantStats = () => {
 		const total = MOCK_APPLICANTS.length;
 		const success = MOCK_APPLICANTS.filter(
@@ -217,7 +203,6 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 			(a) => a.status === "waiting",
 		).length;
 
-		// Count by department
 		const departmentCounts = MOCK_APPLICANTS.reduce(
 			(acc, curr) => {
 				acc[curr.department] = (acc[curr.department] || 0) + 1;
@@ -235,29 +220,15 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 		};
 	};
 
-	// Fetch a single applicant by ID
 	const fetchApplicantById = async (id: string) => {
-		// In a real app, this would be an API call
-		// const response = await api.get(`/applicants/${id}`);
-		// return response.data;
-
-		// For now, find the applicant in the mock data
 		const applicant = MOCK_APPLICANTS.find((a) => a.id === id);
 		if (!applicant) throw new Error(`Applicant with ID ${id} not found`);
 		return applicant;
 	};
 
-	// Delete an applicant
 	const deleteApplicant = useMutation({
 		mutationFn: async (id: string) => {
-			// In a real app, this would be an API call
-			// await api.delete(`/applicants/${id}`);
-			// return id;
-
-			// For mock data, simulate a successful deletion after a delay
 			await new Promise((resolve) => setTimeout(resolve, 500));
-
-			// Remove the applicant from our mock data (for demonstration purposes only)
 			const index = MOCK_APPLICANTS.findIndex((a) => a.id === id);
 			if (index !== -1) {
 				MOCK_APPLICANTS.splice(index, 1);
@@ -281,17 +252,10 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 		},
 	});
 
-	// Create a new applicant
 	const createApplicant = useMutation({
 		mutationFn: async (newApplicant: Partial<Applicant>) => {
-			// In a real app, this would be an API call
-			// const response = await api.post("/applicants", newApplicant);
-			// return response.data;
-
-			// For mock data, simulate a successful creation after a delay
 			await new Promise((resolve) => setTimeout(resolve, 500));
 
-			// Ensure we have all required fields with defaults if not provided
 			const createdApplicant: Applicant = {
 				id: `${MOCK_APPLICANTS.length + 1}`,
 				name: newApplicant.name || "New Applicant",
@@ -303,7 +267,6 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 				...newApplicant,
 			};
 
-			// In a real app, the backend would handle this
 			MOCK_APPLICANTS.push(createdApplicant);
 
 			return createdApplicant;
@@ -324,31 +287,23 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 		},
 	});
 
-	// Update an existing applicant
 	const updateApplicant = useMutation({
 		mutationFn: async ({
 			id,
 			data,
 		}: { id: string; data: Partial<Applicant> }) => {
-			// In a real app, this would be an API call
-			// const response = await api.put(`/applicants/${id}`, data);
-			// return response.data;
-
-			// For mock data, simulate a successful update after a delay
 			await new Promise((resolve) => setTimeout(resolve, 500));
 
 			const applicantIndex = MOCK_APPLICANTS.findIndex((a) => a.id === id);
 			if (applicantIndex === -1)
 				throw new Error(`Applicant with ID ${id} not found`);
 
-			// Update the applicant in the mock data
 			const updatedApplicant: Applicant = {
 				...MOCK_APPLICANTS[applicantIndex],
 				...data,
 				lastUpdated: new Date().toLocaleDateString(),
 			};
 
-			// Replace the old applicant with the updated one
 			MOCK_APPLICANTS[applicantIndex] = updatedApplicant;
 
 			return updatedApplicant;
@@ -369,7 +324,6 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 		},
 	});
 
-	// Export the queries and mutations
 	return {
 		applicants: useQuery({
 			queryKey: ["applicants", page, limit, filterParams],

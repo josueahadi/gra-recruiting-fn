@@ -14,9 +14,6 @@ interface WorkEducationTabProps {
 	}) => void;
 }
 
-/**
- * Component for Work & Education tab in applicant view
- */
 const WorkEducationTab: React.FC<WorkEducationTabProps> = ({
 	education,
 	experience,

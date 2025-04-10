@@ -65,13 +65,10 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 			const file = e.target.files[0];
 
 			onAvatarChange(file);
-
-			// In a real implementation, this would be done after upload completes
 			setTimeout(() => setIsUploading(false), 1000);
 		}
 	};
 
-	// User profile header with avatar
 	const profileHeader = (
 		<div className="md:px-10">
 			<div className="flex flex-row items-center gap-6 mb-8 ">

@@ -21,10 +21,6 @@ interface MultipleChoiceQuestionProps {
 	buttonText?: string;
 }
 
-/**
- * Component for rendering multiple choice questions
- * Supports both text and image-based options
- */
 const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 	questionNumber,
 	// totalQuestions,

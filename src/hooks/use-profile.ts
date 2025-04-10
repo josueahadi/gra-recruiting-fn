@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 
-// Types for profile data
 export interface ProfileInfo {
 	firstName: string;
 	lastName: string;
@@ -82,34 +81,22 @@ interface UseProfileOptions {
 	userType: "applicant" | "admin";
 }
 
-/**
- * Custom hook for managing profile data across the application
- */
 export function useProfile(options: UseProfileOptions) {
 	const { id, userType } = options;
 	const [profileData, setProfileData] = useState<ApplicantData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const { toast } = useToast();
-
-	// Determine if current user can edit this profile
 	const canEdit = userType === "applicant" || !id;
 
-	// Fetch profile data on initial load
 	useEffect(() => {
 		const fetchProfileData = async () => {
 			setIsLoading(true);
 			setError(null);
 
 			try {
-				// In a real app, this would be an API call
-				// const response = await fetch(`/api/profile${id ? `/${id}` : ''}`);
-				// const data = await response.json();
-
-				// Simulate API delay
 				await new Promise((resolve) => setTimeout(resolve, 500));
 
-				// Mock data for demonstration
 				const mockData: ApplicantData = {
 					id: id || "current-user",
 					name: "John Doe",
@@ -219,18 +206,11 @@ export function useProfile(options: UseProfileOptions) {
 		fetchProfileData();
 	}, [id, toast]);
 
-	/**
-	 * Update personal information
-	 */
 	const updatePersonalInfo = useCallback(
 		async (info: ProfileInfo) => {
 			if (!profileData) return;
 
 			try {
-				// In a real app, this would be an API call
-				// await fetch(`/api/profile/personal`, { method: 'PUT', body: JSON.stringify(info) });
-
-				// Optimistic update
 				setProfileData((prev) =>
 					prev
 						? {
@@ -257,18 +237,11 @@ export function useProfile(options: UseProfileOptions) {
 		[profileData, toast],
 	);
 
-	/**
-	 * Update address information
-	 */
 	const updateAddress = useCallback(
 		async (info: AddressInfo) => {
 			if (!profileData) return;
 
 			try {
-				// In a real app, this would be an API call
-				// await fetch(`/api/profile/address`, { method: 'PUT', body: JSON.stringify(info) });
-
-				// Optimistic update
 				setProfileData((prev) =>
 					prev ? { ...prev, addressInfo: info } : null,
 				);
@@ -289,9 +262,6 @@ export function useProfile(options: UseProfileOptions) {
 		[profileData, toast],
 	);
 
-	/**
-	 * Update skills and languages
-	 */
 	const updateSkills = useCallback(
 		async (data: {
 			technical: Skill[];
@@ -302,10 +272,6 @@ export function useProfile(options: UseProfileOptions) {
 			if (!profileData) return;
 
 			try {
-				// In a real app, this would be an API call
-				// await fetch(`/api/profile/skills`, { method: 'PUT', body: JSON.stringify(data) });
-
-				// Optimistic update
 				setProfileData((prev) =>
 					prev
 						? {
@@ -336,9 +302,6 @@ export function useProfile(options: UseProfileOptions) {
 		[profileData, toast],
 	);
 
-	/**
-	 * Update work and education information
-	 */
 	const updateWorkEducation = useCallback(
 		async (data: {
 			education: Education[];
@@ -347,10 +310,6 @@ export function useProfile(options: UseProfileOptions) {
 			if (!profileData) return;
 
 			try {
-				// In a real app, this would be an API call
-				// await fetch(`/api/profile/background`, { method: 'PUT', body: JSON.stringify(data) });
-
-				// Optimistic update
 				setProfileData((prev) =>
 					prev
 						? {
@@ -377,23 +336,13 @@ export function useProfile(options: UseProfileOptions) {
 		[profileData, toast],
 	);
 
-	/**
-	 * Upload a file (avatar, resume, or sample document)
-	 */
 	const uploadFile = useCallback(
 		async (type: "avatar" | "resume" | "sample", file: File) => {
 			if (!profileData) return;
 
 			try {
-				// In a real app, this would be an API call with FormData
-				// const formData = new FormData();
-				// formData.append('file', file);
-				// await fetch(`/api/profile/upload/${type}`, { method: 'POST', body: formData });
-
-				// Simulate upload response
 				const uploadedUrl = URL.createObjectURL(file);
 
-				// Optimistic update based on file type
 				if (type === "avatar") {
 					setProfileData((prev) =>
 						prev ? { ...prev, avatarSrc: uploadedUrl } : null,
@@ -443,18 +392,11 @@ export function useProfile(options: UseProfileOptions) {
 		[profileData, toast],
 	);
 
-	/**
-	 * Remove a document (resume or sample)
-	 */
 	const removeDocument = useCallback(
 		async (type: "resume" | "sample", index?: number) => {
 			if (!profileData) return;
 
 			try {
-				// In a real app, this would be an API call
-				// await fetch(`/api/profile/document/${type}${index !== undefined ? `/${index}` : ''}`, { method: 'DELETE' });
-
-				// Optimistic update
 				if (type === "resume") {
 					setProfileData((prev) =>
 						prev
@@ -499,18 +441,11 @@ export function useProfile(options: UseProfileOptions) {
 		[profileData, toast],
 	);
 
-	/**
-	 * Update portfolio links
-	 */
 	const updatePortfolioLinks = useCallback(
 		async (links: PortfolioLinks) => {
 			if (!profileData) return;
 
 			try {
-				// In a real app, this would be an API call
-				// await fetch(`/api/profile/links`, { method: 'PUT', body: JSON.stringify(links) });
-
-				// Optimistic update
 				setProfileData((prev) =>
 					prev ? { ...prev, portfolioLinks: links } : null,
 				);
