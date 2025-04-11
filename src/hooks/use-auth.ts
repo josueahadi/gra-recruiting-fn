@@ -14,7 +14,7 @@ import {
 	logout,
 	setUser,
 } from "@/redux/slices/auth-slice";
-import jwtDecode from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
 
 interface DecodedToken {
 	id: number;
@@ -68,13 +68,18 @@ export const useAuth = (options?: UseAuthOptions) => {
 		}
 	};
 
-	const handleRedirect = (userRole: string) => {
+	const isAdminRole = (role: string | null): boolean => {
+		return role === "ADMIN" || role === "SUPER_ADMIN";
+	};
+
+	const handleRedirect = (token: string) => {
+		const role = getRoleFromToken(token);
 		const callbackUrl = searchParams?.get("callbackUrl");
 
 		if (callbackUrl) {
 			router.push(callbackUrl);
 		} else {
-			if (userRole.toLowerCase() === "admin") {
+			if (isAdminRole(role)) {
 				router.push("/admin/dashboard");
 			} else {
 				router.push("/applicant/dashboard");
