@@ -5,7 +5,14 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export function AuthCheck({ children }: { children: React.ReactNode }) {
-	const { isAuthenticated, isLoading, user, isProtectedRoute } = useAuth();
+	const {
+		isAuthenticated,
+		isLoading,
+		token,
+		isProtectedRoute,
+		getRoleFromToken,
+		isAdminRole,
+	} = useAuth();
 	const router = useRouter();
 	const pathname = usePathname();
 
@@ -15,14 +22,23 @@ export function AuthCheck({ children }: { children: React.ReactNode }) {
 				router.push(`/auth?mode=login&callbackUrl=${pathname}`);
 			}
 
-			if (
-				pathname.startsWith("/admin") &&
-				user?.role.toLowerCase() !== "admin"
-			) {
-				router.push("/applicant/dashboard");
+			if (pathname.startsWith("/admin") && token) {
+				const role = getRoleFromToken(token);
+				if (!isAdminRole(role)) {
+					router.push("/applicant/dashboard");
+				}
 			}
 		}
-	}, [isAuthenticated, isLoading, pathname, router, user, isProtectedRoute]);
+	}, [
+		isAuthenticated,
+		isLoading,
+		pathname,
+		router,
+		token,
+		isProtectedRoute,
+		getRoleFromToken,
+		isAdminRole,
+	]);
 
 	if (isLoading) {
 		return (

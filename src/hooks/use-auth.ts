@@ -15,13 +15,7 @@ import {
 	setUser,
 } from "@/redux/slices/auth-slice";
 import { jwtDecode } from "jwt-decode";
-
-interface DecodedToken {
-	id: number;
-	role: string;
-	iat: number;
-	exp: number;
-}
+import type { DecodedToken } from "@/types/auth";
 interface UseAuthOptions {
 	onSuccess?: () => void;
 	onError?: (error: Error) => void;
@@ -332,6 +326,8 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 		// Helper methods
 		isProtectedRoute,
+		getRoleFromToken,
+		isAdminRole,
 	};
 };
 
