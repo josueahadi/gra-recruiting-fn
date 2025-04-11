@@ -14,7 +14,14 @@ import {
 	logout,
 	setUser,
 } from "@/redux/slices/auth-slice";
+import jwtDecode from "jwt-decode";
 
+interface DecodedToken {
+	id: number;
+	role: string;
+	iat: number;
+	exp: number;
+}
 interface UseAuthOptions {
 	onSuccess?: () => void;
 	onError?: (error: Error) => void;
@@ -51,7 +58,16 @@ export const useAuth = (options?: UseAuthOptions) => {
 		(state) => state.auth,
 	);
 
-	// Redirect based on user role
+	const getRoleFromToken = (token: string): string | null => {
+		try {
+			const decodedToken = jwtDecode<DecodedToken>(token);
+			return decodedToken.role;
+		} catch (error) {
+			console.error("Error decoding token:", error);
+			return null;
+		}
+	};
+
 	const handleRedirect = (userRole: string) => {
 		const callbackUrl = searchParams?.get("callbackUrl");
 
