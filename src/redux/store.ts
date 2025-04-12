@@ -6,7 +6,7 @@ import storage from "redux-persist/lib/storage";
 const persistConfig = {
 	key: "gra-auth",
 	storage,
-	whitelist: ["token"],
+	whitelist: ["token", "isAuthenticated"],
 };
 
 const persistedAuthReducer = persistReducer(persistConfig, authReducer);

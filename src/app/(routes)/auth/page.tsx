@@ -2,24 +2,75 @@
 
 import AuthForm from "@/components/auth/auth-form";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 
 function AuthContent() {
+	const router = useRouter();
 	const searchParams = useSearchParams();
 	const mode = (searchParams.get("mode") as "login" | "signup") || "login";
-	const { isAuthenticated, user } = useAuth();
+	const callbackUrl = searchParams.get("callbackUrl");
+	const { isAuthenticated, user, token, isCheckingAuth, getRoleFromToken } =
+		useAuth();
+
+	// Force an immediate check for authentication status
+	useEffect(() => {
+		console.log("[Auth Page] Initial load: ", {
+			isAuthenticated,
+			hasToken: !!token,
+			isChecking: isCheckingAuth,
+		});
+	}, []);
 
 	useEffect(() => {
-		if (isAuthenticated && user) {
-			const redirectPath =
-				user.role.toLowerCase() === "admin"
-					? "/admin/dashboard"
-					: "/applicant/dashboard";
-			window.location.href = redirectPath;
+		// Add detailed console logs for debugging
+		console.log("[Auth Page] Auth state updated:", {
+			isAuthenticated,
+			isCheckingAuth,
+			hasToken: !!token,
+			user: user?.email,
+			callbackUrl,
+		});
+
+		if (token) {
+			const decodedRole = getRoleFromToken(token);
+			console.log("[Auth Page] Decoded token role:", decodedRole);
 		}
-	}, [isAuthenticated, user]);
+
+		// If authenticated, redirect immediately
+		if (isAuthenticated && token) {
+			const decodedRole = getRoleFromToken(token);
+
+			// Use the callback URL or default based on role from token
+			const redirectPath =
+				callbackUrl ||
+				(decodedRole === "ADMIN" || decodedRole === "SUPER_ADMIN"
+					? "/admin/dashboard"
+					: "/applicant/dashboard");
+
+			console.log("[Auth Page] Redirecting to:", redirectPath);
+			router.push(redirectPath);
+		}
+	}, [
+		isAuthenticated,
+		isCheckingAuth,
+		user,
+		token,
+		callbackUrl,
+		router,
+		getRoleFromToken,
+	]);
+
+	// Show loading state if still checking auth
+	if (isCheckingAuth) {
+		return <AuthFallback />;
+	}
+
+	// If authenticated but still on this page (waiting for redirect)
+	if (isAuthenticated) {
+		return <AuthFallback />;
+	}
 
 	return (
 		<div className="min-h-screen flex">
@@ -33,9 +84,7 @@ function AuthContent() {
 							: "/images/placeholder.svg"
 					}
 					alt="Grow Rwanda"
-					className={`w-full h-full ${
-						mode === "login" ? "object-cover" : "object-cover"
-					}`}
+					className="w-full h-full object-cover"
 					priority
 				/>
 			</div>

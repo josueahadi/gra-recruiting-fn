@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useToast } from "@/hooks/use-toast";
@@ -13,9 +12,11 @@ import {
 	setError,
 	logout,
 	setUser,
+	initializeAuth,
 } from "@/redux/slices/auth-slice";
 import { jwtDecode } from "jwt-decode";
 import type { DecodedToken } from "@/types/auth";
+
 interface UseAuthOptions {
 	onSuccess?: () => void;
 	onError?: (error: Error) => void;
@@ -43,6 +44,7 @@ interface SignUpData {
 
 export const useAuth = (options?: UseAuthOptions) => {
 	const [showPassword, setShowPassword] = useState(false);
+	const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 	const { toast } = useToast();
 	const router = useRouter();
 	const searchParams = useSearchParams();
@@ -54,10 +56,22 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 	const getRoleFromToken = (token: string): string | null => {
 		try {
-			const decodedToken = jwtDecode<DecodedToken>(token);
+			const cleanToken = token.replace(/^["'](.+)["']$/, "$1");
+
+			console.log("[Token Debug] Attempting to decode token:", {
+				tokenLength: token.length,
+				cleanTokenLength: cleanToken.length,
+				cleanToken: cleanToken,
+			});
+
+			const decodedToken = jwtDecode<DecodedToken>(cleanToken);
+			console.log(
+				"[Token Debug] Successfully decoded token, role =",
+				decodedToken.role,
+			);
 			return decodedToken.role;
 		} catch (error) {
-			console.error("Error decoding token:", error);
+			console.error("[Token Debug] Error decoding token:", error);
 			return null;
 		}
 	};
@@ -66,8 +80,8 @@ export const useAuth = (options?: UseAuthOptions) => {
 		return role === "ADMIN" || role === "SUPER_ADMIN";
 	};
 
-	const handleRedirect = (token: string) => {
-		const role = getRoleFromToken(token);
+	const handleRedirect = (authToken: string) => {
+		const role = getRoleFromToken(authToken);
 		const callbackUrl = searchParams?.get("callbackUrl");
 
 		if (callbackUrl) {
@@ -76,14 +90,13 @@ export const useAuth = (options?: UseAuthOptions) => {
 			if (isAdminRole(role)) {
 				router.push("/admin/dashboard");
 			} else {
-				router.push("/applicant/dashboard");
+				router.push("/applicant");
 			}
 		}
 
 		options?.onSuccess?.();
 	};
 
-	// Handle auth type selection (login/signup)
 	const handleAuth = (type: "login" | "signup") => {
 		router.push(`/auth?mode=${type}`);
 	};
@@ -103,9 +116,8 @@ export const useAuth = (options?: UseAuthOptions) => {
 				description: "Successfully logged in.",
 			});
 
-			handleRedirect(user.role);
+			handleRedirect(accessToken);
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
 			dispatch(
 				setError(error.response?.data?.message || "Invalid credentials"),
@@ -138,8 +150,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 				password: data.password,
 			});
 
-			// Step 2: If we have profile data and the signup was successful,
-			// complete the application profile
 			if (data.career && response.data.accessToken) {
 				try {
 					await api.post(
@@ -159,7 +169,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 					);
 				} catch (profileError) {
 					console.error("Error completing profile:", profileError);
-					// We still return the user data since the account was created
 				}
 			}
 
@@ -174,9 +183,8 @@ export const useAuth = (options?: UseAuthOptions) => {
 				description: "Your account has been created successfully.",
 			});
 
-			handleRedirect(user.role);
+			handleRedirect(accessToken);
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
 			dispatch(
 				setError(error.response?.data?.message || "Registration failed"),
@@ -218,7 +226,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 				description: "Your email has been verified successfully.",
 			});
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
 			dispatch(
 				setError(error.response?.data?.message || "Verification failed"),
@@ -249,6 +256,8 @@ export const useAuth = (options?: UseAuthOptions) => {
 	});
 
 	useEffect(() => {
+		dispatch(initializeAuth());
+
 		if (userQuery.data) {
 			dispatch(setUser(userQuery.data));
 		}
@@ -257,7 +266,17 @@ export const useAuth = (options?: UseAuthOptions) => {
 			console.error("Error fetching user data:", userQuery.error);
 			dispatch(logout());
 		}
-	}, [userQuery.data, userQuery.error, dispatch]);
+
+		if (!userQuery.isPending) {
+			setIsCheckingAuth(false);
+		}
+	}, [userQuery.data, userQuery.error, userQuery.isPending, dispatch]);
+
+	useEffect(() => {
+		if (!token) {
+			setIsCheckingAuth(false);
+		}
+	}, [token]);
 
 	const signOut = () => {
 		dispatch(logout());
@@ -272,7 +291,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const handleGoogleAuth = async () => {
 		try {
 			window.location.href = `${api.defaults.baseURL}/auth/google`;
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		} catch (error: any) {
 			console.error("Google auth error:", error);
 			dispatch(setError("Google authentication failed"));
@@ -293,11 +311,8 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 	useEffect(() => {
 		if (token) {
-			// biome-ignore lint/complexity/useLiteralKeys: <explanation>
 			api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 		} else {
-			// biome-ignore lint/complexity/useLiteralKeys: <explanation>
-			// biome-ignore lint/performance/noDelete: <explanation>
 			delete api.defaults.headers.common["Authorization"];
 		}
 	}, [token]);
@@ -312,6 +327,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 			signInMutation.isPending ||
 			signUpMutation.isPending ||
 			userQuery.isLoading,
+		isCheckingAuth,
 		error,
 		showPassword,
 

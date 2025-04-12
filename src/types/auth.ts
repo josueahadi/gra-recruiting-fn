@@ -1,8 +1,10 @@
+import type { JwtPayload } from "jwt-decode";
+
 export interface User {
 	id: string;
 	email: string;
 	name: string;
-	role: "USER" | "ADMIN";
+	role: "USER" | "ADMIN" | "SUPER_ADMIN";
 }
 
 export interface AuthResponse {
@@ -46,7 +48,7 @@ export interface ProgressIndicatorProps {
 	}>;
 }
 
-export interface DecodedToken {
+export interface DecodedToken extends JwtPayload {
 	id: number;
 	role: string;
 	iat: number;
