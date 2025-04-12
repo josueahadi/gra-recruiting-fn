@@ -13,6 +13,8 @@ function AuthContent() {
 	const callbackUrl = searchParams.get("callbackUrl");
 	const { isAuthenticated, user, token, isCheckingAuth, getRoleFromToken } =
 		useAuth();
+	// Add a state to track redirection status
+	const [isRedirecting, setIsRedirecting] = useState(false);
 
 	// Force an immediate check for authentication status
 	useEffect(() => {
@@ -20,10 +22,14 @@ function AuthContent() {
 			isAuthenticated,
 			hasToken: !!token,
 			isChecking: isCheckingAuth,
+			isRedirecting,
 		});
-	}, []);
+	}, [isRedirecting, isAuthenticated, token, isCheckingAuth]);
 
 	useEffect(() => {
+		// Skip if already redirecting to prevent loops
+		if (isRedirecting) return;
+
 		// Add detailed console logs for debugging
 		console.log("[Auth Page] Auth state updated:", {
 			isAuthenticated,
@@ -31,6 +37,7 @@ function AuthContent() {
 			hasToken: !!token,
 			user: user?.email,
 			callbackUrl,
+			isRedirecting,
 		});
 
 		if (token) {
@@ -39,18 +46,24 @@ function AuthContent() {
 		}
 
 		// If authenticated, redirect immediately
-		if (isAuthenticated && token) {
+		if (isAuthenticated && token && !isRedirecting) {
 			const decodedRole = getRoleFromToken(token);
 
 			// Use the callback URL or default based on role from token
-			const redirectPath =
-				callbackUrl ||
-				(decodedRole === "ADMIN" || decodedRole === "SUPER_ADMIN"
-					? "/admin/dashboard"
-					: "/applicant/dashboard");
+			// Use case-insensitive comparison for role matching
+			const isAdminUser = decodedRole?.toUpperCase() === "ADMIN" || 
+				decodedRole?.toUpperCase() === "SUPER_ADMIN";
+			
+			const redirectPath = callbackUrl || 
+				(isAdminUser ? "/admin/dashboard" : "/applicant/dashboard");
 
 			console.log("[Auth Page] Redirecting to:", redirectPath);
-			router.push(redirectPath);
+
+			// Set redirecting state to prevent further redirects
+			setIsRedirecting(true);
+
+			// Use replace instead of push to avoid browser history issues
+			router.replace(redirectPath);
 		}
 	}, [
 		isAuthenticated,
@@ -60,10 +73,11 @@ function AuthContent() {
 		callbackUrl,
 		router,
 		getRoleFromToken,
+		isRedirecting,
 	]);
 
-	// Show loading state if still checking auth
-	if (isCheckingAuth) {
+	// Show loading state if still checking auth or actively redirecting
+	if (isCheckingAuth || isRedirecting) {
 		return <AuthFallback />;
 	}
 

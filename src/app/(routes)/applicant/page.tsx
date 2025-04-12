@@ -5,7 +5,7 @@ import ProfileContent from "@/components/applicant/profile/profile-content";
 
 export default function ApplicantProfilePage() {
 	return (
-		<AppLayout userType="APPLICANT">
+		<AppLayout userType="applicant">
 			<ProfileContent />
 		</AppLayout>
 	);

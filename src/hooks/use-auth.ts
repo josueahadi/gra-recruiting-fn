@@ -77,7 +77,10 @@ export const useAuth = (options?: UseAuthOptions) => {
 	};
 
 	const isAdminRole = (role: string | null): boolean => {
-		return role === "ADMIN" || role === "SUPER_ADMIN";
+		if (!role) return false;
+		return (
+			role.toUpperCase() === "ADMIN" || role.toUpperCase() === "SUPER_ADMIN"
+		);
 	};
 
 	const handleRedirect = (authToken: string) => {

@@ -44,7 +44,7 @@ const AdminPage = () => {
 	};
 
 	return (
-		<AppLayout userType="ADMIN">
+		<AppLayout userType="admin">
 			<div className="space-y-6">{renderContent()}</div>
 		</AppLayout>
 	);

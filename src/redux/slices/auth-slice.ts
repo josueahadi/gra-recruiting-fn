@@ -30,19 +30,24 @@ const initialState: AuthState = {
 	error: null,
 };
 
+const cleanToken = (token: string): string => {
+	return token.replace(/^["'](.+)["']$/, "$1").trim();
+};
+
 const authSlice = createSlice({
 	name: "auth",
 	initialState,
 	reducers: {
-		// Initialize auth state from persisted token
 		initializeAuth: (state) => {
-			// If we have a token but isAuthenticated is false, fix it
 			if (state.token && !state.isAuthenticated) {
 				console.log("[Redux Debug] Initializing auth state from token");
-				state.isAuthenticated = true;
-
 				try {
-					state.decodedToken = jwtDecode<DecodedToken>(state.token);
+					// Clean the token first
+					const cleanedToken = cleanToken(state.token);
+					state.token = cleanedToken;
+					state.isAuthenticated = true;
+					state.decodedToken = jwtDecode<DecodedToken>(cleanedToken);
+
 					console.log("[Redux Debug] Re-initialized auth state with token:", {
 						role: state.decodedToken?.role,
 						isAuthenticated: state.isAuthenticated,
@@ -52,7 +57,6 @@ const authSlice = createSlice({
 						"[Redux Debug] Failed to decode token during initialization:",
 						error,
 					);
-					// Token is invalid, reset state
 					state.token = null;
 					state.isAuthenticated = false;
 					state.decodedToken = null;
@@ -63,18 +67,18 @@ const authSlice = createSlice({
 			state,
 			action: PayloadAction<{ token: string; user: User }>,
 		) => {
-			const cleanToken = action.payload.token.replace(/^["'](.+)["']$/, "$1");
-			console.log("[Redux Debug] Processing token:", {
+			const cleanedToken = cleanToken(action.payload.token);
+			console.log("[Redux Debug] Setting credentials with cleaned token:", {
 				originalLength: action.payload.token.length,
-				cleanedLength: cleanToken.length,
+				cleanedLength: cleanedToken.length,
 				userRole: action.payload.user.role,
 			});
 
-			state.token = cleanToken;
+			state.token = cleanedToken;
 			state.user = action.payload.user;
 
 			try {
-				state.decodedToken = jwtDecode<DecodedToken>(cleanToken);
+				state.decodedToken = jwtDecode<DecodedToken>(cleanedToken);
 				console.log(
 					"[Redux Debug] Successfully decoded token in Redux:",
 					state.decodedToken?.role,
@@ -100,6 +104,7 @@ const authSlice = createSlice({
 		logout: (state) => {
 			state.token = null;
 			state.user = null;
+			state.decodedToken = null;
 			state.isAuthenticated = false;
 			state.error = null;
 		},

@@ -56,10 +56,12 @@ export function middleware(request: NextRequest) {
 			return NextResponse.redirect(url);
 		}
 
+		// Use case-insensitive role check to match our other changes
+		const upperCaseRole = role?.toUpperCase();
 		if (
 			pathname.startsWith("/admin") &&
-			role !== "ADMIN" &&
-			role !== "SUPER_ADMIN"
+			upperCaseRole !== "ADMIN" &&
+			upperCaseRole !== "SUPER_ADMIN"
 		) {
 			return NextResponse.redirect(
 				new URL("/applicant/dashboard", request.url),
