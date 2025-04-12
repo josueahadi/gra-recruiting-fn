@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
-	setCredentials,
+	setToken,
 	setLoading,
 	setError,
 	logout,
@@ -42,6 +42,29 @@ interface SignUpData {
 	githubProfileUrl?: string;
 }
 
+interface UserProfileResponse {
+	id: number;
+	firstName: string;
+	lastName: string;
+	email: string;
+	phoneNumber?: string;
+	careerName?: string;
+	linkedinProfileUrl?: string;
+	githubProfileUrl?: string;
+	resumeURL?: string;
+	levelOfEducation?: string;
+	university?: string;
+	graduationDate?: string;
+	createdAt: string;
+	updatedAt: string;
+	profileUpdatedAt: string | null;
+}
+
+const cleanToken = (token: string): string => {
+	if (!token) return "";
+	return token.replace(/^["'](.+)["']$/, "$1").trim();
+};
+
 export const useAuth = (options?: UseAuthOptions) => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [isCheckingAuth, setIsCheckingAuth] = useState(true);
@@ -54,48 +77,45 @@ export const useAuth = (options?: UseAuthOptions) => {
 		(state) => state.auth,
 	);
 
-	const getRoleFromToken = (token: string): string | null => {
+	const getRoleFromToken = (tokenStr: string): string | null => {
+		if (!tokenStr) return null;
+
 		try {
-			const cleanToken = token.replace(/^["'](.+)["']$/, "$1");
+			const cleaned = cleanToken(tokenStr);
 
-			console.log("[Token Debug] Attempting to decode token:", {
-				tokenLength: token.length,
-				cleanTokenLength: cleanToken.length,
-				cleanToken: cleanToken,
-			});
-
-			const decodedToken = jwtDecode<DecodedToken>(cleanToken);
-			console.log(
-				"[Token Debug] Successfully decoded token, role =",
-				decodedToken.role,
-			);
+			const decodedToken = jwtDecode<DecodedToken>(cleaned);
 			return decodedToken.role;
 		} catch (error) {
-			console.error("[Token Debug] Error decoding token:", error);
+			console.error("[useAuth] Error decoding token:", error);
 			return null;
 		}
 	};
 
 	const isAdminRole = (role: string | null): boolean => {
 		if (!role) return false;
-		return (
-			role.toUpperCase() === "ADMIN" || role.toUpperCase() === "SUPER_ADMIN"
-		);
+		const upperRole = role.toUpperCase();
+		return upperRole === "ADMIN" || upperRole === "SUPER_ADMIN";
 	};
 
 	const handleRedirect = (authToken: string) => {
 		const role = getRoleFromToken(authToken);
 		const callbackUrl = searchParams?.get("callbackUrl");
 
+		let redirectPath: string;
+
 		if (callbackUrl) {
-			router.push(callbackUrl);
+			redirectPath = callbackUrl;
 		} else {
-			if (isAdminRole(role)) {
-				router.push("/admin/dashboard");
-			} else {
-				router.push("/applicant");
-			}
+			redirectPath = isAdminRole(role)
+				? "/admin/dashboard"
+				: "/applicant/dashboard";
 		}
+
+		console.log("[useAuth] Redirecting to:", redirectPath);
+
+		setTimeout(() => {
+			router.replace(redirectPath);
+		}, 100);
 
 		options?.onSuccess?.();
 	};
@@ -104,24 +124,66 @@ export const useAuth = (options?: UseAuthOptions) => {
 		router.push(`/auth?mode=${type}`);
 	};
 
+	const fetchUserProfile = async () => {
+		if (!token) return null;
+
+		try {
+			const { data } = await api.get<UserProfileResponse>(
+				"/api/v1/users/view-profile",
+			);
+			console.log("[useAuth] Fetched user profile:", data);
+
+			const userData = {
+				id: data.id.toString(),
+				firstName: data.firstName,
+				lastName: data.lastName,
+				email: data.email,
+				role: getRoleFromToken(token) || "USER",
+				phoneNumber: data.phoneNumber,
+				isEmailVerified: true,
+			};
+
+			dispatch(setUser(userData));
+			return userData;
+		} catch (error) {
+			console.error("[useAuth] Error fetching user profile:", error);
+			return null;
+		}
+	};
+
 	const signInMutation = useMutation({
 		mutationFn: async (credentials: SignInCredentials) => {
 			dispatch(setLoading(true));
-			const { data } = await api.post("/auth/signin", credentials);
-			return data;
+			const response = await api.post("/api/v1/auth/signin", credentials);
+			return response.data;
 		},
 		onSuccess: (data) => {
-			const { accessToken, user } = data;
-			dispatch(setCredentials({ token: accessToken, user }));
+			const { accessToken } = data;
+
+			if (!accessToken) {
+				console.error("[useAuth] No access token in response:", data);
+				throw new Error("No access token received");
+			}
+
+			console.log(
+				"[useAuth] Sign in successful with token:",
+				accessToken.substring(0, 10) + "...",
+			);
+
+			dispatch(setToken(accessToken));
 
 			toast({
 				title: "Success!",
 				description: "Successfully logged in.",
 			});
 
+			fetchUserProfile();
+
 			handleRedirect(accessToken);
 		},
 		onError: (error: any) => {
+			console.error("[useAuth] Sign in error:", error?.response?.data || error);
+
 			dispatch(
 				setError(error.response?.data?.message || "Invalid credentials"),
 			);
@@ -145,18 +207,23 @@ export const useAuth = (options?: UseAuthOptions) => {
 		mutationFn: async (data: SignUpData) => {
 			dispatch(setLoading(true));
 
-			// Step 1: Create the user account
-			const response = await api.post("/users/signup", {
+			const response = await api.post("/api/v1/users/signup", {
 				firstName: data.firstName,
 				lastName: data.lastName,
 				email: data.email,
 				password: data.password,
 			});
 
-			if (data.career && response.data.accessToken) {
+			const { accessToken } = response.data;
+
+			if (!accessToken) {
+				throw new Error("No access token received from signup");
+			}
+
+			if (data.career) {
 				try {
 					await api.post(
-						"/applicants/complete-application-profile",
+						"/api/v1/applicants/complete-application-profile",
 						{
 							career: data.career,
 							levelOfEducation: data.levelOfEducation,
@@ -167,26 +234,31 @@ export const useAuth = (options?: UseAuthOptions) => {
 							githubProfileUrl: data.githubProfileUrl,
 						},
 						{
-							headers: { Authorization: `Bearer ${response.data.accessToken}` },
+							headers: { Authorization: `Bearer ${accessToken}` },
 						},
 					);
 				} catch (profileError) {
-					console.error("Error completing profile:", profileError);
+					console.error("[useAuth] Error completing profile:", profileError);
 				}
 			}
 
 			return response.data;
 		},
 		onSuccess: (data) => {
-			const { accessToken, user } = data;
-			dispatch(setCredentials({ token: accessToken, user }));
+			if (!data.accessToken) {
+				throw new Error("No access token received");
+			}
+
+			dispatch(setToken(data.accessToken));
 
 			toast({
 				title: "Success!",
 				description: "Your account has been created successfully.",
 			});
 
-			handleRedirect(accessToken);
+			fetchUserProfile();
+
+			handleRedirect(data.accessToken);
 		},
 		onError: (error: any) => {
 			dispatch(
@@ -211,23 +283,20 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const verifyEmailMutation = useMutation({
 		mutationFn: async (code: string) => {
 			dispatch(setLoading(true));
-			const { data } = await api.patch("/users/verify-email", { code });
+			const { data } = await api.patch("/api/v1/users/verify-email", { code });
 			return data;
 		},
 		onSuccess: (data) => {
-			if (data.user) {
-				dispatch(
-					setCredentials({
-						token: data.accessToken || token || "",
-						user: data.user,
-					}),
-				);
+			if (data.accessToken) {
+				dispatch(setToken(data.accessToken));
 			}
 
 			toast({
 				title: "Success!",
 				description: "Your email has been verified successfully.",
 			});
+
+			fetchUserProfile();
 		},
 		onError: (error: any) => {
 			dispatch(
@@ -249,11 +318,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 	const userQuery = useQuery({
 		queryKey: ["current-user"],
-		queryFn: async () => {
-			if (!token) return null;
-			const { data } = await api.get("/users/view-profile");
-			return data;
-		},
+		queryFn: fetchUserProfile,
 		enabled: !!token && !user,
 		retry: 1,
 	});
@@ -261,19 +326,18 @@ export const useAuth = (options?: UseAuthOptions) => {
 	useEffect(() => {
 		dispatch(initializeAuth());
 
-		if (userQuery.data) {
-			dispatch(setUser(userQuery.data));
-		}
+		const authCheckTimer = setTimeout(() => {
+			setIsCheckingAuth(false);
+		}, 1000);
 
-		if (userQuery.error) {
-			console.error("Error fetching user data:", userQuery.error);
-			dispatch(logout());
-		}
+		return () => clearTimeout(authCheckTimer);
+	}, [dispatch]);
 
+	useEffect(() => {
 		if (!userQuery.isPending) {
 			setIsCheckingAuth(false);
 		}
-	}, [userQuery.data, userQuery.error, userQuery.isPending, dispatch]);
+	}, [userQuery.isPending]);
 
 	useEffect(() => {
 		if (!token) {
@@ -281,9 +345,18 @@ export const useAuth = (options?: UseAuthOptions) => {
 		}
 	}, [token]);
 
+	useEffect(() => {
+		if (token) {
+			const cleanedToken = cleanToken(token);
+			api.defaults.headers.common["Authorization"] = `Bearer ${cleanedToken}`;
+		} else {
+			delete api.defaults.headers.common["Authorization"];
+		}
+	}, [token]);
+
 	const signOut = () => {
 		dispatch(logout());
-		router.push("/auth?mode=login");
+		router.replace("/auth?mode=login");
 
 		toast({
 			title: "Signed out",
@@ -293,9 +366,9 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 	const handleGoogleAuth = async () => {
 		try {
-			window.location.href = `${api.defaults.baseURL}/auth/google`;
+			window.location.href = `${api.defaults.baseURL}/api/v1/auth/google`;
 		} catch (error: any) {
-			console.error("Google auth error:", error);
+			console.error("[useAuth] Google auth error:", error);
 			dispatch(setError("Google authentication failed"));
 
 			toast({
@@ -311,14 +384,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const isProtectedRoute = (path: string) => {
 		return path.startsWith("/applicant") || path.startsWith("/admin");
 	};
-
-	useEffect(() => {
-		if (token) {
-			api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-		} else {
-			delete api.defaults.headers.common["Authorization"];
-		}
-	}, [token]);
 
 	return {
 		// State

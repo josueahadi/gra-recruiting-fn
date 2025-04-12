@@ -13,57 +13,30 @@ function AuthContent() {
 	const callbackUrl = searchParams.get("callbackUrl");
 	const { isAuthenticated, user, token, isCheckingAuth, getRoleFromToken } =
 		useAuth();
-	// Add a state to track redirection status
+
 	const [isRedirecting, setIsRedirecting] = useState(false);
 
-	// Force an immediate check for authentication status
 	useEffect(() => {
-		console.log("[Auth Page] Initial load: ", {
-			isAuthenticated,
-			hasToken: !!token,
-			isChecking: isCheckingAuth,
-			isRedirecting,
-		});
-	}, [isRedirecting, isAuthenticated, token, isCheckingAuth]);
+		if (isRedirecting || isCheckingAuth) return;
 
-	useEffect(() => {
-		// Skip if already redirecting to prevent loops
-		if (isRedirecting) return;
-
-		// Add detailed console logs for debugging
-		console.log("[Auth Page] Auth state updated:", {
-			isAuthenticated,
-			isCheckingAuth,
-			hasToken: !!token,
-			user: user?.email,
-			callbackUrl,
-			isRedirecting,
-		});
-
-		if (token) {
-			const decodedRole = getRoleFromToken(token);
-			console.log("[Auth Page] Decoded token role:", decodedRole);
-		}
-
-		// If authenticated, redirect immediately
 		if (isAuthenticated && token && !isRedirecting) {
-			const decodedRole = getRoleFromToken(token);
+			const role = getRoleFromToken(token);
 
-			// Use the callback URL or default based on role from token
-			// Use case-insensitive comparison for role matching
-			const isAdminUser = decodedRole?.toUpperCase() === "ADMIN" || 
-				decodedRole?.toUpperCase() === "SUPER_ADMIN";
-			
-			const redirectPath = callbackUrl || 
+			const isAdminUser =
+				role?.toUpperCase() === "ADMIN" ||
+				role?.toUpperCase() === "SUPER_ADMIN";
+
+			const redirectPath =
+				callbackUrl ||
 				(isAdminUser ? "/admin/dashboard" : "/applicant/dashboard");
 
-			console.log("[Auth Page] Redirecting to:", redirectPath);
+			console.log("[Auth Page] Authenticated, redirecting to:", redirectPath);
 
-			// Set redirecting state to prevent further redirects
 			setIsRedirecting(true);
 
-			// Use replace instead of push to avoid browser history issues
-			router.replace(redirectPath);
+			setTimeout(() => {
+				router.replace(redirectPath);
+			}, 100);
 		}
 	}, [
 		isAuthenticated,
@@ -76,13 +49,7 @@ function AuthContent() {
 		isRedirecting,
 	]);
 
-	// Show loading state if still checking auth or actively redirecting
-	if (isCheckingAuth || isRedirecting) {
-		return <AuthFallback />;
-	}
-
-	// If authenticated but still on this page (waiting for redirect)
-	if (isAuthenticated) {
+	if (isCheckingAuth || isRedirecting || isAuthenticated) {
 		return <AuthFallback />;
 	}
 

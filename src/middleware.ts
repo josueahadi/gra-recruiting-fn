@@ -12,6 +12,7 @@ const publicPaths = [
 	"/favicon.ico",
 	"/_next",
 	"/images",
+	"/public",
 ];
 
 const isPublicPath = (path: string) => {
@@ -21,6 +22,10 @@ const isPublicPath = (path: string) => {
 			path.startsWith(`${publicPath}/`) ||
 			path.startsWith(`${publicPath}?`),
 	);
+};
+
+const cleanToken = (token: string): string => {
+	return token.replace(/^["'](.+)["']$/, "$1").trim();
 };
 
 export function middleware(request: NextRequest) {
@@ -37,35 +42,48 @@ export function middleware(request: NextRequest) {
 	if (authCookie) {
 		try {
 			const authData = JSON.parse(authCookie.value);
-			const tokenData = JSON.parse(authData.token || "null");
-			token = tokenData;
 
-			if (token) {
-				const decodedToken = jwtDecode<DecodedToken>(token);
-				role = decodedToken.role;
+			let tokenData = null;
+			try {
+				tokenData = JSON.parse(authData.token || "null");
+			} catch (e) {
+				tokenData = authData.token;
+			}
+
+			if (tokenData) {
+				token = cleanToken(tokenData);
+
+				try {
+					const decoded = jwtDecode<DecodedToken>(token);
+					role = decoded?.role;
+				} catch (error) {
+					console.error("[Middleware] Error decoding token:", error);
+					token = null;
+					role = null;
+				}
 			}
 		} catch (error) {
-			console.error("Error parsing auth cookie:", error);
+			console.error("[Middleware] Error parsing auth cookie:", error);
 		}
 	}
+
 	if (pathname.startsWith("/applicant") || pathname.startsWith("/admin")) {
 		if (!token) {
+			console.log("[Middleware] No token, redirecting to login:", pathname);
 			const url = new URL("/auth", request.url);
 			url.searchParams.set("mode", "login");
 			url.searchParams.set("callbackUrl", pathname);
 			return NextResponse.redirect(url);
 		}
 
-		// Use case-insensitive role check to match our other changes
-		const upperCaseRole = role?.toUpperCase();
-		if (
-			pathname.startsWith("/admin") &&
-			upperCaseRole !== "ADMIN" &&
-			upperCaseRole !== "SUPER_ADMIN"
-		) {
-			return NextResponse.redirect(
-				new URL("/applicant/dashboard", request.url),
-			);
+		if (pathname.startsWith("/admin")) {
+			const upperRole = role?.toUpperCase();
+			if (upperRole !== "ADMIN" && upperRole !== "SUPER_ADMIN") {
+				console.log("[Middleware] Unauthorized admin access, role:", role);
+				return NextResponse.redirect(
+					new URL("/applicant/dashboard", request.url),
+				);
+			}
 		}
 	}
 

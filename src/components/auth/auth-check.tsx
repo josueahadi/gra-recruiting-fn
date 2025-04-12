@@ -19,27 +19,41 @@ export function AuthCheck({ children }: { children: React.ReactNode }) {
 	const [isRedirecting, setIsRedirecting] = useState(false);
 
 	useEffect(() => {
-		if (!isCheckingAuth && !isRedirecting) {
-			if (isProtectedRoute(pathname) && !isAuthenticated) {
-				setIsRedirecting(true);
-				router.push(
-					`/auth?mode=login&callbackUrl=${encodeURIComponent(pathname)}`,
-				);
-				return;
-			}
+		if (isRedirecting || isLoading || isCheckingAuth) {
+			return;
+		}
 
-			if (pathname.startsWith("/admin") && token) {
-				const role = getRoleFromToken(token);
-				if (!isAdminRole(role)) {
-					setIsRedirecting(true);
-					router.push("/applicant");
-					return;
-				}
+		if (pathname.startsWith("/auth")) {
+			return;
+		}
+
+		if (isProtectedRoute(pathname) && !isAuthenticated) {
+			console.log("[AuthCheck] Unauthorized access, redirecting to login");
+			setIsRedirecting(true);
+
+			const encodedPath = encodeURIComponent(pathname);
+			const redirectUrl = `/auth?mode=login&callbackUrl=${encodedPath}`;
+
+			router.replace(redirectUrl);
+			return;
+		}
+
+		if (pathname.startsWith("/admin") && token) {
+			const role = getRoleFromToken(token);
+
+			if (!isAdminRole(role)) {
+				console.log(
+					"[AuthCheck] Not admin, redirecting to applicant dashboard",
+				);
+				setIsRedirecting(true);
+				router.replace("/applicant/dashboard");
+				return;
 			}
 		}
 	}, [
 		isAuthenticated,
 		isCheckingAuth,
+		isLoading,
 		isRedirecting,
 		pathname,
 		router,
@@ -59,3 +73,5 @@ export function AuthCheck({ children }: { children: React.ReactNode }) {
 
 	return <>{children}</>;
 }
+
+export default AuthCheck;

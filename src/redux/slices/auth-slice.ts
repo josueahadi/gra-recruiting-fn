@@ -31,6 +31,7 @@ const initialState: AuthState = {
 };
 
 const cleanToken = (token: string): string => {
+	if (!token) return "";
 	return token.replace(/^["'](.+)["']$/, "$1").trim();
 };
 
@@ -39,14 +40,38 @@ const authSlice = createSlice({
 	initialState,
 	reducers: {
 		initializeAuth: (state) => {
-			if (state.token && !state.isAuthenticated) {
+			if (state.token) {
 				console.log("[Redux Debug] Initializing auth state from token");
 				try {
-					// Clean the token first
+					if (typeof state.isAuthenticated === "string") {
+						state.isAuthenticated = state.isAuthenticated === "true";
+					}
+
 					const cleanedToken = cleanToken(state.token);
 					state.token = cleanedToken;
 					state.isAuthenticated = true;
-					state.decodedToken = jwtDecode<DecodedToken>(cleanedToken);
+
+					if (typeof state.decodedToken === "string") {
+						try {
+							state.decodedToken = JSON.parse(state.decodedToken);
+						} catch (e) {
+							console.error(
+								"[Redux Debug] Failed to parse decodedToken string, decoding from token",
+							);
+							state.decodedToken = jwtDecode<DecodedToken>(cleanedToken);
+						}
+					} else if (!state.decodedToken) {
+						state.decodedToken = jwtDecode<DecodedToken>(cleanedToken);
+					}
+
+					if (typeof state.user === "string") {
+						try {
+							state.user = JSON.parse(state.user);
+						} catch (e) {
+							console.error("[Redux Debug] Failed to parse user string");
+							state.user = null;
+						}
+					}
 
 					console.log("[Redux Debug] Re-initialized auth state with token:", {
 						role: state.decodedToken?.role,
@@ -60,47 +85,59 @@ const authSlice = createSlice({
 					state.token = null;
 					state.isAuthenticated = false;
 					state.decodedToken = null;
+					state.user = null;
 				}
 			}
 		},
-		setCredentials: (
-			state,
-			action: PayloadAction<{ token: string; user: User }>,
-		) => {
-			const cleanedToken = cleanToken(action.payload.token);
-			console.log("[Redux Debug] Setting credentials with cleaned token:", {
-				originalLength: action.payload.token.length,
+
+		setToken: (state, action: PayloadAction<string>) => {
+			const cleanedToken = cleanToken(action.payload);
+			console.log("[Redux Debug] Setting token:", {
+				originalLength: action.payload.length,
 				cleanedLength: cleanedToken.length,
-				userRole: action.payload.user.role,
 			});
 
 			state.token = cleanedToken;
-			state.user = action.payload.user;
+			state.isAuthenticated = true;
 
 			try {
 				state.decodedToken = jwtDecode<DecodedToken>(cleanedToken);
 				console.log(
-					"[Redux Debug] Successfully decoded token in Redux:",
-					state.decodedToken?.role,
+					"[Redux Debug] Decoded token in Redux:",
+					state.decodedToken,
 				);
+
+				if (!state.user && state.decodedToken) {
+					state.user = {
+						id: state.decodedToken.id.toString(),
+						firstName: "User",
+						lastName: "",
+						email: "",
+						role: state.decodedToken.role,
+						isEmailVerified: false,
+					};
+					console.log("[Redux Debug] Created minimal user from token");
+				}
 			} catch (error) {
 				state.decodedToken = null;
 				console.error("[Redux Debug] Error decoding token in Redux:", error);
 			}
-
-			state.isAuthenticated = true;
-			state.error = null;
 		},
+
 		setUser: (state, action: PayloadAction<User>) => {
 			state.user = action.payload;
+			console.log("[Redux Debug] User data set:", action.payload.email);
 		},
+
 		setLoading: (state, action: PayloadAction<boolean>) => {
 			state.isLoading = action.payload;
 		},
+
 		setError: (state, action: PayloadAction<string>) => {
 			state.error = action.payload;
 			state.isLoading = false;
 		},
+
 		logout: (state) => {
 			state.token = null;
 			state.user = null;
@@ -112,7 +149,7 @@ const authSlice = createSlice({
 });
 
 export const {
-	setCredentials,
+	setToken,
 	setUser,
 	setLoading,
 	setError,
