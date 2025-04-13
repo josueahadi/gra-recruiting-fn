@@ -6,6 +6,8 @@ import { cleanToken, isTokenExpired } from "@/lib/utils/auth-utils";
 
 const BASE_URL = "https://jobs-staging.api.growrwanda.com";
 
+let isLoggingOut = false;
+
 export const api = axios.create({
 	baseURL: BASE_URL,
 	headers: {
@@ -13,8 +15,6 @@ export const api = axios.create({
 	},
 	timeout: 30000,
 });
-
-let isLoggingOut = false;
 
 const handleAuthError = () => {
 	if (isLoggingOut) return;
@@ -35,6 +35,12 @@ api.interceptors.request.use(
 	(config) => {
 		const state = store.getState();
 		const token = state.auth.token;
+
+		if (process.env.NODE_ENV === "development") {
+			console.log(
+				`[API Request] ${config.method?.toUpperCase()} ${config.url}`,
+			);
+		}
 
 		if (token) {
 			if (isTokenExpired(token)) {
@@ -59,7 +65,7 @@ api.interceptors.request.use(
 		return config;
 	},
 	(error) => {
-		console.error("[API] Request error:", error);
+		console.error("[API] Request configuration error:", error);
 		return Promise.reject(error);
 	},
 );
@@ -95,6 +101,11 @@ api.interceptors.response.use(
 
 		if (error.response.status === 404) {
 			console.error("[API] 404 Not Found:", originalRequest.url);
+			return Promise.reject(
+				new Error(
+					`The requested resource (${originalRequest.url}) was not found.`,
+				),
+			);
 		}
 
 		if (error.response.status >= 500) {
@@ -105,6 +116,17 @@ api.interceptors.response.use(
 			);
 		}
 
+		let errorMessage = "An unexpected error occurred";
+		if (error.response?.data?.message) {
+			errorMessage = error.response.data.message;
+		} else if (error.response?.data?.error) {
+			errorMessage = error.response.data.error;
+		} else if (error.message) {
+			errorMessage = error.message;
+		}
+
+		error.displayMessage = errorMessage;
+
 		return Promise.reject(error);
 	},
 );
@@ -113,9 +135,17 @@ export const handleApiError = (
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	error: any,
 	fallbackMessage = "An error occurred",
-) => {
+): string => {
+	if (error.displayMessage) {
+		return error.displayMessage;
+	}
+
 	if (error.response?.data?.message) {
 		return error.response.data.message;
+	}
+
+	if (error.response?.data?.error) {
+		return error.response.data.error;
 	}
 
 	if (error.message) {
