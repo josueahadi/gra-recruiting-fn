@@ -11,8 +11,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React from "react";
+// import { useRouter } from "next/navigation";
+import React, { useCallback } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 export interface UserAvatarProps {
 	userType: "applicant" | "admin";
@@ -35,13 +36,16 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 	menuItems,
 	onLogout,
 }) => {
-	const router = useRouter();
+	// const router = useRouter();
+	const { signOut, displayName } = useAuth();
 
-	const getInitials = (): string => {
+	const actualUserName = displayName || userName;
+
+	const getInitials = useCallback((): string => {
 		if (userType === "admin") return "AD";
 
-		if (userName) {
-			return userName
+		if (actualUserName) {
+			return actualUserName
 				.split(" ")
 				.map((n) => n[0])
 				.join("")
@@ -50,14 +54,14 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 		}
 
 		return "JD";
-	};
+	}, [actualUserName, userType]);
 
 	const handleLogout = () => {
 		if (onLogout) {
 			onLogout();
 		} else {
-			console.log("Logging out...");
-			router.push("/");
+			console.log("Logging out using auth hook...");
+			signOut();
 		}
 	};
 
@@ -81,12 +85,21 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" className="p-0 h-auto">
 					<Avatar className="h-10 w-10 border-2 border-primary-light cursor-pointer">
-						<AvatarImage src={avatarSrc} alt={userName || "User"} />
+						<AvatarImage src={avatarSrc} alt={actualUserName || "User"} />
 						<AvatarFallback>{getInitials()}</AvatarFallback>
 					</Avatar>
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-56">
+				{actualUserName && (
+					<>
+						<div className="px-2 py-1.5 text-sm font-medium text-gray-700">
+							{actualUserName}
+						</div>
+						<DropdownMenuSeparator />
+					</>
+				)}
+
 				{itemsToRender.map((item, index) => (
 					<React.Fragment
 						key={`menu-item-${

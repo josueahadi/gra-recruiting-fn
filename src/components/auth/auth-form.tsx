@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { AUTH_CONSTANTS } from "@/constants";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { EducationBackgroundFields } from "./background-fields";
 import { ContactInfoFields } from "./contact-info-fields";
 import GoogleAuthButton from "./google-auth-button";
@@ -48,8 +48,8 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 	});
 
 	const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-
 	const [currentStep, setCurrentStep] = useState(1);
+	const [serverError, setServerError] = useState<string | null>(null);
 
 	const {
 		isLoading,
@@ -58,6 +58,8 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		signIn,
 		signUp,
 		handleGoogleAuth,
+		error: authError,
+		clearErrors,
 	} = useAuth({
 		onSuccess: () => {
 			if (onSuccess) {
@@ -67,16 +69,32 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			}
 		},
 		onError: (error) => {
+			const errorMessage =
+				error.message || "Please check your information and try again.";
+			setServerError(errorMessage);
+
 			toast({
 				title: mode === "login" ? "Login failed" : "Registration failed",
-				description:
-					error.message || "Please check your information and try again.",
+				description: errorMessage,
 				variant: "destructive",
 			});
 
 			if (onError) onError(error);
 		},
 	});
+
+	// Clear server errors when switching modes or when form data changes
+	useEffect(() => {
+		setServerError(null);
+		clearErrors?.();
+	}, [mode, formData, clearErrors]);
+
+	// Display any errors from the auth hook
+	useEffect(() => {
+		if (authError) {
+			setServerError(authError);
+		}
+	}, [authError]);
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value, type, checked } = e.target;
@@ -88,6 +106,11 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		if (formErrors[name]) {
 			setFormErrors((prev) => ({ ...prev, [name]: "" }));
 		}
+
+		// Clear server errors when user starts typing
+		if (serverError) {
+			setServerError(null);
+		}
 	};
 
 	const handleSelectChange = (name: string, value: string) => {
@@ -98,6 +121,11 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 
 		if (formErrors[name]) {
 			setFormErrors((prev) => ({ ...prev, [name]: "" }));
+		}
+
+		// Clear server errors when user makes changes
+		if (serverError) {
+			setServerError(null);
 		}
 	};
 
@@ -190,6 +218,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 
 	const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
+		setServerError(null);
 
 		if (mode === "login") {
 			if (validateLoginForm()) {
@@ -233,6 +262,12 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			)}
 			<div className="max-w-md mx-auto space-y-6">
 				<FormHeader mode={mode} currentStep={currentStep} />
+
+				{serverError && (
+					<div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+						{serverError}
+					</div>
+				)}
 
 				<form onSubmit={handleFormSubmit} className="space-y-6">
 					{mode === "login" && (
