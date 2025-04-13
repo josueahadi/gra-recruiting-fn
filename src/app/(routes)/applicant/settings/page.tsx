@@ -1,12 +1,12 @@
 "use client";
 
 import SettingsSection from "@/components/applicant/settings";
-import AppLayout from "@/components/layout/app-layout";
+import AppLayoutWrapper from "@/components/layout/app-layout-wrapper";
 
 export default function ApplicantSettingsPage() {
 	return (
-		<AppLayout userType="applicant">
+		<AppLayoutWrapper>
 			<SettingsSection />
-		</AppLayout>
+		</AppLayoutWrapper>
 	);
 }

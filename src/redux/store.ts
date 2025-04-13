@@ -12,7 +12,17 @@ import {
 	createTransform,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage";
-import createEncryptor from "redux-persist-transform-encrypt";
+
+// biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
+let createEncryptor;
+try {
+	// eslint-disable-next-line @typescript-eslint/no-require-imports
+	const encryptTransform = require("redux-persist-transform-encrypt");
+	createEncryptor = encryptTransform.createEncryptor;
+} catch (error) {
+	console.error("Failed to import redux-persist-transform-encrypt:", error);
+	createEncryptor = null;
+}
 
 const SECRET_KEY = "growrwanda-auth-2024";
 
@@ -32,6 +42,7 @@ const authTransform = createTransform(
 	},
 	{ whitelist: ["auth"] },
 );
+
 const persistConfig = {
 	key: "gra-auth",
 	storage,
@@ -39,20 +50,26 @@ const persistConfig = {
 	transforms: [authTransform],
 };
 
-try {
-	const encryptor = createEncryptor({
-		secretKey: SECRET_KEY,
-		onError: (error) => {
-			console.error("Redux persist encryption error:", error);
-		},
-	});
+// Only try to add encryption if createEncryptor was properly imported
+if (createEncryptor) {
+	try {
+		const encryptor = createEncryptor({
+			secretKey: SECRET_KEY,
+			onError: (error) => {
+				console.error("Redux persist encryption error:", error);
+			},
+		});
 
-	persistConfig.transforms.push(encryptor);
-	console.log("Redux persistence encryption enabled");
-} catch (error) {
-	console.error("Failed to initialize redux-persist encryption:", error);
-	console.log("Continuing without encryption");
+		persistConfig.transforms.push(encryptor);
+		console.log("Redux persistence encryption enabled");
+	} catch (error) {
+		console.error("Failed to initialize redux-persist encryption:", error);
+		console.log("Continuing without encryption");
+	}
+} else {
+	console.log("Encryption not available, continuing without encryption");
 }
+
 const persistedAuthReducer = persistReducer(persistConfig, authReducer);
 
 export const store = configureStore({

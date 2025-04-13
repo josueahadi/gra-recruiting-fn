@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import { jwtDecode } from "jwt-decode";
 import type { DecodedToken } from "@/types/auth";
+import { cleanToken } from "@/lib/utils/auth-utils";
 
 interface User {
 	id: string;
@@ -30,11 +31,6 @@ const initialState: AuthState = {
 	error: null,
 };
 
-const cleanToken = (token: string): string => {
-	if (!token) return "";
-	return token.replace(/^["'](.+)["']$/, "$1").trim();
-};
-
 const authSlice = createSlice({
 	name: "auth",
 	initialState,
@@ -56,7 +52,7 @@ const authSlice = createSlice({
 							state.decodedToken = JSON.parse(state.decodedToken);
 						} catch (e) {
 							console.error(
-								"[Redux Debug] Failed to parse decodedToken string, decoding from token",
+								`[Redux Debug] Failed to parse decodedToken string, decoding from token: ${e}`,
 							);
 							state.decodedToken = jwtDecode<DecodedToken>(cleanedToken);
 						}
@@ -68,10 +64,12 @@ const authSlice = createSlice({
 						try {
 							state.user = JSON.parse(state.user);
 						} catch (e) {
-							console.error("[Redux Debug] Failed to parse user string");
+							console.error(`[Redux Debug] Failed to parse user string: ${e}`);
 							state.user = null;
 						}
 					}
+
+					state.error = null;
 
 					console.log("[Redux Debug] Re-initialized auth state with token:", {
 						role: state.decodedToken?.role,
@@ -86,11 +84,17 @@ const authSlice = createSlice({
 					state.isAuthenticated = false;
 					state.decodedToken = null;
 					state.user = null;
+					state.error = "Session invalid. Please login again.";
 				}
 			}
 		},
 
 		setToken: (state, action: PayloadAction<string>) => {
+			if (!action.payload) {
+				state.error = "Invalid token received";
+				return;
+			}
+
 			const cleanedToken = cleanToken(action.payload);
 			console.log("[Redux Debug] Setting token:", {
 				originalLength: action.payload.length,
@@ -99,6 +103,7 @@ const authSlice = createSlice({
 
 			state.token = cleanedToken;
 			state.isAuthenticated = true;
+			state.error = null;
 
 			try {
 				state.decodedToken = jwtDecode<DecodedToken>(cleanedToken);
@@ -120,22 +125,31 @@ const authSlice = createSlice({
 				}
 			} catch (error) {
 				state.decodedToken = null;
+				state.error = "Error processing authentication token";
 				console.error("[Redux Debug] Error decoding token in Redux:", error);
 			}
 		},
 
 		setUser: (state, action: PayloadAction<User>) => {
 			state.user = action.payload;
+			state.error = null;
 			console.log("[Redux Debug] User data set:", action.payload.email);
 		},
 
 		setLoading: (state, action: PayloadAction<boolean>) => {
 			state.isLoading = action.payload;
+			if (action.payload === true) {
+				state.error = null;
+			}
 		},
 
 		setError: (state, action: PayloadAction<string>) => {
 			state.error = action.payload;
 			state.isLoading = false;
+		},
+
+		clearError: (state) => {
+			state.error = null;
 		},
 
 		logout: (state) => {
@@ -144,6 +158,8 @@ const authSlice = createSlice({
 			state.decodedToken = null;
 			state.isAuthenticated = false;
 			state.error = null;
+			state.isLoading = false;
+			console.log("[Redux Debug] User logged out, auth state reset");
 		},
 	},
 });
@@ -153,6 +169,7 @@ export const {
 	setUser,
 	setLoading,
 	setError,
+	clearError,
 	logout,
 	initializeAuth,
 } = authSlice.actions;

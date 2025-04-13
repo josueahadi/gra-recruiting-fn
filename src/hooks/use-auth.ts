@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useToast } from "@/hooks/use-toast";
@@ -10,12 +11,21 @@ import {
 	setToken,
 	setLoading,
 	setError,
+	clearError,
 	logout,
 	setUser,
 	initializeAuth,
 } from "@/redux/slices/auth-slice";
-import { jwtDecode } from "jwt-decode";
-import type { DecodedToken } from "@/types/auth";
+import {
+	cleanToken,
+	isProtectedRoute,
+	getRoleFromToken,
+	isAdminRole,
+	isTokenExpired,
+	type UserType,
+	formatUserName,
+} from "@/lib/utils/auth-utils";
+// import type { DecodedToken } from "@/types/auth";
 
 interface UseAuthOptions {
 	onSuccess?: () => void;
@@ -60,42 +70,35 @@ interface UserProfileResponse {
 	profileUpdatedAt: string | null;
 }
 
-const cleanToken = (token: string): string => {
-	if (!token) return "";
-	return token.replace(/^["'](.+)["']$/, "$1").trim();
-};
-
 export const useAuth = (options?: UseAuthOptions) => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+	const [userType, setUserType] = useState<UserType>("applicant");
 	const { toast } = useToast();
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
 	const dispatch = useAppDispatch();
-	const { user, token, isAuthenticated, isLoading, error } = useAppSelector(
-		(state) => state.auth,
-	);
+	const { user, token, isAuthenticated, isLoading, error, decodedToken } =
+		useAppSelector((state) => state.auth);
 
-	const getRoleFromToken = (tokenStr: string): string | null => {
-		if (!tokenStr) return null;
-
-		try {
-			const cleaned = cleanToken(tokenStr);
-
-			const decodedToken = jwtDecode<DecodedToken>(cleaned);
-			return decodedToken.role;
-		} catch (error) {
-			console.error("[useAuth] Error decoding token:", error);
-			return null;
+	// Check if token is expired and update userType based on role
+	useEffect(() => {
+		if (token) {
+			if (isTokenExpired(token)) {
+				console.log("[useAuth] Token expired, logging out");
+				toast({
+					title: "Session Expired",
+					description: "Your session has expired. Please sign in again.",
+					variant: "destructive",
+				});
+				dispatch(logout());
+			} else {
+				const role = getRoleFromToken(token);
+				setUserType(isAdminRole(role) ? "admin" : "applicant");
+			}
 		}
-	};
-
-	const isAdminRole = (role: string | null): boolean => {
-		if (!role) return false;
-		const upperRole = role.toUpperCase();
-		return upperRole === "ADMIN" || upperRole === "SUPER_ADMIN";
-	};
+	}, [token, dispatch, toast]);
 
 	const handleRedirect = (authToken: string) => {
 		const role = getRoleFromToken(authToken);
@@ -124,8 +127,11 @@ export const useAuth = (options?: UseAuthOptions) => {
 		router.push(`/auth?mode=${type}`);
 	};
 
-	const fetchUserProfile = async () => {
+	const fetchUserProfile = async (
+		retryCount = 0,
+	): Promise<UserProfileResponse | null> => {
 		if (!token) return null;
+		const MAX_RETRIES = 2;
 
 		try {
 			const { data } = await api.get<UserProfileResponse>(
@@ -133,6 +139,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 			);
 			console.log("[useAuth] Fetched user profile:", data);
 
+			// Extract user data from response and update Redux
 			const userData = {
 				id: data.id.toString(),
 				firstName: data.firstName,
@@ -144,9 +151,35 @@ export const useAuth = (options?: UseAuthOptions) => {
 			};
 
 			dispatch(setUser(userData));
-			return userData;
-		} catch (error) {
-			console.error("[useAuth] Error fetching user profile:", error);
+			return data;
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		} catch (error: any) {
+			console.error(
+				`[useAuth] Error fetching user profile (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`,
+				error,
+			);
+
+			if (error.response?.status === 401) {
+				// Token might be invalid, trigger logout
+				dispatch(logout());
+				return null;
+			}
+
+			if (retryCount < MAX_RETRIES) {
+				// Exponential backoff
+				const delay = 2 ** retryCount * 500;
+				await new Promise((resolve) => setTimeout(resolve, delay));
+				return fetchUserProfile(retryCount + 1);
+			}
+
+			// Show error toast after all retries fail
+			toast({
+				title: "Profile Error",
+				description:
+					"Could not load your profile. Some features may be limited.",
+				variant: "destructive",
+			});
+
 			return null;
 		}
 	};
@@ -154,6 +187,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const signInMutation = useMutation({
 		mutationFn: async (credentials: SignInCredentials) => {
 			dispatch(setLoading(true));
+			dispatch(clearError()); // Clear any previous errors
 			const response = await api.post("/api/v1/auth/signin", credentials);
 			return response.data;
 		},
@@ -167,6 +201,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			console.log(
 				"[useAuth] Sign in successful with token:",
+				// biome-ignore lint/style/useTemplate: <explanation>
 				accessToken.substring(0, 10) + "...",
 			);
 
@@ -181,6 +216,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			handleRedirect(accessToken);
 		},
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
 			console.error("[useAuth] Sign in error:", error?.response?.data || error);
 
@@ -206,6 +242,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const signUpMutation = useMutation({
 		mutationFn: async (data: SignUpData) => {
 			dispatch(setLoading(true));
+			dispatch(clearError()); // Clear any previous errors
 
 			const response = await api.post("/api/v1/users/signup", {
 				firstName: data.firstName,
@@ -260,6 +297,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			handleRedirect(data.accessToken);
 		},
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
 			dispatch(
 				setError(error.response?.data?.message || "Registration failed"),
@@ -283,6 +321,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const verifyEmailMutation = useMutation({
 		mutationFn: async (code: string) => {
 			dispatch(setLoading(true));
+			dispatch(clearError()); // Clear any previous errors
 			const { data } = await api.patch("/api/v1/users/verify-email", { code });
 			return data;
 		},
@@ -298,6 +337,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			fetchUserProfile();
 		},
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
 			dispatch(
 				setError(error.response?.data?.message || "Verification failed"),
@@ -318,20 +358,34 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 	const userQuery = useQuery({
 		queryKey: ["current-user"],
-		queryFn: fetchUserProfile,
+		queryFn: () => fetchUserProfile(),
 		enabled: !!token && !user,
-		retry: 1,
+		retry: 2,
+		retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000), // Exponential backoff
 	});
 
 	useEffect(() => {
+		// Initialize auth state from persisted storage
 		dispatch(initializeAuth());
+
+		// Check if token is valid and not expired
+		if (token && !isTokenExpired(token)) {
+			const role = getRoleFromToken(token);
+			setUserType(isAdminRole(role) ? "admin" : "applicant");
+		} else if (token) {
+			// Token exists but is expired
+			console.log(
+				"[useAuth] Expired token found during initialization, logging out",
+			);
+			dispatch(logout());
+		}
 
 		const authCheckTimer = setTimeout(() => {
 			setIsCheckingAuth(false);
 		}, 1000);
 
 		return () => clearTimeout(authCheckTimer);
-	}, [dispatch]);
+	}, [dispatch, token]);
 
 	useEffect(() => {
 		if (!userQuery.isPending) {
@@ -348,9 +402,9 @@ export const useAuth = (options?: UseAuthOptions) => {
 	useEffect(() => {
 		if (token) {
 			const cleanedToken = cleanToken(token);
-			api.defaults.headers.common["Authorization"] = `Bearer ${cleanedToken}`;
+			api.defaults.headers.common.Authorization = `Bearer ${cleanedToken}`;
 		} else {
-			delete api.defaults.headers.common["Authorization"];
+			api.defaults.headers.common.Authorization = undefined;
 		}
 	}, [token]);
 
@@ -367,6 +421,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const handleGoogleAuth = async () => {
 		try {
 			window.location.href = `${api.defaults.baseURL}/api/v1/auth/google`;
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		} catch (error: any) {
 			console.error("[useAuth] Google auth error:", error);
 			dispatch(setError("Google authentication failed"));
@@ -381,8 +436,8 @@ export const useAuth = (options?: UseAuthOptions) => {
 		}
 	};
 
-	const isProtectedRoute = (path: string) => {
-		return path.startsWith("/applicant") || path.startsWith("/admin");
+	const getUserDisplayName = () => {
+		return formatUserName(user?.firstName, user?.lastName);
 	};
 
 	return {
@@ -398,6 +453,9 @@ export const useAuth = (options?: UseAuthOptions) => {
 		isCheckingAuth,
 		error,
 		showPassword,
+		userType,
+		decodedToken,
+		displayName: getUserDisplayName(),
 
 		// Actions
 		setShowPassword,
@@ -407,11 +465,15 @@ export const useAuth = (options?: UseAuthOptions) => {
 		verifyEmail: verifyEmailMutation.mutate,
 		handleGoogleAuth,
 		handleAuth,
+		clearErrors: () => dispatch(clearError()),
 
 		// Helper methods
 		isProtectedRoute,
 		getRoleFromToken,
 		isAdminRole,
+		refreshProfile: () => fetchUserProfile(),
+		isTokenExpired: () => (token ? isTokenExpired(token) : true),
+		getUserDisplayName,
 	};
 };
 

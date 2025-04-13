@@ -2,7 +2,7 @@
 
 import AssessmentIntro from "@/components/applicant/exam/assessment-intro";
 import ProfileBlockMessage from "@/components/applicant/exam/profile-block-message";
-import AppLayout from "@/components/layout/app-layout";
+import AppLayoutWrapper from "@/components/layout/app-layout-wrapper";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
@@ -45,18 +45,18 @@ export default function ExamPage() {
 
 	if (isLoading) {
 		return (
-			<AppLayout userType="applicant">
+			<AppLayoutWrapper>
 				<div className="bg-white rounded-lg p-6 shadow-sm">
 					<div className="flex items-center justify-center h-64">
 						<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base" />
 					</div>
 				</div>
-			</AppLayout>
+			</AppLayoutWrapper>
 		);
 	}
 
 	return (
-		<AppLayout userType="applicant">
+		<AppLayoutWrapper>
 			<div className="bg-white rounded-lg shadow-sm py-10 md:py-20">
 				{isProfileComplete ? (
 					<AssessmentIntro
@@ -91,6 +91,6 @@ export default function ExamPage() {
 					/>
 				)}
 			</div>
-		</AppLayout>
+		</AppLayoutWrapper>
 	);
 }

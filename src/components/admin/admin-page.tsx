@@ -1,6 +1,6 @@
 "use client";
 
-import AppLayout from "@/components/layout/app-layout";
+import AppLayoutWrapper from "@/components/layout/app-layout-wrapper";
 import { usePathname } from "next/navigation";
 import React from "react";
 import AdminDashboard from "@/components/admin/admin-dashboard";
@@ -44,9 +44,9 @@ const AdminPage = () => {
 	};
 
 	return (
-		<AppLayout userType="admin">
+		<AppLayoutWrapper>
 			<div className="space-y-6">{renderContent()}</div>
-		</AppLayout>
+		</AppLayoutWrapper>
 	);
 };
 

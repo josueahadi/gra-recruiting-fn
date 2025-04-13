@@ -1,12 +1,12 @@
 "use client";
 
-import AppLayout from "@/components/layout/app-layout";
+import AppLayoutWrapper from "@/components/layout/app-layout-wrapper";
 import ProfileContent from "@/components/applicant/profile/profile-content";
 
 export default function ApplicantSkillsPage() {
 	return (
-		<AppLayout userType="applicant">
+		<AppLayoutWrapper>
 			<ProfileContent />
-		</AppLayout>
+		</AppLayoutWrapper>
 	);
 }

@@ -57,7 +57,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 			onLogout();
 		} else {
 			console.log("Logging out...");
-			router.push("/login");
+			router.push("/");
 		}
 	};
 

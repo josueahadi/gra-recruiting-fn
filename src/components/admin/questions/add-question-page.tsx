@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import AppLayout from "@/components/layout/app-layout";
+import AppLayoutWrapper from "@/components/layout/app-layout-wrapper";
 import { Button } from "@/components/ui/button";
 import {
 	Select,
@@ -16,16 +16,16 @@ import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Upload, ArrowLeft } from "lucide-react";
 import { useQuestions } from "@/hooks/use-questions";
-import type { Question } from "@/types";
+// import type { Question } from "@/types";
 
 export default function AddQuestionPage() {
 	const router = useRouter();
-	const [formData, setFormData] = useState<Partial<Question>>({
-		text: "",
-		excerpt: "",
-		section: "Multiple Choice",
-		type: "multiple-choice",
-	});
+	// const [formData, setFormData] = useState<Partial<Question>>({
+	// 	text: "",
+	// 	excerpt: "",
+	// 	section: "Multiple Choice",
+	// 	type: "multiple-choice",
+	// });
 	const { toast } = useToast();
 	const { createQuestion } = useQuestions();
 	const [isPublishing, setIsPublishing] = useState(false);
@@ -88,6 +88,7 @@ export default function AddQuestionPage() {
 			const excerpt =
 				textContent.substring(0, 97) + (textContent.length > 97 ? "..." : "");
 
+			// biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
 			let questionData;
 
 			if (questionType === "Essay") {
@@ -132,7 +133,7 @@ export default function AddQuestionPage() {
 	};
 
 	return (
-		<AppLayout userType="admin">
+		<AppLayoutWrapper>
 			<div className="w-full max-w-6xl mx-auto">
 				<div className="bg-white rounded-lg p-6 shadow-sm">
 					<div className="flex justify-between items-center mb-8">
@@ -237,6 +238,6 @@ export default function AddQuestionPage() {
 					</div>
 				</div>
 			</div>
-		</AppLayout>
+		</AppLayoutWrapper>
 	);
 }

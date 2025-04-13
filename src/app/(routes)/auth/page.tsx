@@ -5,6 +5,8 @@ import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useAppDispatch } from "@/redux/hooks";
+import { initializeAuth } from "@/redux/slices/auth-slice";
 
 function AuthContent() {
 	const router = useRouter();
@@ -13,30 +15,84 @@ function AuthContent() {
 	const callbackUrl = searchParams.get("callbackUrl");
 	const { isAuthenticated, user, token, isCheckingAuth, getRoleFromToken } =
 		useAuth();
+	const dispatch = useAppDispatch();
 
 	const [isRedirecting, setIsRedirecting] = useState(false);
+	const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
 
 	useEffect(() => {
-		if (isRedirecting || isCheckingAuth) return;
+		console.log("[Auth Page] Initial load: ", {
+			isAuthenticated,
+			hasToken: !!token,
+			isChecking: isCheckingAuth,
+			isRedirecting,
+		});
+
+		if (token && !isAuthenticated) {
+			dispatch(initializeAuth());
+		}
+
+		if (!isCheckingAuth && !hasCheckedAuth) {
+			setHasCheckedAuth(true);
+		}
+	}, [
+		isRedirecting,
+		isAuthenticated,
+		token,
+		isCheckingAuth,
+		hasCheckedAuth,
+		dispatch,
+	]);
+
+	useEffect(() => {
+		if (isRedirecting || isCheckingAuth || !hasCheckedAuth) return;
+
+		console.log("[Auth Page] Auth state updated:", {
+			isAuthenticated,
+			isCheckingAuth,
+			hasToken: !!token,
+			user: user?.email,
+			callbackUrl,
+			isRedirecting,
+			hasCheckedAuth,
+		});
+
+		if (token) {
+			const decodedRole = getRoleFromToken(token);
+			console.log("[Auth Page] Decoded token role:", decodedRole);
+		}
 
 		if (isAuthenticated && token && !isRedirecting) {
-			const role = getRoleFromToken(token);
+			// Check for redirect loop using localStorage
+			const lastRedirectTime = Number.parseInt(
+				localStorage.getItem("lastAuthRedirect") || "0",
+			);
+			const currentTime = Date.now();
+
+			if (currentTime - lastRedirectTime < 2000) {
+				console.log(
+					"[Auth Page] Preventing redirect loop - too many redirects",
+				);
+				return;
+			}
+
+			const decodedRole = getRoleFromToken(token);
 
 			const isAdminUser =
-				role?.toUpperCase() === "ADMIN" ||
-				role?.toUpperCase() === "SUPER_ADMIN";
+				decodedRole?.toUpperCase() === "ADMIN" ||
+				decodedRole?.toUpperCase() === "SUPER_ADMIN";
 
 			const redirectPath =
 				callbackUrl ||
 				(isAdminUser ? "/admin/dashboard" : "/applicant/dashboard");
 
-			console.log("[Auth Page] Authenticated, redirecting to:", redirectPath);
+			console.log("[Auth Page] Redirecting to:", redirectPath);
 
 			setIsRedirecting(true);
+			localStorage.setItem("lastAuthRedirect", currentTime.toString());
 
-			setTimeout(() => {
-				router.replace(redirectPath);
-			}, 100);
+			window.location.href = redirectPath;
+			return;
 		}
 	}, [
 		isAuthenticated,
@@ -47,6 +103,7 @@ function AuthContent() {
 		router,
 		getRoleFromToken,
 		isRedirecting,
+		hasCheckedAuth,
 	]);
 
 	if (isCheckingAuth || isRedirecting || isAuthenticated) {
@@ -95,6 +152,17 @@ function AuthFallback() {
 }
 
 export default function AuthPage() {
+	useEffect(() => {
+		const currentTime = Date.now();
+		const lastRedirectTime = Number.parseInt(
+			localStorage.getItem("lastAuthRedirect") || "0",
+		);
+
+		if (currentTime - lastRedirectTime > 5000) {
+			localStorage.removeItem("lastAuthRedirect");
+		}
+	}, []);
+
 	const [isClient, setIsClient] = useState(false);
 
 	useEffect(() => {

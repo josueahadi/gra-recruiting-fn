@@ -1,13 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
 import { store } from "@/redux/store";
 import { logout } from "@/redux/slices/auth-slice";
+import { cleanToken, isTokenExpired } from "@/lib/utils/auth-utils";
 
 const BASE_URL = "https://jobs-staging.api.growrwanda.com";
-
-const cleanToken = (token: string | null): string | null => {
-	if (!token) return null;
-	return token.replace(/^["'](.+)["']$/, "$1").trim();
-};
 
 export const api = axios.create({
 	baseURL: BASE_URL,
@@ -17,12 +14,37 @@ export const api = axios.create({
 	timeout: 30000,
 });
 
+let isLoggingOut = false;
+
+const handleAuthError = () => {
+	if (isLoggingOut) return;
+
+	isLoggingOut = true;
+	store.dispatch(logout());
+
+	if (typeof window !== "undefined") {
+		window.location.href = "/auth?mode=login";
+
+		setTimeout(() => {
+			isLoggingOut = false;
+		}, 1000);
+	}
+};
+
 api.interceptors.request.use(
 	(config) => {
 		const state = store.getState();
 		const token = state.auth.token;
 
 		if (token) {
+			if (isTokenExpired(token)) {
+				console.log("[API] Token expired or about to expire, logging out");
+				handleAuthError();
+				return Promise.reject(
+					new Error("Session expired. Please login again."),
+				);
+			}
+
 			const cleanedToken = cleanToken(token);
 			config.headers.Authorization = `Bearer ${cleanedToken}`;
 
@@ -64,12 +86,7 @@ api.interceptors.response.use(
 		if (error.response.status === 401 && !originalRequest._retry) {
 			console.log("[API] 401 Unauthorized response, logging out");
 			originalRequest._retry = true;
-
-			store.dispatch(logout());
-
-			if (typeof window !== "undefined") {
-				window.location.href = "/auth?mode=login";
-			}
+			handleAuthError();
 		}
 
 		if (error.response.status === 403 && !originalRequest._retry) {
@@ -93,10 +110,11 @@ api.interceptors.response.use(
 );
 
 export const handleApiError = (
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	error: any,
 	fallbackMessage = "An error occurred",
 ) => {
-	if (error.response && error.response.data && error.response.data.message) {
+	if (error.response?.data?.message) {
 		return error.response.data.message;
 	}
 
