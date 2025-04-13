@@ -186,10 +186,28 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 	const signInMutation = useMutation({
 		mutationFn: async (credentials: SignInCredentials) => {
-			dispatch(setLoading(true));
-			dispatch(clearError()); // Clear any previous errors
-			const response = await api.post("/api/v1/auth/signin", credentials);
-			return response.data;
+			try {
+				dispatch(setLoading(true));
+				dispatch(clearError());
+
+				console.log(
+					"[useAuth] Attempting sign in with email:",
+					credentials.email,
+				);
+
+				const response = await api.post("/api/v1/auth/signin", credentials);
+				return response.data;
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+			} catch (error: any) {
+				console.error("[useAuth] Sign in API error:", {
+					message: error.message,
+					status: error.response?.status,
+					data: error.response?.data,
+					url: error.config?.url,
+				});
+
+				throw error;
+			}
 		},
 		onSuccess: (data) => {
 			const { accessToken } = data;
@@ -201,8 +219,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			console.log(
 				"[useAuth] Sign in successful with token:",
-				// biome-ignore lint/style/useTemplate: <explanation>
-				accessToken.substring(0, 10) + "...",
+				`${accessToken.substring(0, 10)}...`,
 			);
 
 			dispatch(setToken(accessToken));
@@ -218,21 +235,22 @@ export const useAuth = (options?: UseAuthOptions) => {
 		},
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
-			console.error("[useAuth] Sign in error:", error?.response?.data || error);
+			console.error("[useAuth] Sign in error:", error);
 
-			dispatch(
-				setError(error.response?.data?.message || "Invalid credentials"),
+			const errorMessage = handleApiError(
+				error,
+				"Invalid credentials. Please try again.",
 			);
 
+			dispatch(setError(errorMessage));
+
 			toast({
-				title: "Error",
-				description:
-					error.response?.data?.message ||
-					"Invalid credentials. Please try again.",
+				title: "Login Failed",
+				description: errorMessage,
 				variant: "destructive",
 			});
 
-			options?.onError?.(error);
+			if (options?.onError) options.onError(error);
 		},
 		onSettled: () => {
 			dispatch(setLoading(false));
@@ -242,7 +260,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const signUpMutation = useMutation({
 		mutationFn: async (data: SignUpData) => {
 			dispatch(setLoading(true));
-			dispatch(clearError()); // Clear any previous errors
+			dispatch(clearError());
 
 			const response = await api.post("/api/v1/users/signup", {
 				firstName: data.firstName,
