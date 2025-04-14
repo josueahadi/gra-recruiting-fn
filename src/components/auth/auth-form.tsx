@@ -1,18 +1,17 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { AUTH_CONSTANTS } from "@/constants";
 import { useAuth } from "@/hooks/use-auth";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { EducationBackgroundFields } from "./background-fields";
 import { ContactInfoFields } from "./contact-info-fields";
 import GoogleAuthButton from "./google-auth-button";
 import { LoginFields } from "./login-fields";
 import ProgressIndicator from "./progress-indicator";
-import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { toast } from "react-hot-toast";
 
 const REGISTRATION_STEPS = [
 	{ number: 1, label: "Contact Info" },
@@ -25,39 +24,8 @@ interface AuthFormProps {
 	onError?: (error: Error) => void;
 }
 
-const ErrorDisplay = ({ message }: { message: string | null }) => {
-	if (!message) return null;
-
-	return (
-		<div className="animate-in fade-in-50 duration-300 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-md">
-			<div className="flex items-start">
-				<div className="flex-shrink-0">
-					<svg
-						className="h-5 w-5 text-red-500"
-						viewBox="0 0 20 20"
-						fill="currentColor"
-					>
-						<title>Error</title>
-						<path
-							fillRule="evenodd"
-							d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-							clipRule="evenodd"
-						/>
-					</svg>
-				</div>
-				<div className="ml-3">
-					<p className="text-sm font-medium">{message}</p>
-				</div>
-			</div>
-		</div>
-	);
-};
-
 const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 	const router = useRouter();
-	const searchParams = useSearchParams();
-	const callbackUrl = searchParams.get("callbackUrl") || "/applicant/dashboard";
-	const { toast } = useToast();
 
 	const [formData, setFormData] = useState({
 		firstName: "",
@@ -89,23 +57,11 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		error: authError,
 		clearErrors,
 	} = useAuth({
-		onSuccess: () => {
-			if (onSuccess) {
-				onSuccess();
-			} else {
-				router.push(callbackUrl);
-			}
-		},
+		onSuccess,
 		onError: (error) => {
 			const errorMessage =
 				error.message || "Please check your information and try again.";
 			setServerError(errorMessage);
-
-			toast({
-				title: mode === "login" ? "Login failed" : "Registration failed",
-				description: errorMessage,
-				variant: "destructive",
-			});
 
 			if (onError) onError(error);
 		},
@@ -119,6 +75,13 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 	useEffect(() => {
 		if (authError) {
 			setServerError(authError);
+
+			// Map backend error messages to specific form fields
+			if (authError.includes("email")) {
+				setFormErrors((prev) => ({ ...prev, email: authError }));
+			} else if (authError.includes("password")) {
+				setFormErrors((prev) => ({ ...prev, password: authError }));
+			}
 		}
 	}, [authError]);
 
@@ -287,14 +250,13 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			<div className="max-w-md mx-auto space-y-6">
 				<FormHeader mode={mode} currentStep={currentStep} />
 
-				{serverError && (
+				{serverError && !formErrors.email && !formErrors.password && (
 					<div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
 						{serverError}
 					</div>
 				)}
 
 				<form onSubmit={handleFormSubmit} className="space-y-6">
-					<ErrorDisplay message={serverError || authError} />
 					{mode === "login" && (
 						<LoginFields
 							email={formData.email}
@@ -303,13 +265,11 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 							onEmailChange={(value) =>
 								handleInputChange({
 									target: { name: "email", value, type: "text" },
-									// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 								} as any)
 							}
 							onPasswordChange={(value) =>
 								handleInputChange({
 									target: { name: "password", value, type: "text" },
-									// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 								} as any)
 							}
 							showPassword={showPassword}
@@ -333,7 +293,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 										value,
 										type: typeof value === "boolean" ? "checkbox" : "text",
 									},
-									// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 								} as any)
 							}
 							showPassword={showPassword}
@@ -354,7 +313,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 							onInputChange={(name, value) =>
 								handleInputChange({
 									target: { name, value, type: "text" },
-									// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 								} as any)
 							}
 							onSelectChange={handleSelectChange}

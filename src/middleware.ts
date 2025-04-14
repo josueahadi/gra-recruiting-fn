@@ -32,15 +32,8 @@ const isPublicPath = (path: string) => {
 export function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl;
 
+	// Allow access to public paths
 	if (isPublicPath(pathname)) {
-		return NextResponse.next();
-	}
-
-	const referer = request.headers.get("referer") || "";
-	if (referer.includes("/auth?mode=login") && pathname.startsWith("/admin")) {
-		console.log(
-			"[Middleware] Detected potential loop: referrer from auth page but trying to access admin. Allowing through to let client-side auth handle it.",
-		);
 		return NextResponse.next();
 	}
 
@@ -49,6 +42,7 @@ export function middleware(request: NextRequest) {
 	let role = null;
 	let isExpired = true;
 
+	// Try to extract and validate token
 	if (authCookie) {
 		try {
 			const authData = JSON.parse(authCookie.value);
@@ -87,18 +81,19 @@ export function middleware(request: NextRequest) {
 		}
 	}
 
+	// Handle protected routes
 	if (pathname.startsWith("/applicant") || pathname.startsWith("/admin")) {
+		// Redirect unauthenticated users to login
 		if (!token) {
 			console.log(
 				"[Middleware] No valid token, redirecting to login:",
 				pathname,
 			);
-			const url = new URL("/auth", request.url);
-			url.searchParams.set("mode", "login");
-			url.searchParams.set("callbackUrl", pathname);
-			return NextResponse.redirect(url);
+			// Simple redirect to login without callback URL
+			return NextResponse.redirect(new URL("/auth?mode=login", request.url));
 		}
 
+		// Redirect non-admin users trying to access admin routes
 		if (pathname.startsWith("/admin")) {
 			if (!isAdminRole(role)) {
 				console.log("[Middleware] Unauthorized admin access, role:", role);

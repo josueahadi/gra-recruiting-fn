@@ -1,10 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useToast } from "@/hooks/use-toast";
 import { api } from "@/services/api";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
@@ -26,11 +24,11 @@ import {
 	formatUserName,
 } from "@/lib/utils/auth-utils";
 import { handleApiError } from "@/services/api";
+import { toast } from "react-hot-toast";
 
 interface UseAuthOptions {
 	onSuccess?: () => void;
 	onError?: (error: Error) => void;
-	onOpenChange?: (open: boolean) => void;
 }
 
 interface SignInCredentials {
@@ -74,9 +72,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 	const [userType, setUserType] = useState<UserType>("applicant");
-	const { toast } = useToast();
 	const router = useRouter();
-	const searchParams = useSearchParams();
 
 	const dispatch = useAppDispatch();
 	const { user, token, isAuthenticated, isLoading, error, decodedToken } =
@@ -86,38 +82,25 @@ export const useAuth = (options?: UseAuthOptions) => {
 		if (token) {
 			if (isTokenExpired(token)) {
 				console.log("[useAuth] Token expired, logging out");
-				toast({
-					title: "Session Expired",
-					description: "Your session has expired. Please sign in again.",
-					variant: "destructive",
-				});
+				toast.error("Your session has expired. Please sign in again.");
 				dispatch(logout());
 			} else {
 				const role = getRoleFromToken(token);
 				setUserType(isAdminRole(role) ? "admin" : "applicant");
 			}
 		}
-	}, [token, dispatch, toast]);
+	}, [token, dispatch]);
 
 	const handleRedirect = (authToken: string) => {
 		const role = getRoleFromToken(authToken);
-		const callbackUrl = searchParams?.get("callbackUrl");
 
-		let redirectPath: string;
-
-		if (callbackUrl) {
-			redirectPath = callbackUrl;
-		} else {
-			redirectPath = isAdminRole(role)
-				? "/admin/dashboard"
-				: "/applicant/dashboard";
-		}
+		// Simple redirect logic based on user role
+		const redirectPath = isAdminRole(role)
+			? "/admin/dashboard"
+			: "/applicant/dashboard";
 
 		console.log("[useAuth] Redirecting to:", redirectPath);
-
-		setTimeout(() => {
-			router.replace(redirectPath);
-		}, 100);
+		router.replace(redirectPath);
 
 		options?.onSuccess?.();
 	};
@@ -150,7 +133,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			dispatch(setUser(userData));
 			return data;
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		} catch (error: any) {
 			console.error(
 				`[useAuth] Error fetching user profile (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`,
@@ -168,13 +150,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 				return fetchUserProfile(retryCount + 1);
 			}
 
-			toast({
-				title: "Profile Error",
-				description:
-					"Could not load your profile. Some features may be limited.",
-				variant: "destructive",
-			});
-
+			toast.error("Could not load your profile. Some features may be limited.");
 			throw error;
 		}
 	};
@@ -192,7 +168,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 				const response = await api.post("/api/v1/auth/signin", credentials);
 				return response.data;
-				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			} catch (error: any) {
 				console.error("[useAuth] Sign in API error:", {
 					message: error.message,
@@ -219,10 +194,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			dispatch(setToken(accessToken));
 
-			toast({
-				title: "Success!",
-				description: "Successfully logged in.",
-			});
+			toast.success("Successfully logged in");
 
 			try {
 				console.log("[useAuth] Fetching user profile before redirecting...");
@@ -234,7 +206,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 				handleRedirect(accessToken);
 			}
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
 			console.error("[useAuth] Sign in error:", error);
 
@@ -245,20 +216,16 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			dispatch(setError(errorResponse.message));
 
-			let toastMessage = errorResponse.message;
+			let errorMessage = errorResponse.message;
 
 			if (errorResponse.details?.statusCode === 404) {
-				toastMessage =
+				errorMessage =
 					"This account doesn't exist. Please sign up or verify your email.";
 			} else if (errorResponse.details?.statusCode === 401) {
-				toastMessage = "Invalid password. Please try again.";
+				errorMessage = "Invalid password. Please try again.";
 			}
 
-			toast({
-				title: "Authentication Failed",
-				description: toastMessage,
-				variant: "destructive",
-			});
+			toast.error(errorMessage);
 
 			if (options?.onError) options.onError(error);
 		},
@@ -316,10 +283,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			dispatch(setToken(data.accessToken));
 
-			toast({
-				title: "Success!",
-				description: "Your account has been created successfully.",
-			});
+			toast.success("Your account has been created successfully");
 
 			try {
 				console.log("[useAuth] Fetching user profile before redirecting...");
@@ -331,19 +295,15 @@ export const useAuth = (options?: UseAuthOptions) => {
 				handleRedirect(data.accessToken);
 			}
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
 			dispatch(
 				setError(error.response?.data?.message || "Registration failed"),
 			);
 
-			toast({
-				title: "Error",
-				description:
-					error.response?.data?.message ||
+			toast.error(
+				error.response?.data?.message ||
 					"Something went wrong. Please try again.",
-				variant: "destructive",
-			});
+			);
 
 			options?.onError?.(error);
 		},
@@ -364,26 +324,19 @@ export const useAuth = (options?: UseAuthOptions) => {
 				dispatch(setToken(data.accessToken));
 			}
 
-			toast({
-				title: "Success!",
-				description: "Your email has been verified successfully.",
-			});
+			toast.success("Your email has been verified successfully");
 
 			fetchUserProfile();
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
 			dispatch(
 				setError(error.response?.data?.message || "Verification failed"),
 			);
 
-			toast({
-				title: "Error",
-				description:
-					error.response?.data?.message ||
+			toast.error(
+				error.response?.data?.message ||
 					"Failed to verify email. Please try again.",
-				variant: "destructive",
-			});
+			);
 		},
 		onSettled: () => {
 			dispatch(setLoading(false));
@@ -445,28 +398,19 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 		dispatch(logout());
 
-		setTimeout(() => {
-			router.push("/auth?mode=login");
-			toast({
-				title: "Signed out",
-				description: "You have been signed out successfully.",
-			});
-		}, 100);
+		toast.success("You have been signed out successfully");
+
+		router.push("/auth?mode=login");
 	};
 
 	const handleGoogleAuth = async () => {
 		try {
 			window.location.href = `${api.defaults.baseURL}/api/v1/auth/google`;
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		} catch (error: any) {
 			console.error("[useAuth] Google auth error:", error);
 			dispatch(setError("Google authentication failed"));
 
-			toast({
-				title: "Error",
-				description: "Failed to authenticate with Google. Please try again.",
-				variant: "destructive",
-			});
+			toast.error("Failed to authenticate with Google. Please try again.");
 
 			options?.onError?.(error);
 		}
