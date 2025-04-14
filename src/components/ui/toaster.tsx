@@ -9,17 +9,9 @@ import {
 	ToastViewport,
 } from "@/components/ui/toast";
 import { useToast } from "@/hooks/use-toast";
-import * as React from "react";
-import { useEffect } from "react";
 
 export function Toaster() {
 	const { toasts } = useToast();
-
-	useEffect(() => {
-		if (process.env.NODE_ENV === "development" && toasts.length > 0) {
-			console.log("[Toaster] Current toasts:", toasts);
-		}
-	}, [toasts]);
 
 	return (
 		<ToastProvider>
@@ -33,7 +25,7 @@ export function Toaster() {
 					<ToastClose />
 				</Toast>
 			))}
-			<ToastViewport className="fixed bottom-0 right-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:top-auto sm:right-0 sm:flex-col md:max-w-[420px]" />
+			<ToastViewport className="fixed bottom-0 right-0 z-[9999] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]" />
 		</ToastProvider>
 	);
 }

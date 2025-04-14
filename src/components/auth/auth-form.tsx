@@ -25,6 +25,34 @@ interface AuthFormProps {
 	onError?: (error: Error) => void;
 }
 
+const ErrorDisplay = ({ message }: { message: string | null }) => {
+	if (!message) return null;
+
+	return (
+		<div className="animate-in fade-in-50 duration-300 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-md">
+			<div className="flex items-start">
+				<div className="flex-shrink-0">
+					<svg
+						className="h-5 w-5 text-red-500"
+						viewBox="0 0 20 20"
+						fill="currentColor"
+					>
+						<title>Error</title>
+						<path
+							fillRule="evenodd"
+							d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+							clipRule="evenodd"
+						/>
+					</svg>
+				</div>
+				<div className="ml-3">
+					<p className="text-sm font-medium">{message}</p>
+				</div>
+			</div>
+		</div>
+	);
+};
+
 const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
@@ -83,13 +111,11 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		},
 	});
 
-	// Clear server errors when switching modes or when form data changes
 	useEffect(() => {
 		setServerError(null);
 		clearErrors?.();
 	}, [mode, formData, clearErrors]);
 
-	// Display any errors from the auth hook
 	useEffect(() => {
 		if (authError) {
 			setServerError(authError);
@@ -107,7 +133,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			setFormErrors((prev) => ({ ...prev, [name]: "" }));
 		}
 
-		// Clear server errors when user starts typing
 		if (serverError) {
 			setServerError(null);
 		}
@@ -123,7 +148,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			setFormErrors((prev) => ({ ...prev, [name]: "" }));
 		}
 
-		// Clear server errors when user makes changes
 		if (serverError) {
 			setServerError(null);
 		}
@@ -270,6 +294,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 				)}
 
 				<form onSubmit={handleFormSubmit} className="space-y-6">
+					<ErrorDisplay message={serverError || authError} />
 					{mode === "login" && (
 						<LoginFields
 							email={formData.email}

@@ -89,43 +89,87 @@ api.interceptors.response.use(
 			);
 		}
 
+		let errorMessage = "An unexpected error occurred";
+		let errorDetails = null;
+
+		if (error.response?.data) {
+			if (error.response.data.message) {
+				errorMessage = error.response.data.message;
+				errorDetails = {
+					statusCode: error.response.data.statusCode,
+					error: error.response.data.error,
+					message: error.response.data.message,
+				};
+				console.log("[API] Structured error response:", errorDetails);
+			}
+		}
+
 		if (error.response.status === 401 && !originalRequest._retry) {
 			console.log("[API] 401 Unauthorized response, logging out");
 			originalRequest._retry = true;
 			handleAuthError();
 		}
 
-		if (error.response.status === 403 && !originalRequest._retry) {
-			console.error("[API] 403 Forbidden - Permission denied");
+		if (error.response.status === 403) {
+			console.error("[API] 403 Forbidden response:", error);
+			errorMessage = "You do not have permission to access this resource.";
+			errorDetails = {
+				statusCode: error.response.status,
+				error: error.response.data.error,
+				message: error.response.data.message,
+			};
 		}
 
 		if (error.response.status === 404) {
-			console.error("[API] 404 Not Found:", originalRequest.url);
-			return Promise.reject(
-				new Error(
-					`The requested resource (${originalRequest.url}) was not found.`,
-				),
-			);
+			console.error("[API] 404 Not Found response:", error);
+			errorMessage = "The requested resource was not found.";
+			errorDetails = {
+				statusCode: error.response.status,
+				error: error.response.data.error,
+				message: error.response.data.message,
+			};
 		}
 
-		if (error.response.status >= 500) {
-			console.error(
-				"[API] Server error:",
-				error.response.status,
-				error.response.data,
-			);
+		if (error.response.status === 500) {
+			console.error("[API] 500 Internal Server Error response:", error);
+			errorMessage = "An internal server error occurred.";
+			errorDetails = {
+				statusCode: error.response.status,
+				error: error.response.data.error,
+				message: error.response.data.message,
+			};
+		} else if (error.response.status === 422) {
+			console.error("[API] 422 Unprocessable Entity response:", error);
+			errorMessage = "Validation error occurred.";
+			errorDetails = {
+				statusCode: error.response.status,
+				error: error.response.data.error,
+				message: error.response.data.message,
+			};
 		}
 
-		let errorMessage = "An unexpected error occurred";
-		if (error.response?.data?.message) {
-			errorMessage = error.response.data.message;
-		} else if (error.response?.data?.error) {
-			errorMessage = error.response.data.error;
-		} else if (error.message) {
-			errorMessage = error.message;
+		if (error.response.status === 400) {
+			console.error("[API] 400 Bad Request response:", error);
+			errorMessage = "Bad request. Please check your input.";
+			errorDetails = {
+				statusCode: error.response.status,
+				error: error.response.data.error,
+				message: error.response.data.message,
+			};
+		}
+
+		if (error.response.status === 429) {
+			console.error("[API] 429 Too Many Requests response:", error);
+			errorMessage = "Too many requests. Please try again later.";
+			errorDetails = {
+				statusCode: error.response.status,
+				error: error.response.data.error,
+				message: error.response.data.message,
+			};
 		}
 
 		error.displayMessage = errorMessage;
+		error.errorDetails = errorDetails;
 
 		return Promise.reject(error);
 	},
@@ -135,22 +179,34 @@ export const handleApiError = (
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	error: any,
 	fallbackMessage = "An error occurred",
-): string => {
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+): { message: string; details: any | null } => {
+	const errorResponse = {
+		message: fallbackMessage,
+		details: null,
+	};
+
+	if (error.errorDetails) {
+		errorResponse.details = error.errorDetails;
+	}
+
 	if (error.displayMessage) {
-		return error.displayMessage;
+		errorResponse.message = error.displayMessage;
+		return errorResponse;
 	}
 
 	if (error.response?.data?.message) {
-		return error.response.data.message;
-	}
-
-	if (error.response?.data?.error) {
-		return error.response.data.error;
+		errorResponse.message = error.response.data.message;
+		errorResponse.details = {
+			statusCode: error.response.data.statusCode,
+			error: error.response.data.error,
+		};
+		return errorResponse;
 	}
 
 	if (error.message) {
-		return error.message;
+		errorResponse.message = error.message;
 	}
 
-	return fallbackMessage;
+	return errorResponse;
 };

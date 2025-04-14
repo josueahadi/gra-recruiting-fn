@@ -237,18 +237,29 @@ export const useAuth = (options?: UseAuthOptions) => {
 		onError: (error: any) => {
 			console.error("[useAuth] Sign in error:", error);
 
-			const errorMessage = handleApiError(
+			const errorResponse = handleApiError(
 				error,
 				"Invalid credentials. Please try again.",
 			);
 
-			dispatch(setError(errorMessage));
+			dispatch(setError(errorResponse.message));
+
+			let toastMessage = errorResponse.message;
+
+			if (errorResponse.details?.statusCode === 404) {
+				toastMessage =
+					"This account doesn't exist. Please sign up or verify your email.";
+			} else if (errorResponse.details?.statusCode === 401) {
+				toastMessage = "Invalid password. Please try again.";
+			}
 
 			toast({
-				title: "Login Failed",
-				description: errorMessage,
+				title: "Authentication Failed",
+				description: toastMessage,
 				variant: "destructive",
 			});
+
+			setServerError(toastMessage);
 
 			if (options?.onError) options.onError(error);
 		},
@@ -427,13 +438,17 @@ export const useAuth = (options?: UseAuthOptions) => {
 	}, [token]);
 
 	const signOut = () => {
-		dispatch(logout());
-		router.replace("/auth?mode=login");
+		api.defaults.headers.common.Authorization = undefined;
 
-		toast({
-			title: "Signed out",
-			description: "You have been signed out successfully.",
-		});
+		dispatch(logout());
+
+		setTimeout(() => {
+			router.push("/auth?mode=login");
+			toast({
+				title: "Signed out",
+				description: "You have been signed out successfully.",
+			});
+		}, 100);
 	};
 
 	const handleGoogleAuth = async () => {
