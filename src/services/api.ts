@@ -181,32 +181,30 @@ export const handleApiError = (
 	fallbackMessage = "An error occurred",
 	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 ): { message: string; details: any | null } => {
-	const errorResponse = {
-		message: fallbackMessage,
-		details: null,
-	};
+	let message = fallbackMessage;
+	let details = null;
 
-	if (error.errorDetails) {
-		errorResponse.details = error.errorDetails;
+	if (axios.isAxiosError(error)) {
+		if (error.response) {
+			const statusCode = error.response.status;
+			details = error.response.data || null;
+
+			if (statusCode === 401) {
+				message = "Authentication failed. Please sign in again.";
+			} else if (statusCode === 403) {
+				message = "You don't have permission to access this resource.";
+			} else if (error.response.data?.message) {
+				message = error.response.data.message;
+			}
+		} else if (error.request) {
+			message =
+				"No response received from server. Please check your connection.";
+		} else {
+			message = `Request error: ${error.message}`;
+		}
+	} else if (error instanceof Error) {
+		message = error.message;
 	}
 
-	if (error.displayMessage) {
-		errorResponse.message = error.displayMessage;
-		return errorResponse;
-	}
-
-	if (error.response?.data?.message) {
-		errorResponse.message = error.response.data.message;
-		errorResponse.details = {
-			statusCode: error.response.data.statusCode,
-			error: error.response.data.error,
-		};
-		return errorResponse;
-	}
-
-	if (error.message) {
-		errorResponse.message = error.message;
-	}
-
-	return errorResponse;
+	return { message, details };
 };

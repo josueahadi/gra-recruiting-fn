@@ -25,7 +25,7 @@ import {
 	type UserType,
 	formatUserName,
 } from "@/lib/utils/auth-utils";
-// import type { DecodedToken } from "@/types/auth";
+import { handleApiError } from "@/services/api";
 
 interface UseAuthOptions {
 	onSuccess?: () => void;
@@ -82,7 +82,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const { user, token, isAuthenticated, isLoading, error, decodedToken } =
 		useAppSelector((state) => state.auth);
 
-	// Check if token is expired and update userType based on role
 	useEffect(() => {
 		if (token) {
 			if (isTokenExpired(token)) {
@@ -139,7 +138,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 			);
 			console.log("[useAuth] Fetched user profile:", data);
 
-			// Extract user data from response and update Redux
 			const userData = {
 				id: data.id.toString(),
 				firstName: data.firstName,
@@ -160,19 +158,16 @@ export const useAuth = (options?: UseAuthOptions) => {
 			);
 
 			if (error.response?.status === 401) {
-				// Token might be invalid, trigger logout
 				dispatch(logout());
 				return null;
 			}
 
 			if (retryCount < MAX_RETRIES) {
-				// Exponential backoff
 				const delay = 2 ** retryCount * 500;
 				await new Promise((resolve) => setTimeout(resolve, delay));
 				return fetchUserProfile(retryCount + 1);
 			}
 
-			// Show error toast after all retries fail
 			toast({
 				title: "Profile Error",
 				description:
@@ -180,7 +175,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 				variant: "destructive",
 			});
 
-			return null;
+			throw error;
 		}
 	};
 
@@ -209,7 +204,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 				throw error;
 			}
 		},
-		onSuccess: (data) => {
+		onSuccess: async (data) => {
 			const { accessToken } = data;
 
 			if (!accessToken) {
@@ -229,9 +224,15 @@ export const useAuth = (options?: UseAuthOptions) => {
 				description: "Successfully logged in.",
 			});
 
-			fetchUserProfile();
+			try {
+				console.log("[useAuth] Fetching user profile before redirecting...");
+				await fetchUserProfile();
 
-			handleRedirect(accessToken);
+				handleRedirect(accessToken);
+			} catch (error) {
+				console.error("[useAuth] Error fetching profile during login:", error);
+				handleRedirect(accessToken);
+			}
 		},
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
@@ -258,8 +259,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 				description: toastMessage,
 				variant: "destructive",
 			});
-
-			setServerError(toastMessage);
 
 			if (options?.onError) options.onError(error);
 		},
@@ -310,7 +309,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			return response.data;
 		},
-		onSuccess: (data) => {
+		onSuccess: async (data) => {
 			if (!data.accessToken) {
 				throw new Error("No access token received");
 			}
@@ -322,9 +321,15 @@ export const useAuth = (options?: UseAuthOptions) => {
 				description: "Your account has been created successfully.",
 			});
 
-			fetchUserProfile();
+			try {
+				console.log("[useAuth] Fetching user profile before redirecting...");
+				await fetchUserProfile();
 
-			handleRedirect(data.accessToken);
+				handleRedirect(data.accessToken);
+			} catch (error) {
+				console.error("[useAuth] Error fetching profile during signup:", error);
+				handleRedirect(data.accessToken);
+			}
 		},
 		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
@@ -350,7 +355,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const verifyEmailMutation = useMutation({
 		mutationFn: async (code: string) => {
 			dispatch(setLoading(true));
-			dispatch(clearError()); // Clear any previous errors
+			dispatch(clearError());
 			const { data } = await api.patch("/api/v1/users/verify-email", { code });
 			return data;
 		},
@@ -390,14 +395,12 @@ export const useAuth = (options?: UseAuthOptions) => {
 		queryFn: () => fetchUserProfile(),
 		enabled: !!token && !user,
 		retry: 2,
-		retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000), // Exponential backoff
+		retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
 	});
 
 	useEffect(() => {
-		// Initialize auth state from persisted storage
 		dispatch(initializeAuth());
 
-		// Check if token is valid and not expired
 		if (token && !isTokenExpired(token)) {
 			const role = getRoleFromToken(token);
 			setUserType(isAdminRole(role) ? "admin" : "applicant");
