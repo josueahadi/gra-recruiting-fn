@@ -6,28 +6,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { Bell, Lock, LogOut, Save, Shield, Trash2 } from "lucide-react";
-import type React from "react";
+import { Bell, Lock, LogOut, Save, Shield, Trash2, UserCog, Users } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
-const ApplicantSettingsSection = () => {
+const AdminSettingsSection = () => {
+	const { user, signOut } = useAuth();
+	
 	const [passwordForm, setPasswordForm] = useState({
 		currentPassword: "",
 		newPassword: "",
 		confirmPassword: "",
 	});
 
-	const [notificationSettings, setNotificationSettings] = useState({
-		emailAlerts: true,
+	const [adminSettings, setAdminSettings] = useState({
+		emailNotifications: true,
 		applicationUpdates: true,
-		newOpportunities: true,
-		marketingEmails: false,
+		securityAlerts: true,
+		autoApproveApplicants: false,
 	});
 
-	const [privacySettings, setPrivacySettings] = useState({
-		profileVisibility: true,
-		showContactInfo: true,
-		allowRecruiters: true,
+	const [systemSettings, setSystemSettings] = useState({
+		maintenanceMode: false,
+		debugMode: false,
+		allowNewRegistrations: true,
 	});
 
 	const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -38,19 +40,19 @@ const ApplicantSettingsSection = () => {
 		});
 	};
 
-	const handleNotificationToggle = (
-		setting: keyof typeof notificationSettings,
+	const handleAdminToggle = (
+		setting: keyof typeof adminSettings,
 	) => {
-		setNotificationSettings({
-			...notificationSettings,
-			[setting]: !notificationSettings[setting],
+		setAdminSettings({
+			...adminSettings,
+			[setting]: !adminSettings[setting],
 		});
 	};
 
-	const handlePrivacyToggle = (setting: keyof typeof privacySettings) => {
-		setPrivacySettings({
-			...privacySettings,
-			[setting]: !privacySettings[setting],
+	const handleSystemToggle = (setting: keyof typeof systemSettings) => {
+		setSystemSettings({
+			...systemSettings,
+			[setting]: !systemSettings[setting],
 		});
 	};
 
@@ -64,12 +66,22 @@ const ApplicantSettingsSection = () => {
 		});
 	};
 
+	const handleLogoutAllDevices = () => {
+		// Implementation would go here
+		console.log("Logging out from all devices");
+	};
+
 	return (
 		<div className="p-6 max-w-4xl mx-auto">
 			<div className="mb-8">
 				<h1 className="text-3xl font-semibold text-primary-600">
-					Account Settings
+					Admin Settings
 				</h1>
+				{user && (
+					<p className="text-gray-500 mt-1">
+						Logged in as {user.firstName} {user.lastName} ({user.email})
+					</p>
+				)}
 			</div>
 
 			<div className="space-y-8">
@@ -77,7 +89,7 @@ const ApplicantSettingsSection = () => {
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<Lock className="h-5 w-5 text-primary-500" />
 						<CardTitle className="text-xl text-primary-500">
-							Change Password
+							Security
 						</CardTitle>
 					</CardHeader>
 
@@ -110,8 +122,7 @@ const ApplicantSettingsSection = () => {
 									required
 								/>
 								<p className="text-xs text-gray-500 mt-1">
-									Password must be at least 8 characters long and include
-									uppercase, lowercase, numbers, and special characters.
+									Password must be at least 8 characters long with a mix of letters, numbers, and symbols.
 								</p>
 							</div>
 
@@ -143,7 +154,7 @@ const ApplicantSettingsSection = () => {
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<Bell className="h-5 w-5 text-primary-500" />
 						<CardTitle className="text-xl text-primary-500">
-							Notifications
+							Admin Notifications
 						</CardTitle>
 					</CardHeader>
 
@@ -153,15 +164,15 @@ const ApplicantSettingsSection = () => {
 						<div className="space-y-4">
 							<div className="flex items-center justify-between">
 								<div>
-									<h3 className="font-medium">Email Alerts</h3>
+									<h3 className="font-medium">Email Notifications</h3>
 									<p className="text-sm text-gray-500">
-										Receive important account updates via email
+										Receive important system updates via email
 									</p>
 								</div>
 								<Switch
-									checked={notificationSettings.emailAlerts}
+									checked={adminSettings.emailNotifications}
 									onCheckedChange={() =>
-										handleNotificationToggle("emailAlerts")
+										handleAdminToggle("emailNotifications")
 									}
 								/>
 							</div>
@@ -172,13 +183,13 @@ const ApplicantSettingsSection = () => {
 								<div>
 									<h3 className="font-medium">Application Updates</h3>
 									<p className="text-sm text-gray-500">
-										Notifications about your job applications
+										Get notified when new applications are submitted
 									</p>
 								</div>
 								<Switch
-									checked={notificationSettings.applicationUpdates}
+									checked={adminSettings.applicationUpdates}
 									onCheckedChange={() =>
-										handleNotificationToggle("applicationUpdates")
+										handleAdminToggle("applicationUpdates")
 									}
 								/>
 							</div>
@@ -187,16 +198,15 @@ const ApplicantSettingsSection = () => {
 
 							<div className="flex items-center justify-between">
 								<div>
-									<h3 className="font-medium">New Opportunities</h3>
+									<h3 className="font-medium">Security Alerts</h3>
 									<p className="text-sm text-gray-500">
-										Get notified about new job opportunities matching your
-										profile
+										Get notified about suspicious login attempts
 									</p>
 								</div>
 								<Switch
-									checked={notificationSettings.newOpportunities}
+									checked={adminSettings.securityAlerts}
 									onCheckedChange={() =>
-										handleNotificationToggle("newOpportunities")
+										handleAdminToggle("securityAlerts")
 									}
 								/>
 							</div>
@@ -205,15 +215,15 @@ const ApplicantSettingsSection = () => {
 
 							<div className="flex items-center justify-between">
 								<div>
-									<h3 className="font-medium">Marketing Emails</h3>
+									<h3 className="font-medium">Auto-Approve Applicants</h3>
 									<p className="text-sm text-gray-500">
-										Receive promotional content and newsletters
+										Automatically approve new applicant registrations
 									</p>
 								</div>
 								<Switch
-									checked={notificationSettings.marketingEmails}
+									checked={adminSettings.autoApproveApplicants}
 									onCheckedChange={() =>
-										handleNotificationToggle("marketingEmails")
+										handleAdminToggle("autoApproveApplicants")
 									}
 								/>
 							</div>
@@ -223,8 +233,8 @@ const ApplicantSettingsSection = () => {
 
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
-						<Shield className="h-5 w-5 text-primary-500" />
-						<CardTitle className="text-xl text-primary-500">Privacy</CardTitle>
+						<UserCog className="h-5 w-5 text-primary-500" />
+						<CardTitle className="text-xl text-primary-500">System Settings</CardTitle>
 					</CardHeader>
 
 					<Separator className="mb-4" />
@@ -233,15 +243,15 @@ const ApplicantSettingsSection = () => {
 						<div className="space-y-4">
 							<div className="flex items-center justify-between">
 								<div>
-									<h3 className="font-medium">Profile Visibility</h3>
+									<h3 className="font-medium">Maintenance Mode</h3>
 									<p className="text-sm text-gray-500">
-										Make your profile visible to employers
+										Temporarily disable the site for maintenance
 									</p>
 								</div>
 								<Switch
-									checked={privacySettings.profileVisibility}
+									checked={systemSettings.maintenanceMode}
 									onCheckedChange={() =>
-										handlePrivacyToggle("profileVisibility")
+										handleSystemToggle("maintenanceMode")
 									}
 								/>
 							</div>
@@ -250,14 +260,14 @@ const ApplicantSettingsSection = () => {
 
 							<div className="flex items-center justify-between">
 								<div>
-									<h3 className="font-medium">Show Contact Information</h3>
+									<h3 className="font-medium">Debug Mode</h3>
 									<p className="text-sm text-gray-500">
-										Allow employers to see your contact details
+										Enable detailed error messages and logging
 									</p>
 								</div>
 								<Switch
-									checked={privacySettings.showContactInfo}
-									onCheckedChange={() => handlePrivacyToggle("showContactInfo")}
+									checked={systemSettings.debugMode}
+									onCheckedChange={() => handleSystemToggle("debugMode")}
 								/>
 							</div>
 
@@ -266,15 +276,15 @@ const ApplicantSettingsSection = () => {
 							<div className="flex items-center justify-between">
 								<div>
 									<h3 className="font-medium">
-										Allow Recruiters to Contact You
+										Allow New Registrations
 									</h3>
 									<p className="text-sm text-gray-500">
-										Receive messages from recruiters about job opportunities
+										Enable new applicant registrations
 									</p>
 								</div>
 								<Switch
-									checked={privacySettings.allowRecruiters}
-									onCheckedChange={() => handlePrivacyToggle("allowRecruiters")}
+									checked={systemSettings.allowNewRegistrations}
+									onCheckedChange={() => handleSystemToggle("allowNewRegistrations")}
 								/>
 							</div>
 						</div>
@@ -284,7 +294,7 @@ const ApplicantSettingsSection = () => {
 				<Card className="border-red-200">
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<Trash2 className="h-5 w-5 text-red-500" />
-						<CardTitle className="text-xl text-red-500">Danger Zone</CardTitle>
+						<CardTitle className="text-xl text-red-500">Account Actions</CardTitle>
 					</CardHeader>
 
 					<Separator className="mb-4 bg-red-100" />
@@ -296,12 +306,12 @@ const ApplicantSettingsSection = () => {
 									Log Out From All Devices
 								</h3>
 								<p className="text-sm text-gray-500 mb-3">
-									This will log you out from all devices where you&apos;re
-									currently signed in
+									This will end all active sessions for your account
 								</p>
 								<Button
 									variant="outline"
 									className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+									onClick={handleLogoutAllDevices}
 								>
 									<LogOut className="h-4 w-4 mr-2" />
 									Log Out Everywhere
@@ -311,17 +321,17 @@ const ApplicantSettingsSection = () => {
 							<Separator />
 
 							<div>
-								<h3 className="font-medium text-gray-900">Delete Account</h3>
+								<h3 className="font-medium text-gray-900">Sign Out</h3>
 								<p className="text-sm text-gray-500 mb-3">
-									Permanently delete your account and all associated data. This
-									action cannot be undone.
+									Log out from your current session
 								</p>
 								<Button
 									variant="outline"
 									className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+									onClick={signOut}
 								>
-									<Trash2 className="h-4 w-4 mr-2" />
-									Delete Account
+									<LogOut className="h-4 w-4 mr-2" />
+									Sign Out
 								</Button>
 							</div>
 						</div>
@@ -332,4 +342,4 @@ const ApplicantSettingsSection = () => {
 	);
 };
 
-export default ApplicantSettingsSection;
+export default AdminSettingsSection; 

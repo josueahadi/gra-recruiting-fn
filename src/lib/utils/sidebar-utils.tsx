@@ -5,7 +5,7 @@ import {
 	FileText,
 	HelpCircle,
 	LayoutDashboard,
-	LogOut,
+	Settings,
 	Users,
 } from "lucide-react";
 
@@ -20,7 +20,7 @@ export function getSidebarLinks(
 	const applicantsIcon = <Users className="h-5 w-5" />;
 	const questionsIcon = <HelpCircle className="h-5 w-5" />;
 	const resultsIcon = <BarChart className="h-5 w-5" />;
-	const logoutIcon = <LogOut className="h-5 w-5" />;
+	const settingsIcon = <Settings className="h-5 w-5" />;
 
 	let links: SidebarItemType[];
 	
@@ -34,7 +34,7 @@ export function getSidebarLinks(
 				activeSection: "/applicant",
 			},
 			{ label: "Exam", href: "/applicant/exam", icon: examIcon },
-			{ label: "Logout", href: "/logout", icon: logoutIcon },
+			{ label: "Settings", href: "/applicant/settings", icon: settingsIcon },
 		];
 	} else {
 		links = [
@@ -42,7 +42,7 @@ export function getSidebarLinks(
 			{ label: "Applicants", href: "/admin/applicants", icon: applicantsIcon },
 			{ label: "Questions", href: "/admin/questions", icon: questionsIcon },
 			{ label: "Results", href: "/admin/results", icon: resultsIcon },
-			{ label: "Logout", href: "/logout", icon: logoutIcon },
+			{ label: "Settings", href: "/admin/settings", icon: settingsIcon },
 		];
 	}
 	
@@ -62,7 +62,9 @@ export function isLinkActive(pathname: string, link: SidebarItemType): boolean {
 	if (link.href.includes("/exam") && pathname.includes("/exam")) return true;
 
 	if (link.activeSection && pathname.includes(link.activeSection)) {
-		if (pathname.includes("dashboard") || pathname.includes("exam"))
+		if (pathname.includes("dashboard") || 
+		    pathname.includes("exam") || 
+		    pathname.includes("settings"))
 			return false;
 
 		return true;

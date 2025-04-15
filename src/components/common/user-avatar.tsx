@@ -90,7 +90,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 		{
 			icon: <User className="mr-2 h-4 w-4" />,
 			label: "Account",
-			href: userType === "admin" ? "/admin/profile" : "/applicant",
+			href: userType === "admin" ? "/admin/settings" : "/applicant/settings",
 		},
 		{
 			icon: <LogOut className="mr-2 h-4 w-4" />,

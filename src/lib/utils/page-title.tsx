@@ -7,6 +7,7 @@ export function getPageTitle(
 		if (pathname.includes("/applicants")) return "Applicants";
 		if (pathname.includes("/questions")) return "Questions";
 		if (pathname.includes("/results")) return "Results";
+		if (pathname.includes("/settings")) return "Settings";
 		return "Dashboard";
 		// biome-ignore lint/style/noUselessElse: <explanation>
 	} else {
@@ -16,6 +17,7 @@ export function getPageTitle(
 		if (pathname.includes("/skills")) return "Skills & Competence";
 		if (pathname.includes("/education")) return "Work & Education";
 		if (pathname.includes("/documents")) return "Documents & Portfolio";
+		if (pathname.includes("/settings")) return "Settings";
 
 		const lastPathSegment = pathname.split("/").pop() || "";
 		return (
