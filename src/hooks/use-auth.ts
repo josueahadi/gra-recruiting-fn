@@ -380,7 +380,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 		// Clear state in Zustand store
 		logout();
 
-		toast.success("You have been signed out");
+		toast.success("You have been logged out");
 
 		router.push("/auth?mode=login");
 	};

@@ -2,13 +2,12 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { jwtDecode } from "jwt-decode";
 
-// Utility function to determine if a path is public
 const publicPaths = [
 	"/",
 	"/auth",
 	"/about",
 	"/contact",
-	"/api/v1/auth", // Allow auth API routes
+	"/api/v1/auth",
 	"/favicon.ico",
 	"/_next",
 	"/images",
@@ -24,7 +23,6 @@ const isPublicPath = (path: string) => {
 	);
 };
 
-// Check if a token is expired
 const isTokenExpired = (token: string): boolean => {
 	try {
 		const decoded = jwtDecode<{exp: number}>(token);
@@ -36,7 +34,6 @@ const isTokenExpired = (token: string): boolean => {
 	}
 };
 
-// Check if a token represents an admin user
 const isAdminRole = (role: string | null): boolean => {
 	if (!role) return false;
 	const upperRole = role.toUpperCase();
@@ -53,16 +50,13 @@ export function middleware(request: NextRequest) {
 		return NextResponse.next();
 	}
 
-	// Allow access to public paths
 	if (isPublicPath(pathname)) {
 		console.log(`[Middleware] Public path access: ${pathname}`);
 		return NextResponse.next();
 	}
 
-	// Get auth token from cookie
 	const authToken = request.cookies.get("auth-token")?.value;
 	
-	// For protected routes
 	if (pathname.startsWith("/applicant") || pathname.startsWith("/admin") || pathname.startsWith("/api/protected")) {
 		// Redirect unauthenticated users to login
 		if (!authToken) {
@@ -87,6 +81,23 @@ export function middleware(request: NextRequest) {
 				if (!isAdminRole(decoded.role)) {
 					console.log(`[Middleware] Non-admin attempted to access: ${pathname}`);
 					const response = NextResponse.redirect(new URL("/applicant/dashboard", request.url));
+					response.headers.set('x-redirect-count', (redirectCount + 1).toString());
+					return response;
+				}
+			} catch (error) {
+				console.error("[Middleware] Error decoding token:", error);
+				const response = NextResponse.redirect(new URL("/auth?mode=login", request.url));
+				response.headers.set('x-redirect-count', (redirectCount + 1).toString());
+				return response;
+			}
+		}
+
+		if (pathname.startsWith("/applicant") && !pathname.startsWith("/admin/applicants")) {
+			try {
+				const decoded = jwtDecode<{role: string}>(authToken);
+				if (isAdminRole(decoded.role)) {
+					console.log(`[Middleware] Admin attempted to access applicant route: ${pathname}`);
+					const response = NextResponse.redirect(new URL("/admin/dashboard", request.url));
 					response.headers.set('x-redirect-count', (redirectCount + 1).toString());
 					return response;
 				}

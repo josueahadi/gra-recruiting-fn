@@ -64,6 +64,17 @@ export function AuthCheck({ children }: { children: React.ReactNode }) {
 				return;
 			}
 		}
+
+		if (pathname.startsWith("/applicant") && token) {
+			const role = getRoleFromToken(token);
+			if (isAdminRole(role)) {
+				console.log("[AuthCheck] Admin user attempting to access applicant-specific route");
+				setIsRedirecting(true);
+				router.replace("/admin/dashboard");
+				setTimeout(() => setIsRedirecting(false), 1000);
+				return;
+			}
+		}
 	}, [isAuthenticated, pathname, router, token, isRedirecting]);
 
 	// Render children directly without loading states
