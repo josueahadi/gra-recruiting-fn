@@ -1,12 +1,5 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import {
-	cleanToken,
-	isAdminRole,
-	isTokenExpired,
-} from "@/lib/utils/auth-utils";
-import { jwtDecode } from "jwt-decode";
-import type { DecodedToken } from "@/types/auth";
 
 const publicPaths = [
 	"/",
@@ -32,78 +25,32 @@ const isPublicPath = (path: string) => {
 export function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl;
 
-	// Allow access to public paths
-	if (isPublicPath(pathname)) {
+	// Check if we're in a redirection loop
+	const redirectCount = parseInt(request.headers.get('x-redirect-count') || '0');
+	if (redirectCount > 2) {
+		console.error(`[Middleware] Detected redirect loop on path: ${pathname}`);
 		return NextResponse.next();
 	}
 
-	const authCookie = request.cookies.get("persist:gra-auth");
-	let token = null;
-	let role = null;
-	let isExpired = true;
-
-	// Try to extract and validate token
-	if (authCookie) {
-		try {
-			const authData = JSON.parse(authCookie.value);
-			let tokenData = null;
-			try {
-				tokenData = JSON.parse(authData.token || "null");
-			} catch (e) {
-				tokenData = authData.token;
-				console.log(
-					`[Middleware] Failed to parse token, using raw value: ${e}`,
-					authData.token,
-				);
-			}
-
-			if (tokenData) {
-				token = cleanToken(tokenData);
-
-				try {
-					const decoded = jwtDecode<DecodedToken>(token);
-					role = decoded?.role;
-					isExpired = isTokenExpired(token);
-
-					if (isExpired) {
-						console.log("[Middleware] Token expired, redirecting to login");
-						token = null;
-						role = null;
-					}
-				} catch (error) {
-					console.error("[Middleware] Error decoding token:", error);
-					token = null;
-					role = null;
-				}
-			}
-		} catch (error) {
-			console.error("[Middleware] Error parsing auth cookie:", error);
-		}
+	// Allow access to public paths
+	if (isPublicPath(pathname)) {
+		console.log(`[Middleware] Public path access: ${pathname}`);
+		return NextResponse.next();
 	}
 
-	// Handle protected routes
-	if (pathname.startsWith("/applicant") || pathname.startsWith("/admin")) {
-		// Redirect unauthenticated users to login
-		if (!token) {
-			console.log(
-				"[Middleware] No valid token, redirecting to login:",
-				pathname,
-			);
-			// Simple redirect to login without callback URL
-			return NextResponse.redirect(new URL("/auth?mode=login", request.url));
-		}
-
-		// Redirect non-admin users trying to access admin routes
-		if (pathname.startsWith("/admin")) {
-			if (!isAdminRole(role)) {
-				console.log("[Middleware] Unauthorized admin access, role:", role);
-				return NextResponse.redirect(
-					new URL("/applicant/dashboard", request.url),
-				);
-			}
-		}
+	// Note: Server middleware cannot access localStorage
+	// We need to use cookies instead, but Zustand uses localStorage
+	// For now, just let the client-side AuthCheck handle auth
+	
+	// For protected routes that must be checked server-side
+	if (pathname.startsWith("/api/protected")) {
+		// This would need a properly synced cookie to verify auth
+		// For now, return next and let client-side handle it
+		return NextResponse.next();
 	}
 
+	// Let client-side handle all auth checks for now
+	console.log(`[Middleware] Proceeding to: ${pathname} (auth checked client-side)`);
 	return NextResponse.next();
 }
 
@@ -114,3 +61,4 @@ export const config = {
 		"/((?!_next/static|_next/image|favicon.ico).*)",
 	],
 };
+

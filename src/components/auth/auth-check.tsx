@@ -1,83 +1,72 @@
 "use client";
 
-import { useAuth } from "@/hooks/use-auth";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useAuthStore } from "@/store/auth";
+import { isProtectedRoute, getRoleFromToken, isAdminRole } from "@/lib/utils/auth-utils";
 
 export function AuthCheck({ children }: { children: React.ReactNode }) {
-	const {
-		isAuthenticated,
-		isLoading,
-		isCheckingAuth,
-		token,
-		isProtectedRoute,
-		getRoleFromToken,
-		isAdminRole,
-	} = useAuth();
+	const { token, isAuthenticated } = useAuthStore();
 	const router = useRouter();
 	const pathname = usePathname();
 	const [isRedirecting, setIsRedirecting] = useState(false);
+	const prevPathRef = useRef(pathname);
 
 	useEffect(() => {
-		if (isRedirecting || isLoading || isCheckingAuth) {
+		// Prevent multiple redirects
+		if (isRedirecting) return;
+		
+		// Skip if path hasn't changed
+		if (prevPathRef.current === pathname) {
+			prevPathRef.current = pathname;
 			return;
 		}
-
+		
+		prevPathRef.current = pathname;
+		
 		// Skip checks on auth pages
 		if (pathname.startsWith("/auth")) {
+			// Redirect authenticated users away from auth pages
+			if (isAuthenticated && token) {
+				// Don't redirect if already navigating away from auth
+				if (pathname === "/auth" || 
+					pathname === "/auth/login" || 
+					pathname === "/auth/signup" ||
+					pathname.includes("mode=")) {
+					const role = getRoleFromToken(token);
+					const dashboardPath = isAdminRole(role) 
+						? "/admin/dashboard" 
+						: "/applicant/dashboard";
+					console.log("[AuthCheck] Redirecting from auth page to:", dashboardPath);
+					setIsRedirecting(true);
+					router.replace(dashboardPath);
+					setTimeout(() => setIsRedirecting(false), 1000);
+				}
+			}
 			return;
 		}
 
-		// Handle unauthorized access to protected routes
 		if (isProtectedRoute(pathname) && !isAuthenticated) {
-			console.log("[AuthCheck] Unauthorized access, redirecting to login");
+			console.log("[AuthCheck] Unauthorized access to protected route:", pathname);
 			setIsRedirecting(true);
-
-			// Simple redirect to login page without callback URL
 			router.replace("/auth?mode=login");
+			setTimeout(() => setIsRedirecting(false), 1000);
 			return;
 		}
 
-		// Handle non-admin users trying to access admin routes
 		if (pathname.startsWith("/admin") && token) {
 			const role = getRoleFromToken(token);
-
 			if (!isAdminRole(role)) {
-				console.log(
-					"[AuthCheck] Not admin, redirecting to applicant dashboard",
-				);
+				console.log("[AuthCheck] Non-admin user attempting to access admin route");
 				setIsRedirecting(true);
 				router.replace("/applicant/dashboard");
+				setTimeout(() => setIsRedirecting(false), 1000);
 				return;
 			}
 		}
-	}, [
-		isAuthenticated,
-		isCheckingAuth,
-		isLoading,
-		isRedirecting,
-		pathname,
-		router,
-		token,
-		isProtectedRoute,
-		getRoleFromToken,
-		isAdminRole,
-	]);
+	}, [isAuthenticated, pathname, router, token, isRedirecting]);
 
-	// Show loading spinner while checking auth or redirecting
-	if (isCheckingAuth || isLoading || isRedirecting) {
-		return (
-			<div className="flex items-center justify-center min-h-screen">
-				<div className="flex gap-2 items-center">
-					<div className="w-4 h-4 rounded-full bg-primary-base animate-pulse" />
-					<div className="w-4 h-4 rounded-full bg-primary-base animate-pulse delay-75" />
-					<div className="w-4 h-4 rounded-full bg-primary-base animate-pulse delay-150" />
-					<span className="ml-2 text-gray-500">Loading...</span>
-				</div>
-			</div>
-		);
-	}
-
+	// Render children directly without loading states
 	return <>{children}</>;
 }
 

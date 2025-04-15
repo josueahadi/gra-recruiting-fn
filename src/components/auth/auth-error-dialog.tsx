@@ -10,11 +10,12 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { useAppSelector } from "@/redux/hooks";
+import { useAuthStore } from "@/store/auth";
 
 export function AuthErrorDialog() {
 	const [open, setOpen] = useState(false);
-	const authError = useAppSelector((state) => state.auth.error);
+	const authError = useAuthStore(state => state.error);
+	const clearError = useAuthStore(state => state.clearError);
 
 	useEffect(() => {
 		if (authError) {
@@ -23,6 +24,11 @@ export function AuthErrorDialog() {
 			setOpen(false);
 		}
 	}, [authError]);
+
+	const handleDismiss = () => {
+		setOpen(false);
+		clearError();
+	};
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
@@ -34,7 +40,7 @@ export function AuthErrorDialog() {
 					</DialogDescription>
 				</DialogHeader>
 				<DialogFooter>
-					<Button onClick={() => setOpen(false)}>Dismiss</Button>
+					<Button onClick={handleDismiss}>Dismiss</Button>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios from "axios";
-import { store } from "@/redux/store";
-import { logout } from "@/redux/slices/auth-slice";
+import { useAuthStore } from "@/store/auth";
 import { cleanToken, isTokenExpired } from "@/lib/utils/auth-utils";
 
 const BASE_URL = "https://jobs-staging.api.growrwanda.com";
@@ -20,7 +19,10 @@ const handleAuthError = () => {
 	if (isLoggingOut) return;
 
 	isLoggingOut = true;
-	store.dispatch(logout());
+	
+	// Use Zustand's logout function
+	const { logout } = useAuthStore.getState();
+	logout();
 
 	if (typeof window !== "undefined") {
 		window.location.href = "/auth?mode=login";
@@ -33,8 +35,7 @@ const handleAuthError = () => {
 
 api.interceptors.request.use(
 	(config) => {
-		const state = store.getState();
-		const token = state.auth.token;
+		const { token } = useAuthStore.getState();
 
 		if (process.env.NODE_ENV === "development") {
 			console.log(

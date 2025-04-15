@@ -3,17 +3,8 @@
 import { api } from "@/services/api";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "@/redux/hooks";
-import {
-	setToken,
-	setLoading,
-	setError,
-	clearError,
-	logout,
-	setUser,
-	initializeAuth,
-} from "@/redux/slices/auth-slice";
+import { useState, useEffect, useCallback } from "react";
+import { useAuthStore } from "@/store/auth";
 import {
 	cleanToken,
 	isProtectedRoute,
@@ -23,7 +14,6 @@ import {
 	type UserType,
 	formatUserName,
 } from "@/lib/utils/auth-utils";
-import { handleApiError } from "@/services/api";
 import { toast } from "react-hot-toast";
 
 interface UseAuthOptions {
@@ -70,28 +60,63 @@ interface UserProfileResponse {
 
 export const useAuth = (options?: UseAuthOptions) => {
 	const [showPassword, setShowPassword] = useState(false);
-	const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 	const [userType, setUserType] = useState<UserType>("applicant");
 	const router = useRouter();
 
-	const dispatch = useAppDispatch();
-	const { user, token, isAuthenticated, isLoading, error, decodedToken } =
-		useAppSelector((state) => state.auth);
+	const { 
+		token, 
+		user, 
+		isAuthenticated, 
+		isLoading, 
+		error,
+		setToken,
+		setUser,
+		setLoading,
+		setError,
+		clearError: storeClearError,
+		logout: storeLogout,
+		initializeAuth: storeInitializeAuth
+	} = useAuthStore();
+
+	// Use memoized callbacks to prevent infinite loops
+	const logout = useCallback(() => {
+		storeLogout();
+	}, [storeLogout]);
+
+	const clearError = useCallback(() => {
+		storeClearError();
+	}, [storeClearError]);
+
+	const initializeAuth = useCallback(() => {
+		storeInitializeAuth();
+	}, [storeInitializeAuth]);
 
 	useEffect(() => {
-		if (token) {
-			if (isTokenExpired(token)) {
-				console.log("[useAuth] Token expired, logging out");
-				toast.error("Your session has expired. Please sign in again.");
-				dispatch(logout());
-			} else {
-				const role = getRoleFromToken(token);
-				setUserType(isAdminRole(role) ? "admin" : "applicant");
-			}
+		if (token && isTokenExpired(token)) {
+			console.log("[Auth] Token expired, logging out");
+			toast.error("Your session has expired. Please sign in again.");
+			logout();
 		}
-	}, [token, dispatch]);
+	}, [token, logout]);
 
-	const handleRedirect = (authToken: string) => {
+	// Update user type based on role
+	useEffect(() => {
+		if (token) {
+			const role = getRoleFromToken(token);
+			setUserType(isAdminRole(role) ? "admin" : "applicant");
+		}
+	}, [token]);
+
+	// Initialize auth on component mount
+	useEffect(() => {
+		initializeAuth();
+	}, [initializeAuth]);
+
+	const handleAuth = useCallback((type: "login" | "signup") => {
+		router.push(`/auth?mode=${type}`);
+	}, [router]);
+
+	const handleRedirect = useCallback((authToken: string) => {
 		const role = getRoleFromToken(authToken);
 
 		// Simple redirect logic based on user role
@@ -103,11 +128,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 		router.replace(redirectPath);
 
 		options?.onSuccess?.();
-	};
-
-	const handleAuth = (type: "login" | "signup") => {
-		router.push(`/auth?mode=${type}`);
-	};
+	}, [router, options]);
 
 	const fetchUserProfile = async (
 		retryCount = 0,
@@ -131,7 +152,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 				isEmailVerified: true,
 			};
 
-			dispatch(setUser(userData));
+			setUser(userData);
 			return data;
 		} catch (error: any) {
 			console.error(
@@ -140,7 +161,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 			);
 
 			if (error.response?.status === 401) {
-				dispatch(logout());
+				logout();
 				return null;
 			}
 
@@ -155,89 +176,66 @@ export const useAuth = (options?: UseAuthOptions) => {
 		}
 	};
 
-	const signInMutation = useMutation({
-		mutationFn: async (credentials: SignInCredentials) => {
-			try {
-				dispatch(setLoading(true));
-				dispatch(clearError());
+	const signIn = async (credentials: SignInCredentials) => {
+		try {
+			setLoading(true);
+			clearError();
 
-				console.log(
-					"[useAuth] Attempting sign in with email:",
-					credentials.email,
-				);
+			console.log("[Auth] Signing in with:", credentials.email);
 
-				const response = await api.post("/api/v1/auth/signin", credentials);
-				return response.data;
-			} catch (error: any) {
-				console.error("[useAuth] Sign in API error:", {
-					message: error.message,
-					status: error.response?.status,
-					data: error.response?.data,
-					url: error.config?.url,
-				});
-
-				throw error;
-			}
-		},
-		onSuccess: async (data) => {
-			const { accessToken } = data;
+			const response = await api.post("/api/v1/auth/signin", credentials);
+			const { accessToken } = response.data;
 
 			if (!accessToken) {
-				console.error("[useAuth] No access token in response:", data);
 				throw new Error("No access token received");
 			}
 
-			console.log(
-				"[useAuth] Sign in successful with token:",
-				`${accessToken.substring(0, 10)}...`,
-			);
-
-			dispatch(setToken(accessToken));
-
-			toast.success("Successfully logged in");
+			console.log("[Auth] Successfully signed in");
+			setToken(accessToken);
 
 			try {
-				console.log("[useAuth] Fetching user profile before redirecting...");
+				// Load user profile
 				await fetchUserProfile();
-
-				handleRedirect(accessToken);
+				
+				// Redirect to appropriate dashboard
+				const role = getRoleFromToken(accessToken);
+				const redirectPath = isAdminRole(role) 
+					? "/admin/dashboard" 
+					: "/applicant/dashboard";
+				
+				console.log("[Auth] Redirecting to:", redirectPath);
+				router.replace(redirectPath);
+				
+				if (options?.onSuccess) {
+					options.onSuccess();
+				}
 			} catch (error) {
-				console.error("[useAuth] Error fetching profile during login:", error);
-				handleRedirect(accessToken);
+				console.error("[Auth] Error loading profile:", error);
+				// Continue with redirect anyway
+				const role = getRoleFromToken(accessToken);
+				const redirectPath = isAdminRole(role) 
+					? "/admin/dashboard" 
+					: "/applicant/dashboard";
+				router.replace(redirectPath);
 			}
-		},
-		onError: (error: any) => {
-			console.error("[useAuth] Sign in error:", error);
-
-			const errorResponse = handleApiError(
-				error,
-				"Invalid credentials. Please try again.",
-			);
-
-			dispatch(setError(errorResponse.message));
-
-			let errorMessage = errorResponse.message;
-
-			if (errorResponse.details?.statusCode === 404) {
-				errorMessage =
-					"This account doesn't exist. Please sign up or verify your email.";
-			} else if (errorResponse.details?.statusCode === 401) {
-				errorMessage = "Invalid password. Please try again.";
+		} catch (error: any) {
+			console.error("[Auth] Sign in error:", error.response?.data || error.message);
+			
+			const errorMessage = error.response?.data?.message || "Authentication failed. Please try again.";
+			setError(errorMessage);
+			
+			if (options?.onError) {
+				options.onError(new Error(errorMessage));
 			}
-
-			toast.error(errorMessage);
-
-			if (options?.onError) options.onError(error);
-		},
-		onSettled: () => {
-			dispatch(setLoading(false));
-		},
-	});
+		} finally {
+			setLoading(false);
+		}
+	};
 
 	const signUpMutation = useMutation({
 		mutationFn: async (data: SignUpData) => {
-			dispatch(setLoading(true));
-			dispatch(clearError());
+			setLoading(true);
+			clearError();
 
 			const response = await api.post("/api/v1/users/signup", {
 				firstName: data.firstName,
@@ -281,14 +279,13 @@ export const useAuth = (options?: UseAuthOptions) => {
 				throw new Error("No access token received");
 			}
 
-			dispatch(setToken(data.accessToken));
+			setToken(data.accessToken);
 
 			toast.success("Your account has been created successfully");
 
 			try {
 				console.log("[useAuth] Fetching user profile before redirecting...");
 				await fetchUserProfile();
-
 				handleRedirect(data.accessToken);
 			} catch (error) {
 				console.error("[useAuth] Error fetching profile during signup:", error);
@@ -296,9 +293,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 			}
 		},
 		onError: (error: any) => {
-			dispatch(
-				setError(error.response?.data?.message || "Registration failed"),
-			);
+			setError(error.response?.data?.message || "Registration failed");
 
 			toast.error(
 				error.response?.data?.message ||
@@ -308,20 +303,20 @@ export const useAuth = (options?: UseAuthOptions) => {
 			options?.onError?.(error);
 		},
 		onSettled: () => {
-			dispatch(setLoading(false));
+			setLoading(false);
 		},
 	});
 
 	const verifyEmailMutation = useMutation({
 		mutationFn: async (code: string) => {
-			dispatch(setLoading(true));
-			dispatch(clearError());
+			setLoading(true);
+			clearError();
 			const { data } = await api.patch("/api/v1/users/verify-email", { code });
 			return data;
 		},
 		onSuccess: (data) => {
 			if (data.accessToken) {
-				dispatch(setToken(data.accessToken));
+				setToken(data.accessToken);
 			}
 
 			toast.success("Your email has been verified successfully");
@@ -329,9 +324,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 			fetchUserProfile();
 		},
 		onError: (error: any) => {
-			dispatch(
-				setError(error.response?.data?.message || "Verification failed"),
-			);
+			setError(error.response?.data?.message || "Verification failed");
 
 			toast.error(
 				error.response?.data?.message ||
@@ -339,7 +332,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 			);
 		},
 		onSettled: () => {
-			dispatch(setLoading(false));
+			setLoading(false);
 		},
 	});
 
@@ -352,35 +345,14 @@ export const useAuth = (options?: UseAuthOptions) => {
 	});
 
 	useEffect(() => {
-		dispatch(initializeAuth());
-
-		if (token && !isTokenExpired(token)) {
-			const role = getRoleFromToken(token);
-			setUserType(isAdminRole(role) ? "admin" : "applicant");
-		} else if (token) {
-			// Token exists but is expired
-			console.log(
-				"[useAuth] Expired token found during initialization, logging out",
-			);
-			dispatch(logout());
-		}
-
-		const authCheckTimer = setTimeout(() => {
-			setIsCheckingAuth(false);
-		}, 1000);
-
-		return () => clearTimeout(authCheckTimer);
-	}, [dispatch, token]);
-
-	useEffect(() => {
 		if (!userQuery.isPending) {
-			setIsCheckingAuth(false);
+			setUserType("applicant");
 		}
 	}, [userQuery.isPending]);
 
 	useEffect(() => {
 		if (!token) {
-			setIsCheckingAuth(false);
+			setUserType("applicant");
 		}
 	}, [token]);
 
@@ -396,9 +368,9 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const signOut = () => {
 		api.defaults.headers.common.Authorization = undefined;
 
-		dispatch(logout());
+		logout();
 
-		toast.success("You have been signed out successfully");
+		toast.success("You have been signed out");
 
 		router.push("/auth?mode=login");
 	};
@@ -408,7 +380,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 			window.location.href = `${api.defaults.baseURL}/api/v1/auth/google`;
 		} catch (error: any) {
 			console.error("[useAuth] Google auth error:", error);
-			dispatch(setError("Google authentication failed"));
+			setError("Google authentication failed");
 
 			toast.error("Failed to authenticate with Google. Please try again.");
 
@@ -417,7 +389,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 	};
 
 	const getUserDisplayName = () => {
-		return formatUserName(user?.firstName, user?.lastName);
+		return user ? formatUserName(user.firstName, user.lastName) : "";
 	};
 
 	return {
@@ -427,25 +399,23 @@ export const useAuth = (options?: UseAuthOptions) => {
 		isAuthenticated,
 		isLoading:
 			isLoading ||
-			signInMutation.isPending ||
 			signUpMutation.isPending ||
 			userQuery.isLoading,
-		isCheckingAuth,
 		error,
 		showPassword,
 		userType,
-		decodedToken,
+		decodedToken: null,
 		displayName: getUserDisplayName(),
 
 		// Actions
 		setShowPassword,
-		signIn: signInMutation.mutate,
+		signIn,
 		signUp: signUpMutation.mutate,
 		signOut,
 		verifyEmail: verifyEmailMutation.mutate,
 		handleGoogleAuth,
 		handleAuth,
-		clearErrors: () => dispatch(clearError()),
+		clearErrors: clearError,
 
 		// Helper methods
 		isProtectedRoute,
@@ -456,5 +426,3 @@ export const useAuth = (options?: UseAuthOptions) => {
 		getUserDisplayName,
 	};
 };
-
-export default useAuth;

@@ -11,7 +11,6 @@ import GoogleAuthButton from "./google-auth-button";
 import { LoginFields } from "./login-fields";
 import ProgressIndicator from "./progress-indicator";
 import Link from "next/link";
-import { toast } from "react-hot-toast";
 
 const REGISTRATION_STEPS = [
 	{ number: 1, label: "Contact Info" },
@@ -46,6 +45,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 	const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 	const [currentStep, setCurrentStep] = useState(1);
 	const [serverError, setServerError] = useState<string | null>(null);
+	const [isAuthInProgress, setIsAuthInProgress] = useState(false);
 
 	const {
 		isLoading,
@@ -57,8 +57,15 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		error: authError,
 		clearErrors,
 	} = useAuth({
-		onSuccess,
+		onSuccess: () => {
+			// Custom success handler that doesn't trigger additional redirects
+			console.log('[AuthForm] Authentication successful, middleware will handle redirection');
+			// Just set the state to indicate success and prevent additional form submissions
+			setIsAuthInProgress(false);
+			if (onSuccess) onSuccess();
+		},
 		onError: (error) => {
+			setIsAuthInProgress(false);
 			const errorMessage =
 				error.message || "Please check your information and try again.";
 			setServerError(errorMessage);
@@ -70,7 +77,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 	useEffect(() => {
 		setServerError(null);
 		clearErrors?.();
-	}, [mode, formData, clearErrors]);
+	}, [mode, clearErrors]);
 
 	useEffect(() => {
 		if (authError) {
@@ -206,9 +213,15 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 	const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		setServerError(null);
+		
+		// Prevent multiple submissions
+		if (isLoading || isAuthInProgress) {
+			return;
+		}
 
 		if (mode === "login") {
 			if (validateLoginForm()) {
+				setIsAuthInProgress(true);
 				signIn({
 					email: formData.email,
 					password: formData.password,
@@ -221,6 +234,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 				}
 			} else {
 				if (validateSignupStep2()) {
+					setIsAuthInProgress(true);
 					signUp({
 						firstName: formData.firstName,
 						lastName: formData.lastName,
@@ -328,30 +342,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 							disabled={isLoading}
 						>
 							{isLoading ? (
-								<span className="flex items-center justify-center">
-									<svg
-										className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-										xmlns="http://www.w3.org/2000/svg"
-										fill="none"
-										viewBox="0 0 24 24"
-									>
-										<title>Loading spinner</title>
-										<circle
-											className="opacity-25"
-											cx="12"
-											cy="12"
-											r="10"
-											stroke="currentColor"
-											strokeWidth="4"
-										/>
-										<path
-											className="opacity-75"
-											fill="currentColor"
-											d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-										/>
-									</svg>
-									{mode === "login" ? "Signing in..." : "Next Step..."}
-								</span>
+								"Please wait..."
 							) : mode === "login" ? (
 								AUTH_CONSTANTS.LOGIN.buttons.submit
 							) : currentStep === 1 ? (
