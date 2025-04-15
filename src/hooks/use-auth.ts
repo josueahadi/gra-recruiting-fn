@@ -111,6 +111,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 	// Initialize auth on component mount
 	useEffect(() => {
+		console.log("[useAuth] Component mounted, initializing auth...");
 		initializeAuth();
 	}, [initializeAuth]);
 
@@ -135,14 +136,26 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const fetchUserProfile = async (
 		retryCount = 0,
 	): Promise<UserProfileResponse | null> => {
-		if (!token) return null;
+		if (!token) {
+			console.log("[useAuth] fetchUserProfile called but no token available");
+			return null;
+		}
+		
 		const MAX_RETRIES = 2;
 
 		try {
+			console.log("[useAuth] Making API request to fetch user profile...");
+			
 			const { data } = await api.get<UserProfileResponse>(
 				"/api/v1/users/view-profile",
 			);
-			console.log("[useAuth] Fetched user profile:", data);
+			
+			console.log("[useAuth] Successfully fetched user profile:", {
+				id: data.id,
+				firstName: data.firstName,
+				lastName: data.lastName,
+				email: data.email
+			});
 
 			const userData = {
 				id: data.id.toString(),
@@ -152,8 +165,10 @@ export const useAuth = (options?: UseAuthOptions) => {
 				role: getRoleFromToken(token) || "USER",
 				phoneNumber: data.phoneNumber,
 				isEmailVerified: true,
+				isTemporary: false // Explicitly mark as not temporary
 			};
 
+			console.log("[useAuth] Setting user data in store");
 			setUser(userData);
 			return data;
 		} catch (error: any) {
@@ -342,12 +357,35 @@ export const useAuth = (options?: UseAuthOptions) => {
 	});
 
 	const userQuery = useQuery({
-		queryKey: ["current-user"],
-		queryFn: () => fetchUserProfile(),
-		enabled: !!token && !user,
+		queryKey: ["current-user", token],
+		queryFn: () => {
+			console.log("[useAuth] Fetching user profile via React Query...");
+			return fetchUserProfile();
+		},
+		enabled: !!token,
 		retry: 2,
 		retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
+		staleTime: 5 * 60 * 1000,
 	});
+
+	// If we have a token but no user data, fetch the profile
+	useEffect(() => {
+		if (token && !user) {
+			console.log("[useAuth] Token exists but no user data, fetching profile...");
+			fetchUserProfile().catch(err => {
+				console.error("[useAuth] Error fetching profile during initialization:", err);
+			});
+		}
+	}, [token, user]);
+
+	useEffect(() => {
+		if (!userQuery.isPending && !userQuery.isError && userQuery.data) {
+			console.log("[useAuth] User query completed successfully");
+			setUserType(user && isAdminRole(user.role) ? "admin" : "applicant");
+		} else if (userQuery.isError) {
+			console.error("[useAuth] User query failed:", userQuery.error);
+		}
+	}, [userQuery.isPending, userQuery.isError, userQuery.data, user, setUserType]);
 
 	useEffect(() => {
 		if (!userQuery.isPending) {

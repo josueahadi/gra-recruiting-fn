@@ -14,6 +14,7 @@ interface User {
   role: string;
   phoneNumber?: string;
   isEmailVerified: boolean;
+  isTemporary?: boolean;
 }
 
 interface AuthState {
@@ -161,17 +162,18 @@ export const useAuthStore = create<AuthState>()(
             lastUpdated: Date.now()
           });
           
-          // Initialize a basic user if none exists
           const { user } = get();
           if (!user && decodedToken) {
+            console.log("[Auth Store] Creating temporary user placeholder until profile loads");
             set({
               user: {
                 id: decodedToken.id.toString(),
-                firstName: "User",
+                firstName: "Loading...",
                 lastName: "",
                 email: "",
                 role: decodedToken.role,
-                isEmailVerified: false
+                isEmailVerified: false,
+                isTemporary: true
               }
             });
           }
