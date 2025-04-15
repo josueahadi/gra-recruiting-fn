@@ -13,6 +13,8 @@ import {
 	isTokenExpired,
 	type UserType,
 	formatUserName,
+	syncTokenToCookie,
+	getTokenFromCookie,
 } from "@/lib/utils/auth-utils";
 import { toast } from "react-hot-toast";
 
@@ -191,6 +193,9 @@ export const useAuth = (options?: UseAuthOptions) => {
 			}
 
 			console.log("[Auth] Successfully signed in");
+			
+			syncTokenToCookie(accessToken);
+			
 			setToken(accessToken);
 
 			try {
@@ -366,8 +371,13 @@ export const useAuth = (options?: UseAuthOptions) => {
 	}, [token]);
 
 	const signOut = () => {
+		// Clear auth token from cookies first for immediate server-side logout
+		syncTokenToCookie(null);
+		
+		// Clear auth header
 		api.defaults.headers.common.Authorization = undefined;
 
+		// Clear state in Zustand store
 		logout();
 
 		toast.success("You have been signed out");

@@ -73,3 +73,29 @@ export const formatUserName = (
 
 	return firstName || lastName || "User";
 };
+
+export const syncTokenToCookie = (token: string | null): void => {
+	if (typeof document === 'undefined') return;
+	
+	if (token) {
+		document.cookie = `auth-token=${token}; path=/; max-age=2592000; SameSite=Lax`;
+	} else {
+		document.cookie = 'auth-token=; path=/; max-age=0';
+	}
+};
+
+export const getTokenFromCookie = (): string | null => {
+	if (typeof document === 'undefined') return null;
+	
+	const cookieString = document.cookie;
+	const cookies = cookieString.split(';');
+	
+	for (const cookie of cookies) {
+		const [name, value] = cookie.trim().split('=');
+		if (name === 'auth-token' && value) {
+			return value;
+		}
+	}
+	
+	return null;
+};

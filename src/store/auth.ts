@@ -3,6 +3,8 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { jwtDecode } from "jwt-decode";
 import type { DecodedToken } from "@/types/auth";
 import { cleanToken } from "@/lib/utils/auth-utils";
+import { useCallback, useEffect, useRef } from "react";
+import { getRoleFromToken, isTokenExpired, getTokenFromCookie } from "@/lib/utils/auth-utils";
 
 interface User {
   id: string;
@@ -54,11 +56,10 @@ const createSyncedStorage = () => {
       const stringValue = JSON.stringify(value);
       localStorage.setItem(name, stringValue);
       
-      // Also set a synchronization cookie with minimal auth info for server middleware
       try {
         // @ts-ignore - We know value has the shape we expect
         if (value?.state?.token) {
-          // Set a simpler cookie with just the token for server middleware
+          // Set a simple auth-token cookie for server middleware to use
           // @ts-ignore - We know we can access this property
           document.cookie = `auth-token=${value.state.token}; path=/; max-age=2592000; SameSite=Lax`;
         } else {
@@ -72,11 +73,24 @@ const createSyncedStorage = () => {
     
     removeItem: async (name: string) => {
       localStorage.removeItem(name);
-      // Clear the cookie
+      // Clear the auth-token cookie
       document.cookie = 'auth-token=; path=/; max-age=0';
     }
   };
 };
+
+export function useInitializeAuth() {
+  const initializeAuth = useAuthStore((state) => state.initializeAuth);
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (!initialized.current) {
+      console.log("[Auth Store] Initializing auth from storage and cookies");
+      initializeAuth();
+      initialized.current = true;
+    }
+  }, [initializeAuth]);
+}
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -90,35 +104,42 @@ export const useAuthStore = create<AuthState>()(
       lastUpdated: Date.now(),
 
       initializeAuth: () => {
-        const { token, lastUpdated } = get();
-        
-        // Only initialize if token exists and state is at least 1 second old
-        // This prevents constant re-initialization during navigation
-        const now = Date.now();
-        if (token && (now - lastUpdated > 1000)) {
-          console.log("[Auth Store] Initializing auth state from token");
-          try {
-            const cleanedToken = cleanToken(token);
-            const decodedToken = jwtDecode<DecodedToken>(cleanedToken);
-            
-            set({
-              token: cleanedToken,
-              isAuthenticated: true,
-              decodedToken,
-              error: null,
-              lastUpdated: now
-            });
-          } catch (error) {
-            console.error("[Auth Store] Failed to initialize auth:", error);
-            set({
-              token: null,
-              user: null,
-              decodedToken: null,
-              isAuthenticated: false,
-              error: "Session invalid. Please login again.",
-              lastUpdated: now
-            });
+        try {
+          console.log("[Auth Store] Initializing auth state");
+          
+          const storeToken = get().token;
+          const cookieToken = typeof window !== 'undefined' ? getTokenFromCookie() : null;
+          
+          const token = cookieToken || storeToken;
+          
+          if (!token) {
+            console.log("[Auth Store] No auth token found during initialization");
+            return;
           }
+
+          if (isTokenExpired(token)) {
+            console.log("[Auth Store] Auth token expired during initialization, logging out");
+            get().logout();
+            return;
+          }
+
+          console.log("[Auth Store] Auth token found and valid, setting state");
+          
+          if (cookieToken && cookieToken !== storeToken) {
+            set({
+              token,
+              decodedToken: jwtDecode(token),
+              isAuthenticated: true,
+              lastUpdated: Date.now(),
+            });
+
+            if (!get().user) {
+              console.log("[Auth Store] User data missing, will trigger profile fetch");
+            }
+          }
+        } catch (error) {
+          console.error("[Auth Store] Error initializing auth:", error);
+          get().logout();
         }
       },
 
