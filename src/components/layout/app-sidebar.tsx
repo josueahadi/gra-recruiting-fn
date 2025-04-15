@@ -34,8 +34,14 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 	mobileClassName,
 }) => {
 	const pathname = usePathname();
-
+	
+	console.log(`[AppSidebar] Rendering sidebar for userType: ${userType}, pathname: ${pathname}`);
+	
 	const links = customLinks || getSidebarLinks(userType);
+	
+	if (userType === 'admin' && links.some(link => link.href.startsWith('/applicant'))) {
+		console.error('[AppSidebar] ERROR: Admin user received applicant links!', { links });
+	}
 
 	const renderSidebar = (mobile = false) => (
 		<aside

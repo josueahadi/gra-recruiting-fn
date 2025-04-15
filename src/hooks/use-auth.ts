@@ -14,7 +14,6 @@ import {
 	type UserType,
 	formatUserName,
 	syncTokenToCookie,
-	getTokenFromCookie,
 } from "@/lib/utils/auth-utils";
 import { toast } from "react-hot-toast";
 
@@ -386,18 +385,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 			console.error("[useAuth] User query failed:", userQuery.error);
 		}
 	}, [userQuery.isPending, userQuery.isError, userQuery.data, user, setUserType]);
-
-	useEffect(() => {
-		if (!userQuery.isPending) {
-			setUserType("applicant");
-		}
-	}, [userQuery.isPending]);
-
-	useEffect(() => {
-		if (!token) {
-			setUserType("applicant");
-		}
-	}, [token]);
 
 	useEffect(() => {
 		if (token) {

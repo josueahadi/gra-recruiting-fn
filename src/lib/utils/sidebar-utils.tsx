@@ -12,6 +12,8 @@ import {
 export function getSidebarLinks(
 	userType: "applicant" | "admin",
 ): SidebarItemType[] {
+	console.log(`[sidebar-utils] Getting sidebar links for userType: ${userType}`);
+	
 	const dashboardIcon = <LayoutDashboard className="h-5 w-5" />;
 	const profileIcon = <CircleUserRound className="h-5 w-5" />;
 	const examIcon = <FileText className="h-5 w-5" />;
@@ -20,8 +22,10 @@ export function getSidebarLinks(
 	const resultsIcon = <BarChart className="h-5 w-5" />;
 	const logoutIcon = <LogOut className="h-5 w-5" />;
 
+	let links: SidebarItemType[];
+	
 	if (userType === "applicant") {
-		return [
+		links = [
 			{ label: "Dashboard", href: "/applicant/dashboard", icon: dashboardIcon },
 			{
 				label: "Profile",
@@ -32,15 +36,22 @@ export function getSidebarLinks(
 			{ label: "Exam", href: "/applicant/exam", icon: examIcon },
 			{ label: "Logout", href: "/logout", icon: logoutIcon },
 		];
+	} else {
+		links = [
+			{ label: "Dashboard", href: "/admin/dashboard", icon: dashboardIcon },
+			{ label: "Applicants", href: "/admin/applicants", icon: applicantsIcon },
+			{ label: "Questions", href: "/admin/questions", icon: questionsIcon },
+			{ label: "Results", href: "/admin/results", icon: resultsIcon },
+			{ label: "Logout", href: "/logout", icon: logoutIcon },
+		];
 	}
-
-	return [
-		{ label: "Dashboard", href: "/admin/dashboard", icon: dashboardIcon },
-		{ label: "Applicants", href: "/admin/applicants", icon: applicantsIcon },
-		{ label: "Questions", href: "/admin/questions", icon: questionsIcon },
-		{ label: "Results", href: "/admin/results", icon: resultsIcon },
-		{ label: "Logout", href: "/logout", icon: logoutIcon },
-	];
+	
+	console.log(`[sidebar-utils] Returning links for ${userType}:`, { 
+		linkCount: links.length,
+		firstLink: links[0]?.href
+	});
+	
+	return links;
 }
 
 export function isLinkActive(pathname: string, link: SidebarItemType): boolean {

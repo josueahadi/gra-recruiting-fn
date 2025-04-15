@@ -1,6 +1,6 @@
 "use client";
 
-import type React from "react";
+import React, { useEffect } from "react";
 import AppLayout from "@/components/layout/app-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { formatUserName } from "@/lib/utils/auth-utils";
@@ -14,9 +14,25 @@ const AppLayoutWrapper: React.FC<AppLayoutWrapperProps> = ({
 	children,
 	forceUserType,
 }) => {
-	const { user, userType, isCheckingAuth } = useAuth();
+	const { user, userType, isLoading, refreshProfile } = useAuth();
 
-	if (isCheckingAuth) {
+	console.log("[AppLayoutWrapper] Current auth state:", { 
+		userType, 
+		hasUser: !!user, 
+		userRole: user?.role,
+		isLoading
+	});
+
+	useEffect(() => {
+		if (!user || user.isTemporary) {
+			console.log("[AppLayoutWrapper] Loading user profile...");
+			refreshProfile().catch(err => {
+				console.error("[AppLayoutWrapper] Error loading profile:", err);
+			});
+		}
+	}, [user, refreshProfile]);
+
+	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center min-h-screen">
 				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base" />
@@ -27,12 +43,14 @@ const AppLayoutWrapper: React.FC<AppLayoutWrapperProps> = ({
 	const userName = formatUserName(user?.firstName, user?.lastName);
 
 	const effectiveUserType = forceUserType || userType;
+	
+	console.log("[AppLayoutWrapper] Using userType:", effectiveUserType);
 
 	return (
 		<AppLayout
 			userType={effectiveUserType}
 			userName={userName}
-			avatarSrc={user?.avatarUrl}
+			avatarSrc="/images/avatar.jpg" 
 		>
 			{children}
 		</AppLayout>
