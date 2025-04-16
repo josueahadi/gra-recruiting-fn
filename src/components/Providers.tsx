@@ -24,8 +24,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 			{children}
 			<ReactQueryDevtools initialIsOpen={false} />
 			<Toaster
-				position="top-right"
+				position="top-center"
 				toastOptions={{
+					duration: 5000,
 					style: {
 						borderRadius: "10px",
 						padding: "16px",

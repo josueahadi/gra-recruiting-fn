@@ -42,6 +42,7 @@ const isAdminRole = (role: string | null): boolean => {
 
 export function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl;
+	console.log(`[Middleware] Processing request for path: ${pathname}`);
 
 	// Check if we're in a redirection loop
 	const redirectCount = parseInt(request.headers.get('x-redirect-count') || '0');
@@ -56,6 +57,7 @@ export function middleware(request: NextRequest) {
 	}
 
 	const authToken = request.cookies.get("auth-token")?.value;
+	console.log(`[Middleware] Auth token present: ${!!authToken}`);
 	
 	if (pathname.startsWith("/applicant") || pathname.startsWith("/admin") || pathname.startsWith("/api/protected")) {
 		// Redirect unauthenticated users to login

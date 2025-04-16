@@ -110,17 +110,45 @@ export const useAuthStore = create<AuthState>()(
           const storeToken = get().token;
           const cookieToken = typeof window !== 'undefined' ? getTokenFromCookie() : null;
           
-          const token = cookieToken || storeToken;
+          // Prefer cookie token over store token, but validate both
+          let token = null;
+          let validToken = null;
           
-          if (!token) {
-            console.log("[Auth Store] No auth token found during initialization");
+          // Try cookie token first
+          if (cookieToken) {
+            try {
+              const cleaned = cleanToken(cookieToken);
+              if (!isTokenExpired(cleaned)) {
+                validToken = cleaned;
+                token = cookieToken;
+              }
+            } catch (e) {
+              console.warn("[Auth Store] Cookie token invalid:", e);
+            }
+          }
+          
+          // Fall back to store token if cookie token invalid
+          if (!validToken && storeToken) {
+            try {
+              const cleaned = cleanToken(storeToken);
+              if (!isTokenExpired(cleaned)) {
+                validToken = cleaned;
+                token = storeToken;
+              }
+            } catch (e) {
+              console.warn("[Auth Store] Store token invalid:", e);
+            }
+          }
+          
+          if (!validToken) {
+            console.log("[Auth Store] No valid auth token found during initialization");
+            get().logout();
             return;
           }
 
           // Clean and validate the token
           try {
-            const cleanedToken = cleanToken(token);
-            const decodedToken = jwtDecode<DecodedToken>(cleanedToken);
+            const decodedToken = jwtDecode<DecodedToken>(validToken);
             
             if (!decodedToken || !decodedToken.role) {
               console.error("[Auth Store] Invalid token structure");
@@ -128,24 +156,17 @@ export const useAuthStore = create<AuthState>()(
               return;
             }
 
-            if (isTokenExpired(cleanedToken)) {
-              console.log("[Auth Store] Auth token expired during initialization, logging out");
-              get().logout();
-              return;
-            }
-
             console.log("[Auth Store] Auth token found and valid, setting state");
             
             set({
-              token: cleanedToken,
+              token: validToken,
               decodedToken,
               isAuthenticated: true,
               lastUpdated: Date.now(),
             });
 
-            if (cookieToken && cookieToken !== storeToken) {
-              syncTokenToCookie(cleanedToken);
-            }
+            // Ensure cookie and store are in sync
+            syncTokenToCookie(validToken);
 
           } catch (error) {
             console.error("[Auth Store] Token validation error:", error);
@@ -160,13 +181,21 @@ export const useAuthStore = create<AuthState>()(
 
       setToken: (token: string) => {
         if (!token) {
+          console.error("[Auth Store] Attempted to set null token");
           set({ error: "Invalid token received" });
           return;
         }
 
         try {
+          console.log("[Auth Store] Setting new token");
           const cleanedToken = cleanToken(token);
           const decodedToken = jwtDecode<DecodedToken>(cleanedToken);
+          
+          console.log("[Auth Store] Token decoded successfully, exp:", decodedToken.exp);
+          
+          // Get the role and determine user type
+          const role = decodedToken.role;
+          const isAdmin = role === 'ADMIN' || role === 'SUPER_ADMIN';
           
           set({
             token: cleanedToken,
@@ -178,14 +207,14 @@ export const useAuthStore = create<AuthState>()(
           
           const { user } = get();
           if (!user && decodedToken) {
-            console.log("[Auth Store] Creating temporary user placeholder until profile loads");
+            console.log("[Auth Store] Creating temporary user placeholder with role:", role);
             set({
               user: {
                 id: decodedToken.id.toString(),
                 firstName: "Loading...",
                 lastName: "",
                 email: "",
-                role: decodedToken.role,
+                role: role,
                 isEmailVerified: false,
                 isTemporary: true
               }
@@ -202,6 +231,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setUser: (user: User) => {
+        console.log("[Auth Store] Setting user with role:", user.role);
         set({ 
           user,
           error: null,

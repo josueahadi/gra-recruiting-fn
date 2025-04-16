@@ -39,7 +39,6 @@ export const getUserType = (role: string | null): UserType => {
 
 export const isTokenExpired = (
 	token: string | null,
-	bufferTimeInSeconds = 300,
 ): boolean => {
 	if (!token) return true;
 
@@ -50,7 +49,7 @@ export const isTokenExpired = (
 		if (!decoded.exp) return true;
 
 		const currentTime = Math.floor(Date.now() / 1000);
-		return decoded.exp <= currentTime + bufferTimeInSeconds;
+		return decoded.exp <= currentTime;
 	} catch (error) {
 		console.error("[Auth Utils] Error checking token expiration:", error);
 		return true;

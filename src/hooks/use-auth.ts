@@ -137,18 +137,25 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const fetchUserProfile = async (
 		retryCount = 0,
 	): Promise<UserProfileResponse | null> => {
-		if (!token) {
-			console.log("[useAuth] fetchUserProfile called but no token available");
+		const currentToken = useAuthStore.getState().token;
+		
+		if (!currentToken) {
+			console.error("[useAuth] fetchUserProfile called but no token in store");
 			return null;
 		}
 		
 		const MAX_RETRIES = 2;
 
 		try {
-			console.log("[useAuth] Making API request to fetch user profile...");
+			console.log("[useAuth] Making API request to fetch user profile with token:", currentToken.substring(0, 10) + "...");
 			
 			const { data } = await api.get<UserProfileResponse>(
 				"/api/v1/users/view-profile",
+				{
+					headers: {
+						Authorization: `Bearer ${cleanToken(currentToken)}`
+					}
+				}
 			);
 			
 			console.log("[useAuth] Successfully fetched user profile:", {
@@ -163,7 +170,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 				firstName: data.firstName,
 				lastName: data.lastName,
 				email: data.email,
-				role: getRoleFromToken(token) || "USER",
+				role: getRoleFromToken(currentToken) || "USER",
 				phoneNumber: data.phoneNumber,
 				isEmailVerified: true,
 				isTemporary: false // Explicitly mark as not temporary
@@ -175,16 +182,18 @@ export const useAuth = (options?: UseAuthOptions) => {
 		} catch (error: any) {
 			console.error(
 				`[useAuth] Error fetching user profile (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`,
-				error,
+				error.response?.status,
+				error.response?.data
 			);
 
 			if (error.response?.status === 401) {
-				logout();
+				console.error("[useAuth] Unauthorized error fetching profile, token may be invalid");
 				return null;
 			}
 
 			if (retryCount < MAX_RETRIES) {
 				const delay = 2 ** retryCount * 500;
+				console.log(`[useAuth] Retrying profile fetch in ${delay}ms...`);
 				await new Promise((resolve) => setTimeout(resolve, delay));
 				return fetchUserProfile(retryCount + 1);
 			}
@@ -225,8 +234,14 @@ export const useAuth = (options?: UseAuthOptions) => {
 			syncTokenToCookie(accessToken);
 			setToken(accessToken);
 
+			api.defaults.headers.common.Authorization = `Bearer ${cleanToken(accessToken)}`;
+
+			// Small delay to ensure token is set
+			await new Promise(resolve => setTimeout(resolve, 100));
+
 			try {
 				// Load user profile
+				console.log("[Auth] Fetching user profile with token:", accessToken.substring(0, 10) + "...");
 				const profile = await fetchUserProfile();
 				
 				if (!profile) {
@@ -251,18 +266,14 @@ export const useAuth = (options?: UseAuthOptions) => {
 					options.onSuccess();
 				}
 			} catch (error) {
-				console.error("[Auth] Error during post-login verification:", error);
-				// Clear everything and force logout on verification failure
-				logout();
-				queryClient.removeQueries({ queryKey: ["current-user"] });
-				syncTokenToCookie(null);
-				throw new Error("Login verification failed. Please try again.");
+				console.error("[Auth] Error after signin:", error);
+				throw error;
 			}
 		} catch (error: any) {
-			console.error("[Auth] Sign in error:", error.response?.data || error.message);
-			
-			const errorMessage = error.response?.data?.message || error.message || "Authentication failed. Please try again.";
+			console.error("[Auth] Signin error:", error);
+			const errorMessage = error.response?.data?.message || error.message || "Login failed. Please try again.";
 			setError(errorMessage);
+			toast.error(errorMessage);
 			
 			// Ensure cleanup on error
 			logout();

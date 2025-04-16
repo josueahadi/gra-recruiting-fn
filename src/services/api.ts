@@ -40,6 +40,7 @@ api.interceptors.request.use(
 		if (process.env.NODE_ENV === "development") {
 			console.log(
 				`[API Request] ${config.method?.toUpperCase()} ${config.url}`,
+				config.data ? { data: config.data } : ''
 			);
 		}
 
@@ -62,6 +63,10 @@ api.interceptors.request.use(
 					config.url,
 				);
 			}
+		} else if (config.url?.includes('/auth/signin') || config.url?.includes('/auth/signup')) {
+			console.log("[API] Making unauthenticated request to auth endpoint");
+		} else {
+			console.log("[API] No auth token available for request");
 		}
 		return config;
 	},
@@ -76,6 +81,7 @@ api.interceptors.response.use(
 		if (process.env.NODE_ENV === "development") {
 			console.log(
 				`[API] ${response.config.method?.toUpperCase()} ${response.config.url} - Status: ${response.status}`,
+				response.data ? { data: response.data } : ''
 			);
 		}
 		return response;
@@ -102,13 +108,21 @@ api.interceptors.response.use(
 					message: error.response.data.message,
 				};
 				console.log("[API] Structured error response:", errorDetails);
+			} else {
+				console.log("[API] Unstructured error response:", error.response.data);
 			}
 		}
 
-		if (error.response.status === 401 && !originalRequest._retry) {
-			console.log("[API] 401 Unauthorized response, logging out");
-			originalRequest._retry = true;
-			handleAuthError();
+		if (error.response.status === 401) {
+			console.log("[API] 401 Unauthorized response");
+			if (!originalRequest._retry && !originalRequest.url?.includes('/auth/signin')) {
+				console.log("[API] Non-login request failed with 401, logging out");
+				originalRequest._retry = true;
+				handleAuthError();
+			} else {
+				console.log("[API] Login request failed with 401");
+				errorMessage = "Invalid email or password";
+			}
 		}
 
 		if (error.response.status === 403) {

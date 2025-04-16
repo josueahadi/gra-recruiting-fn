@@ -16,8 +16,17 @@ const AppLayoutWrapper: React.FC<AppLayoutWrapperProps> = ({
 }) => {
 	const { user, userType, isLoading, refreshProfile } = useAuth();
 
+	const effectiveUserType = React.useMemo(() => {
+		if (forceUserType) return forceUserType;
+		if (user?.role) {
+			const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
+			return isAdmin ? 'admin' : 'applicant';
+		}
+		return userType;
+	}, [forceUserType, user?.role, userType]);
+
 	console.log("[AppLayoutWrapper] Current auth state:", { 
-		userType, 
+		userType: effectiveUserType, 
 		hasUser: !!user, 
 		userRole: user?.role,
 		isLoading
@@ -41,8 +50,6 @@ const AppLayoutWrapper: React.FC<AppLayoutWrapperProps> = ({
 	}
 
 	const userName = formatUserName(user?.firstName, user?.lastName);
-
-	const effectiveUserType = forceUserType || userType;
 	
 	console.log("[AppLayoutWrapper] Using userType:", effectiveUserType);
 
