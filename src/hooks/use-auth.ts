@@ -32,6 +32,7 @@ interface SignUpData {
 	lastName: string;
 	email: string;
 	password: string;
+	phoneNumber: string;
 	career?: string;
 	levelOfEducation?: string;
 	university?: string;

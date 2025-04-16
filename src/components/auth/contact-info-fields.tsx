@@ -3,7 +3,6 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AUTH_CONSTANTS } from "@/constants";
 import { Eye, EyeOff } from "lucide-react";
 import Link from "next/link";
 import PasswordStrengthMeter from "./password-strength-meter";
@@ -14,11 +13,12 @@ interface ContactInfoFieldsProps {
 	email: string;
 	password: string;
 	confirmPassword: string;
+	phoneNumber: string;
 	terms: boolean;
-	errors?: Record<string, string>;
+	errors: Record<string, string>;
 	onInputChange: (name: string, value: string | boolean) => void;
 	showPassword: boolean;
-	setShowPassword: (show: boolean) => void;
+	setShowPassword: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const ContactInfoFields = ({
@@ -27,16 +27,17 @@ export const ContactInfoFields = ({
 	email,
 	password,
 	confirmPassword,
+	phoneNumber,
 	terms,
-	errors = {},
+	errors,
 	onInputChange,
 	showPassword,
 	setShowPassword,
 }: ContactInfoFieldsProps) => {
 	return (
 		<div className="space-y-4">
-			<div className="grid grid-cols-2 gap-4">
-				<div className="space-y-2">
+			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+				<div>
 					<Label htmlFor="firstName">First Name</Label>
 					<Input
 						id="firstName"
@@ -44,15 +45,13 @@ export const ContactInfoFields = ({
 						type="text"
 						value={firstName}
 						onChange={(e) => onInputChange("firstName", e.target.value)}
-						placeholder="First Name"
-						className={`w-full h-12 rounded-xl border-gray-400 bg-white ${errors.firstName ? "border-red-500" : ""}`}
+						className={errors.firstName ? "border-red-500" : ""}
 					/>
 					{errors.firstName && (
-						<p className="text-red-500 text-xs mt-1">{errors.firstName}</p>
+						<p className="text-red-500 text-sm mt-1">{errors.firstName}</p>
 					)}
 				</div>
-
-				<div className="space-y-2">
+				<div>
 					<Label htmlFor="lastName">Last Name</Label>
 					<Input
 						id="lastName"
@@ -60,33 +59,46 @@ export const ContactInfoFields = ({
 						type="text"
 						value={lastName}
 						onChange={(e) => onInputChange("lastName", e.target.value)}
-						placeholder="Last Name"
-						className={`w-full h-12 rounded-xl border-gray-400 bg-white ${errors.lastName ? "border-red-500" : ""}`}
+						className={errors.lastName ? "border-red-500" : ""}
 					/>
 					{errors.lastName && (
-						<p className="text-red-500 text-xs mt-1">{errors.lastName}</p>
+						<p className="text-red-500 text-sm mt-1">{errors.lastName}</p>
 					)}
 				</div>
 			</div>
 
-			<div className="space-y-2">
-				<Label htmlFor="email">Email Address</Label>
+			<div>
+				<Label htmlFor="email">Email</Label>
 				<Input
 					id="email"
 					name="email"
 					type="email"
 					value={email}
 					onChange={(e) => onInputChange("email", e.target.value)}
-					placeholder="Email Address"
-					className={`w-full h-12 rounded-xl border-gray-400 bg-white ${errors.email ? "border-red-500" : ""}`}
-					autoComplete="email"
+					className={errors.email ? "border-red-500" : ""}
 				/>
 				{errors.email && (
-					<p className="text-red-500 text-xs mt-1">{errors.email}</p>
+					<p className="text-red-500 text-sm mt-1">{errors.email}</p>
 				)}
 			</div>
 
-			<div className="space-y-2">
+			<div>
+				<Label htmlFor="phoneNumber">Phone Number</Label>
+				<Input
+					id="phoneNumber"
+					name="phoneNumber"
+					type="tel"
+					value={phoneNumber}
+					onChange={(e) => onInputChange("phoneNumber", e.target.value)}
+					className={errors.phoneNumber ? "border-red-500" : ""}
+					placeholder="+250789000000"
+				/>
+				{errors.phoneNumber && (
+					<p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>
+				)}
+			</div>
+
+			<div>
 				<Label htmlFor="password">Password</Label>
 				<div className="relative">
 					<Input
@@ -95,28 +107,25 @@ export const ContactInfoFields = ({
 						type={showPassword ? "text" : "password"}
 						value={password}
 						onChange={(e) => onInputChange("password", e.target.value)}
-						placeholder="Password"
-						className={`w-full h-12 rounded-xl border-gray-400 bg-white pr-10 ${errors.password ? "border-red-500" : ""}`}
-						autoComplete="new-password"
+						className={errors.password ? "border-red-500" : ""}
 					/>
 					<button
 						type="button"
-						className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
 						onClick={() => setShowPassword(!showPassword)}
-						aria-label={showPassword ? "Hide password" : "Show password"}
+						className="absolute right-3 top-1/2 transform -translate-y-1/2"
 					>
 						{showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
 					</button>
 				</div>
 				{errors.password && (
-					<p className="text-red-500 text-xs mt-1">{errors.password}</p>
+					<p className="text-red-500 text-sm mt-1">{errors.password}</p>
 				)}
 				{password && (
 					<PasswordStrengthMeter password={password} className="mt-2" />
 				)}
 			</div>
 
-			<div className="space-y-2">
+			<div>
 				<Label htmlFor="confirmPassword">Confirm Password</Label>
 				<div className="relative">
 					<Input
@@ -125,15 +134,11 @@ export const ContactInfoFields = ({
 						type={showPassword ? "text" : "password"}
 						value={confirmPassword}
 						onChange={(e) => onInputChange("confirmPassword", e.target.value)}
-						placeholder="Confirm Password"
-						className={`w-full h-12 rounded-xl border-gray-400 bg-white pr-10 ${
-							errors.confirmPassword ? "border-red-500" : ""
-						}`}
-						autoComplete="new-password"
+						className={errors.confirmPassword ? "border-red-500" : ""}
 					/>
 				</div>
 				{errors.confirmPassword && (
-					<p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>
+					<p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
 				)}
 			</div>
 
@@ -141,18 +146,21 @@ export const ContactInfoFields = ({
 				<Checkbox
 					id="terms"
 					checked={terms}
-					onCheckedChange={(checked) =>
-						onInputChange("terms", checked === true)
-					}
+					onCheckedChange={(checked) => onInputChange("terms", checked === true)}
 				/>
-				<label htmlFor="terms" className="text-sm text-gray-700">
-					{AUTH_CONSTANTS.SIGNUP.terms}{" "}
+				<label
+					htmlFor="terms"
+					className={`text-sm ${errors.terms ? "text-red-500" : ""}`}
+				>
+					I agree to the{" "}
 					<Link href="/terms" className="text-primary-base hover:underline">
-						terms & conditions
+						Terms and Conditions
 					</Link>
 				</label>
 			</div>
-			{errors.terms && <p className="text-red-500 text-xs">{errors.terms}</p>}
+			{errors.terms && (
+				<p className="text-red-500 text-sm mt-1">{errors.terms}</p>
+			)}
 		</div>
 	);
 };

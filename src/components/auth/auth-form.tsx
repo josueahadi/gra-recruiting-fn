@@ -14,7 +14,7 @@ import Link from "next/link";
 
 const REGISTRATION_STEPS = [
 	{ number: 1, label: "Contact Info" },
-	{ number: 2, label: "Education Background" },
+	{ number: 2, label: "Background" },
 ];
 
 interface AuthFormProps {
@@ -40,6 +40,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		terms: true,
 		linkedinProfileUrl: "",
 		githubProfileUrl: "",
+		phoneNumber: "",
 	});
 
 	const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -170,6 +171,25 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			isValid = false;
 		}
 
+		if (!formData.phoneNumber) {
+			errors.phoneNumber = "Phone number is required";
+			isValid = false;
+		} else {
+			const cleanNumber = formData.phoneNumber.replace(/[\s\-()]/g, '');
+			const withCountryCode = /^\+250[7][0-9]{8}$/;
+			const withoutCountryCode = /^0[7][0-9]{8}$/;
+			
+			if (!withCountryCode.test(cleanNumber) && !withoutCountryCode.test(cleanNumber)) {
+				errors.phoneNumber = "Please enter a valid Rwanda phone number (+250789000000 or 0789000000)";
+				isValid = false;
+			} else {
+				setFormData(prev => ({
+					...prev,
+					phoneNumber: cleanNumber
+				}));
+			}
+		}
+
 		if (!formData.password) {
 			errors.password = "Password is required";
 			isValid = false;
@@ -235,11 +255,18 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			} else {
 				if (validateSignupStep2()) {
 					setIsAuthInProgress(true);
+					const formattedPhoneNumber = formData.phoneNumber.startsWith('+250') 
+						? formData.phoneNumber
+						: formData.phoneNumber.startsWith('0') 
+							? '+250' + formData.phoneNumber.slice(1) 
+							: '+250' + formData.phoneNumber;
+
 					signUp({
 						firstName: formData.firstName,
 						lastName: formData.lastName,
 						email: formData.email,
 						password: formData.password,
+						phoneNumber: formattedPhoneNumber,
 						career: formData.career,
 						levelOfEducation: formData.levelOfEducation,
 						university: formData.university,
@@ -298,6 +325,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 							email={formData.email}
 							password={formData.password}
 							confirmPassword={formData.confirmPassword}
+							phoneNumber={formData.phoneNumber}
 							terms={formData.terms}
 							errors={formErrors}
 							onInputChange={(name, value) =>
