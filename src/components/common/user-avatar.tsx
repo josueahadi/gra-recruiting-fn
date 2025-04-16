@@ -79,7 +79,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 				console.log("[UserAvatar] Logging out using auth hook...");
 				signOut();
 			}
-			toast.success("You have been signed out successfully");
+			// toast.success("You have been signed out successfully");
 		} catch (error) {
 			console.error("[UserAvatar] Error during logout:", error);
 			toast.error("There was a problem signing out. Please try again.");

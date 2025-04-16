@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Raleway } from "next/font/google";
 import "./globals.css";
 import { BackgroundGradient } from "@/components/layout/background-gradient";
-import { Toaster } from "@/components/ui/toaster";
 import Providers from "@/components/providers";
 import { AuthCheck } from "@/components/auth/auth-check";
 
@@ -27,7 +26,6 @@ export default function RootLayout({
 				<BackgroundGradient />
 				<Providers>
 					<AuthCheck>{children}</AuthCheck>
-					<Toaster />
 				</Providers>
 			</body>
 		</html>

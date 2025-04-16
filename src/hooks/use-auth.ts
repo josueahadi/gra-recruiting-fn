@@ -1,7 +1,7 @@
 "use client";
 
 import { api } from "@/services/api";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { useAuthStore } from "@/store/auth";
@@ -64,6 +64,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const [showPassword, setShowPassword] = useState(false);
 	const [userType, setUserType] = useState<UserType>("applicant");
 	const router = useRouter();
+	const queryClient = useQueryClient();
 
 	const { 
 		token, 
@@ -195,6 +196,10 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 	const signIn = async (credentials: SignInCredentials) => {
 		try {
+			// Clear any existing auth state first
+			logout();
+			queryClient.removeQueries({ queryKey: ["current-user"] });
+			
 			setLoading(true);
 			clearError();
 
@@ -207,15 +212,34 @@ export const useAuth = (options?: UseAuthOptions) => {
 				throw new Error("No access token received");
 			}
 
+			// Validate the token before proceeding
+			try {
+				const role = getRoleFromToken(accessToken);
+				if (!role) {
+					throw new Error("Invalid token received");
+				}
+			} catch (error) {
+				console.error("[Auth] Token validation failed:", error);
+				throw new Error("Invalid authentication token received");
+			}
+
 			console.log("[Auth] Successfully signed in");
 			
 			syncTokenToCookie(accessToken);
-			
 			setToken(accessToken);
 
 			try {
 				// Load user profile
-				await fetchUserProfile();
+				const profile = await fetchUserProfile();
+				
+				if (!profile) {
+					throw new Error("Failed to load user profile");
+				}
+
+				// Validate that the profile email matches the login email
+				if (profile.email.toLowerCase() !== credentials.email.toLowerCase()) {
+					throw new Error("Profile mismatch detected");
+				}
 				
 				// Redirect to appropriate dashboard
 				const role = getRoleFromToken(accessToken);
@@ -224,25 +248,29 @@ export const useAuth = (options?: UseAuthOptions) => {
 					: "/applicant/dashboard";
 				
 				console.log("[Auth] Redirecting to:", redirectPath);
-				router.replace(redirectPath);
+				window.location.href = redirectPath;
 				
 				if (options?.onSuccess) {
 					options.onSuccess();
 				}
 			} catch (error) {
-				console.error("[Auth] Error loading profile:", error);
-				// Continue with redirect anyway
-				const role = getRoleFromToken(accessToken);
-				const redirectPath = isAdminRole(role) 
-					? "/admin/dashboard" 
-					: "/applicant/dashboard";
-				router.replace(redirectPath);
+				console.error("[Auth] Error during post-login verification:", error);
+				// Clear everything and force logout on verification failure
+				logout();
+				queryClient.removeQueries({ queryKey: ["current-user"] });
+				syncTokenToCookie(null);
+				throw new Error("Login verification failed. Please try again.");
 			}
 		} catch (error: any) {
 			console.error("[Auth] Sign in error:", error.response?.data || error.message);
 			
-			const errorMessage = error.response?.data?.message || "Authentication failed. Please try again.";
+			const errorMessage = error.response?.data?.message || error.message || "Authentication failed. Please try again.";
 			setError(errorMessage);
+			
+			// Ensure cleanup on error
+			logout();
+			queryClient.removeQueries({ queryKey: ["current-user"] });
+			syncTokenToCookie(null);
 			
 			if (options?.onError) {
 				options.onError(new Error(errorMessage));
@@ -406,9 +434,16 @@ export const useAuth = (options?: UseAuthOptions) => {
 		// Clear state in Zustand store
 		logout();
 
-		toast.success("You have been logged out");
+		// Clear any cached queries
+		queryClient.removeQueries({ queryKey: ["current-user"] });
 
-		router.push("/auth?mode=login");
+		toast.success("You have been logged out", {
+			duration: 3000,
+			position: "top-center",
+		});
+
+		// Force a page reload to clear any cached state
+		window.location.href = "/auth?mode=login";
 	};
 
 	const handleGoogleAuth = async () => {
