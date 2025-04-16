@@ -4,13 +4,12 @@ import PrimaryCTAButton from "@/components/common/primary-cta-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "react-hot-toast";
 import Image from "next/image";
 import { useState } from "react";
 
 const ContactSection = () => {
 	const [isSubmitting, setIsSubmitting] = useState(false);
-	const { toast } = useToast();
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
@@ -20,19 +19,12 @@ const ContactSection = () => {
 			// Add your contact form submission logic here
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 
-			toast({
-				title: "Success!",
-				description: "Your message has been sent successfully.",
-			});
+			toast.success("Your message has been sent successfully.");
 
 			// Reset form
 			(e.target as HTMLFormElement).reset();
 		} catch {
-			toast({
-				title: "Error",
-				description: "Failed to send message. Please try again.",
-				variant: "destructive",
-			});
+			toast.error("Failed to send message. Please try again.");
 		} finally {
 			setIsSubmitting(false);
 		}

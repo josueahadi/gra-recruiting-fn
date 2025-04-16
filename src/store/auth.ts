@@ -2,9 +2,8 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { jwtDecode } from "jwt-decode";
 import type { DecodedToken } from "@/types/auth";
-import { cleanToken } from "@/lib/utils/auth-utils";
+import { cleanToken, getRoleFromToken, isTokenExpired, getTokenFromCookie, syncTokenToCookie } from "@/lib/utils/auth-utils";
 import { useCallback, useEffect, useRef } from "react";
-import { getRoleFromToken, isTokenExpired, getTokenFromCookie } from "@/lib/utils/auth-utils";
 
 interface User {
   id: string;
@@ -118,25 +117,40 @@ export const useAuthStore = create<AuthState>()(
             return;
           }
 
-          if (isTokenExpired(token)) {
-            console.log("[Auth Store] Auth token expired during initialization, logging out");
-            get().logout();
-            return;
-          }
+          // Clean and validate the token
+          try {
+            const cleanedToken = cleanToken(token);
+            const decodedToken = jwtDecode<DecodedToken>(cleanedToken);
+            
+            if (!decodedToken || !decodedToken.role) {
+              console.error("[Auth Store] Invalid token structure");
+              get().logout();
+              return;
+            }
 
-          console.log("[Auth Store] Auth token found and valid, setting state");
-          
-          if (cookieToken && cookieToken !== storeToken) {
+            if (isTokenExpired(cleanedToken)) {
+              console.log("[Auth Store] Auth token expired during initialization, logging out");
+              get().logout();
+              return;
+            }
+
+            console.log("[Auth Store] Auth token found and valid, setting state");
+            
             set({
-              token,
-              decodedToken: jwtDecode(token),
+              token: cleanedToken,
+              decodedToken,
               isAuthenticated: true,
               lastUpdated: Date.now(),
             });
 
-            if (!get().user) {
-              console.log("[Auth Store] User data missing, will trigger profile fetch");
+            if (cookieToken && cookieToken !== storeToken) {
+              syncTokenToCookie(cleanedToken);
             }
+
+          } catch (error) {
+            console.error("[Auth Store] Token validation error:", error);
+            get().logout();
+            return;
           }
         } catch (error) {
           console.error("[Auth Store] Error initializing auth:", error);

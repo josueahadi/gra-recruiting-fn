@@ -1,6 +1,6 @@
 // import { api } from "@/services/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "react-hot-toast";
 import type {
 	Question,
 	MultipleChoiceQuestion,
@@ -255,7 +255,6 @@ export const getQuestionsBySection = () => {
 };
 
 export function useQuestions(filterParams: QuestionFilterParams = {}) {
-	const { toast } = useToast();
 	const queryClient = useQueryClient();
 
 	const page = filterParams.page || 1;
@@ -406,17 +405,10 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["questions"] });
-			toast({
-				title: "Success",
-				description: "Question has been created successfully.",
-			});
+			toast.success("Question created successfully");
 		},
-		onError: () => {
-			toast({
-				title: "Error",
-				description: "Failed to create question. Please try again.",
-				variant: "destructive",
-			});
+		onError: (error) => {
+			toast.error(`Failed to create question: ${error.message}`);
 		},
 	});
 
@@ -473,17 +465,10 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["questions"] });
-			toast({
-				title: "Success",
-				description: "Question has been updated successfully.",
-			});
+			toast.success("Question updated successfully");
 		},
-		onError: () => {
-			toast({
-				title: "Error",
-				description: "Failed to update question. Please try again.",
-				variant: "destructive",
-			});
+		onError: (error) => {
+			toast.error(`Failed to update question: ${error.message}`);
 		},
 	});
 
@@ -500,17 +485,10 @@ export function useQuestions(filterParams: QuestionFilterParams = {}) {
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ["questions"] });
-			toast({
-				title: "Success",
-				description: "Question has been deleted successfully.",
-			});
+			toast.success("Question deleted successfully");
 		},
-		onError: () => {
-			toast({
-				title: "Error",
-				description: "Failed to delete question. Please try again.",
-				variant: "destructive",
-			});
+		onError: (error) => {
+			toast.error(`Failed to delete question: ${error.message}`);
 		},
 	});
 

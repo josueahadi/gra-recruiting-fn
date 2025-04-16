@@ -196,10 +196,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 	const signIn = async (credentials: SignInCredentials) => {
 		try {
-			// Clear any existing auth state first
-			logout();
-			queryClient.removeQueries({ queryKey: ["current-user"] });
-			
 			setLoading(true);
 			clearError();
 
@@ -225,6 +221,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			console.log("[Auth] Successfully signed in");
 			
+			// Set token in store and cookie
 			syncTokenToCookie(accessToken);
 			setToken(accessToken);
 
@@ -248,7 +245,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 					: "/applicant/dashboard";
 				
 				console.log("[Auth] Redirecting to:", redirectPath);
-				window.location.href = redirectPath;
+				router.replace(redirectPath);
 				
 				if (options?.onSuccess) {
 					options.onSuccess();

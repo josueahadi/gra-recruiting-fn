@@ -11,22 +11,15 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import TextEditor from "@/components/admin/questions/text-editor";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Upload, ArrowLeft } from "lucide-react";
 import { useQuestions } from "@/hooks/use-questions";
-// import type { Question } from "@/types";
+import type { Question } from "@/types";
 
 export default function AddQuestionPage() {
 	const router = useRouter();
-	// const [formData, setFormData] = useState<Partial<Question>>({
-	// 	text: "",
-	// 	excerpt: "",
-	// 	section: "Multiple Choice",
-	// 	type: "multiple-choice",
-	// });
-	const { toast } = useToast();
 	const { createQuestion } = useQuestions();
 	const [isPublishing, setIsPublishing] = useState(false);
 
@@ -59,22 +52,14 @@ export default function AddQuestionPage() {
 
 	const handlePublish = async () => {
 		if (!questionText.trim()) {
-			toast({
-				title: "Missing information",
-				description: "Please enter a question text",
-				variant: "destructive",
-			});
+			toast.error("Please enter a question text");
 			return;
 		}
 
 		if (questionType !== "Essay") {
 			const hasChoices = choices.some((choice) => choice.text.trim() !== "");
 			if (!hasChoices) {
-				toast({
-					title: "Missing information",
-					description: "Please add at least one answer choice",
-					variant: "destructive",
-				});
+				toast.error("Please add at least one answer choice");
 				return;
 			}
 		}
@@ -88,13 +73,12 @@ export default function AddQuestionPage() {
 			const excerpt =
 				textContent.substring(0, 97) + (textContent.length > 97 ? "..." : "");
 
-			// biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
-			let questionData;
+			let questionData: Partial<Question>;
 
 			if (questionType === "Essay") {
 				questionData = {
-					type: "essay" as const,
-					section: "Essay",
+					type: "essay",
+					section: "Essay" as const,
 					text: questionText,
 					excerpt,
 					difficulty: "Medium",
@@ -104,7 +88,7 @@ export default function AddQuestionPage() {
 			} else {
 				questionData = {
 					type: questionType.toLowerCase().replace(/\s+/g, "-"),
-					section: "Multiple Choice",
+					section: "Multiple Choice" as const,
 					text: questionText,
 					excerpt,
 					difficulty: "Medium",
@@ -115,18 +99,12 @@ export default function AddQuestionPage() {
 
 			await createQuestion.mutateAsync(questionData);
 
-			toast({
-				title: "Success",
-				description: "Question published successfully",
-			});
+			toast.success("Question published successfully");
 
 			router.push("/admin/questions");
 		} catch (error) {
-			toast({
-				title: "Error",
-				description: `Failed to publish question: ${error}. Please try again.`,
-				variant: "destructive",
-			});
+			const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+			toast.error(`Failed to publish question: ${errorMessage}`);
 		} finally {
 			setIsPublishing(false);
 		}

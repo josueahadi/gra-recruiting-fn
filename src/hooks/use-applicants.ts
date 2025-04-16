@@ -1,6 +1,6 @@
 // import { api } from "@/services/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import toast from "react-hot-toast";
 
 // Types
 export interface Applicant {
@@ -123,7 +123,6 @@ export interface ApplicantFilterParams {
 }
 
 export function useApplicants(filterParams: ApplicantFilterParams = {}) {
-	const { toast } = useToast();
 	const queryClient = useQueryClient();
 
 	const page = filterParams.page || 1;
@@ -238,17 +237,10 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 		},
 		onSuccess: (id) => {
 			queryClient.invalidateQueries({ queryKey: ["applicants"] });
-			toast({
-				title: "Success",
-				description: `Applicant with id: ${id}, has been deleted successfully.`,
-			});
+			toast.success(`Applicant with id: ${id}, has been deleted successfully.`);
 		},
 		onError: (error) => {
-			toast({
-				title: "Error",
-				description: `Failed to delete applicant: ${error}. Please try again!`,
-				variant: "destructive",
-			});
+			toast.error(`Failed to delete applicant: ${error}. Please try again!`);
 		},
 	});
 
@@ -273,17 +265,10 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 		},
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["applicants"] });
-			toast({
-				title: "Success",
-				description: `Applicant ${data.name} has been created successfully.`,
-			});
+			toast.success(`Applicant ${data.name} has been created successfully.`);
 		},
 		onError: (error) => {
-			toast({
-				title: "Error",
-				description: `Failed to create applicant: ${error} Please try again.`,
-				variant: "destructive",
-			});
+			toast.error(`Failed to create applicant: ${error} Please try again.`);
 		},
 	});
 
@@ -310,17 +295,10 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 		},
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["applicants"] });
-			toast({
-				title: "Success",
-				description: `Applicant ${data.name} has been updated successfully.`,
-			});
+			toast.success(`Applicant ${data.name} has been updated successfully.`);
 		},
 		onError: (error) => {
-			toast({
-				title: "Error",
-				description: `Failed to update applicant: ${error}. Please try again!`,
-				variant: "destructive",
-			});
+			toast.error(`Failed to update applicant: ${error}. Please try again!`);
 		},
 	});
 

@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import { api } from "@/services/api";
 
 export interface ProfileInfo {
 	firstName: string;
@@ -76,6 +78,12 @@ export interface ApplicantData {
 	avatarSrc?: string;
 }
 
+export interface PasswordUpdateData {
+	currentPassword: string;
+	newPassword: string;
+	confirmPassword: string;
+}
+
 interface UseProfileOptions {
 	id?: string;
 	userType: "applicant" | "admin";
@@ -86,8 +94,36 @@ export function useProfile(options: UseProfileOptions) {
 	const [profileData, setProfileData] = useState<ApplicantData | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const { toast } = useToast();
+	const queryClient = useQueryClient();
 	const canEdit = userType === "applicant" || !id;
+
+	const updateProfile = useMutation({
+		mutationFn: async (data: Partial<ApplicantData>) => {
+			await new Promise((resolve) => setTimeout(resolve, 500));
+			return data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["profile"] });
+			toast.success("Profile updated successfully!");
+		},
+		onError: (error) => {
+			toast.error(`Failed to update profile: ${error}. Please try again!`);
+		},
+	});
+
+	const updatePassword = useMutation({
+		mutationFn: async (data: PasswordUpdateData) => {
+			await new Promise((resolve) => setTimeout(resolve, 500));
+			return data;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["profile"] });
+			toast.success("Password updated successfully!");
+		},
+		onError: (error) => {
+			toast.error(`Failed to update password: ${error}. Please try again!`);
+		},
+	});
 
 	useEffect(() => {
 		const fetchProfileData = async () => {
@@ -193,18 +229,14 @@ export function useProfile(options: UseProfileOptions) {
 			} catch (err) {
 				console.error("Error fetching profile data:", err);
 				setError("Failed to load profile data");
-				toast({
-					title: "Error",
-					description: "Failed to load profile data",
-					variant: "destructive",
-				});
+				toast.error("Failed to load profile data");
 			} finally {
 				setIsLoading(false);
 			}
 		};
 
 		fetchProfileData();
-	}, [id, toast]);
+	}, [id]);
 
 	const updatePersonalInfo = useCallback(
 		async (info: ProfileInfo) => {
@@ -221,20 +253,13 @@ export function useProfile(options: UseProfileOptions) {
 						: null,
 				);
 
-				toast({
-					title: "Success",
-					description: "Personal information updated",
-				});
+				toast.success("Personal information updated");
 			} catch (err) {
 				console.error("Error updating personal info:", err);
-				toast({
-					title: "Error",
-					description: "Failed to update personal information",
-					variant: "destructive",
-				});
+				toast.error("Failed to update personal information");
 			}
 		},
-		[profileData, toast],
+		[profileData],
 	);
 
 	const updateAddress = useCallback(
@@ -246,20 +271,13 @@ export function useProfile(options: UseProfileOptions) {
 					prev ? { ...prev, addressInfo: info } : null,
 				);
 
-				toast({
-					title: "Success",
-					description: "Address information updated",
-				});
+				toast.success("Address information updated");
 			} catch (err) {
 				console.error("Error updating address:", err);
-				toast({
-					title: "Error",
-					description: "Failed to update address information",
-					variant: "destructive",
-				});
+				toast.error("Failed to update address information");
 			}
 		},
-		[profileData, toast],
+		[profileData],
 	);
 
 	const updateSkills = useCallback(
@@ -286,20 +304,13 @@ export function useProfile(options: UseProfileOptions) {
 						: null,
 				);
 
-				toast({
-					title: "Success",
-					description: "Skills and languages updated",
-				});
+				toast.success("Skills and languages updated");
 			} catch (err) {
 				console.error("Error updating skills:", err);
-				toast({
-					title: "Error",
-					description: "Failed to update skills and languages",
-					variant: "destructive",
-				});
+				toast.error("Failed to update skills and languages");
 			}
 		},
-		[profileData, toast],
+		[profileData],
 	);
 
 	const updateWorkEducation = useCallback(
@@ -320,20 +331,13 @@ export function useProfile(options: UseProfileOptions) {
 						: null,
 				);
 
-				toast({
-					title: "Success",
-					description: "Work and education information updated",
-				});
+				toast.success("Work and education information updated");
 			} catch (err) {
 				console.error("Error updating work/education:", err);
-				toast({
-					title: "Error",
-					description: "Failed to update work and education information",
-					variant: "destructive",
-				});
+				toast.error("Failed to update work and education information");
 			}
 		},
-		[profileData, toast],
+		[profileData],
 	);
 
 	const uploadFile = useCallback(
@@ -376,20 +380,13 @@ export function useProfile(options: UseProfileOptions) {
 					);
 				}
 
-				toast({
-					title: "Success",
-					description: `${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully`,
-				});
+				toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully`);
 			} catch (err) {
 				console.error(`Error uploading ${type}:`, err);
-				toast({
-					title: "Error",
-					description: `Failed to upload ${type}`,
-					variant: "destructive",
-				});
+				toast.error(`Failed to upload ${type}`);
 			}
 		},
-		[profileData, toast],
+		[profileData],
 	);
 
 	const removeDocument = useCallback(
@@ -425,20 +422,13 @@ export function useProfile(options: UseProfileOptions) {
 					);
 				}
 
-				toast({
-					title: "Success",
-					description: `${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`,
-				});
+				toast.success(`${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`);
 			} catch (err) {
 				console.error(`Error removing ${type}:`, err);
-				toast({
-					title: "Error",
-					description: `Failed to remove ${type}`,
-					variant: "destructive",
-				});
+				toast.error(`Failed to remove ${type}`);
 			}
 		},
-		[profileData, toast],
+		[profileData],
 	);
 
 	const updatePortfolioLinks = useCallback(
@@ -450,20 +440,13 @@ export function useProfile(options: UseProfileOptions) {
 					prev ? { ...prev, portfolioLinks: links } : null,
 				);
 
-				toast({
-					title: "Success",
-					description: "Portfolio links updated",
-				});
+				toast.success("Portfolio links updated");
 			} catch (err) {
 				console.error("Error updating links:", err);
-				toast({
-					title: "Error",
-					description: "Failed to update portfolio links",
-					variant: "destructive",
-				});
+				toast.error("Failed to update portfolio links");
 			}
 		},
-		[profileData, toast],
+		[profileData],
 	);
 
 	return {
@@ -478,5 +461,7 @@ export function useProfile(options: UseProfileOptions) {
 		uploadFile,
 		removeDocument,
 		updatePortfolioLinks,
+		updateProfile,
+		updatePassword,
 	};
 }

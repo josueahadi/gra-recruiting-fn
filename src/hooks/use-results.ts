@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // import { api } from "@/services/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "react-hot-toast";
 
 export interface TestResult {
 	id: string;
@@ -161,7 +161,6 @@ export interface ResultsFilterParams {
 }
 
 export function useResults(filterParams: ResultsFilterParams = {}) {
-	const { toast } = useToast();
 	const queryClient = useQueryClient();
 
 	const page = filterParams.page || 1;
@@ -261,18 +260,10 @@ export function useResults(filterParams: ResultsFilterParams = {}) {
 		},
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["results"] });
-			toast({
-				title: "AI Grading Complete",
-				description: `Result has been graded by AI Assistant with a score of ${data.score}`,
-			});
+			toast.success(`Result has been graded by AI Assistant with a score of ${data.score}`);
 		},
 		onError: (_error) => {
-			toast({
-				title: "Grading Failed",
-				description:
-					"Failed to complete the AI grading process. Please try again.",
-				variant: "destructive",
-			});
+			toast.error("Failed to complete the AI grading process. Please try again.");
 		},
 	});
 
