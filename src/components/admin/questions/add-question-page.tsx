@@ -87,7 +87,7 @@ export default function AddQuestionPage() {
 				};
 			} else {
 				questionData = {
-					type: questionType.toLowerCase().replace(/\s+/g, "-"),
+					type: questionType as "Problem Solving" | "Computer Skills" | "Math" | "Business" | "multiple-choice" | "essay",
 					section: "Multiple Choice" as const,
 					text: questionText,
 					excerpt,

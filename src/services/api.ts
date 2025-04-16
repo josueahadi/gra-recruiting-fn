@@ -121,7 +121,8 @@ api.interceptors.response.use(
 				handleAuthError();
 			} else {
 				console.log("[API] Login request failed with 401");
-				errorMessage = "Invalid email or password";
+				errorMessage = error.response.data?.message || "Invalid email or password";
+				throw new Error(errorMessage);
 			}
 		}
 

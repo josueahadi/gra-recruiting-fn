@@ -210,7 +210,15 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			console.log("[Auth] Signing in with:", credentials.email);
 
-			const response = await api.post("/api/v1/auth/signin", credentials);
+			let response;
+			try {
+				response = await api.post("/api/v1/auth/signin", credentials);
+			} catch (error: any) {
+				console.error("[Auth] API signin error:", error.message);
+				const errorMessage = error.response?.data?.message || error.message || "Invalid email or password";
+				throw new Error(errorMessage);
+			}
+
 			const { accessToken } = response.data;
 
 			if (!accessToken) {
@@ -234,6 +242,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 			syncTokenToCookie(accessToken);
 			setToken(accessToken);
 
+			// Set auth header immediately
 			api.defaults.headers.common.Authorization = `Bearer ${cleanToken(accessToken)}`;
 
 			// Small delay to ensure token is set
