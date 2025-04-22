@@ -44,12 +44,16 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 
 	const handleSave = () => {
 		setIsEditing(false);
-		onInfoUpdate(personalInfo);
+		const updatedInfo = {
+			...personalInfo,
+			email: initialInfo.email,
+		};
+		onInfoUpdate(updatedInfo);
 	};
 
 	const handleCancel = () => {
 		setIsEditing(false);
-		setPersonalInfo(initialInfo); // Reset to initial data
+		setPersonalInfo(initialInfo);
 	};
 
 	const handleAvatarClick = () => {
@@ -172,9 +176,10 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 							<Input
 								name="email"
 								value={personalInfo.email}
-								onChange={handleInfoChange}
-								className="mt-1 border-gray-400/95"
+								className="mt-1 border-gray-400/95 bg-gray-100"
 								type="email"
+								disabled={true}
+								title="Email address cannot be changed"
 							/>
 						) : (
 							<p className="font-normal">{personalInfo.email}</p>
