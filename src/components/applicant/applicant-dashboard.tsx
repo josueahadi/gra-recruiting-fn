@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { MoveRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
+import { useProfile } from "@/hooks/use-profile";
 
 interface ResultData {
 	sectionOne: {
@@ -21,8 +22,15 @@ interface ResultData {
 
 const ApplicantDashboard = () => {
 	const router = useRouter();
+	const {
+		profileData,
+		isLoading: profileLoading,
+		getProfileCompletion,
+	} = useProfile({
+		userType: "applicant",
+	});
 
-	const [completionPercentage, setCompletionPercentage] = useState(100);
+	const [completionPercentage, setCompletionPercentage] = useState(0);
 	const [showResults, setShowResults] = useState(false);
 	const [resultsData, setResultsData] = useState<ResultData>({
 		sectionOne: {
@@ -41,20 +49,27 @@ const ApplicantDashboard = () => {
 		const fetchDashboardData = async () => {
 			setIsLoading(true);
 			try {
-				await new Promise((resolve) => setTimeout(resolve, 800));
+				// If we have profile data, get the completion percentage
+				if (profileData) {
+					const completion = getProfileCompletion();
+					setCompletionPercentage(completion);
+				} else {
+					// Otherwise check for stored completion
+					const urlParams = new URLSearchParams(window.location.search);
+					const completionParam = urlParams.get("completion");
+					const savedCompletion = localStorage.getItem("profileCompletion");
 
-				const urlParams = new URLSearchParams(window.location.search);
-				const completionParam = urlParams.get("completion");
-				const showResultsParam = urlParams.get("showResults");
-
-				const savedCompletion = localStorage.getItem("profileCompletion");
-				if (completionParam) {
-					const newCompletion = Number.parseInt(completionParam, 10);
-					setCompletionPercentage(newCompletion);
-					localStorage.setItem("profileCompletion", newCompletion.toString());
-				} else if (savedCompletion) {
-					setCompletionPercentage(Number.parseInt(savedCompletion, 10));
+					if (completionParam) {
+						const newCompletion = Number.parseInt(completionParam, 10);
+						setCompletionPercentage(newCompletion);
+					} else if (savedCompletion) {
+						setCompletionPercentage(Number.parseInt(savedCompletion, 10));
+					}
 				}
+
+				// Check for results display
+				const urlParams = new URLSearchParams(window.location.search);
+				const showResultsParam = urlParams.get("showResults");
 
 				if (showResultsParam === "true") {
 					setShowResults(true);
@@ -102,7 +117,7 @@ const ApplicantDashboard = () => {
 		};
 
 		fetchDashboardData();
-	}, []);
+	}, [profileData, getProfileCompletion]);
 
 	const getActionButtonLabel = () => {
 		if (showResults) {
@@ -134,10 +149,6 @@ const ApplicantDashboard = () => {
 	const toggleResultsView = () => {
 		setShowResults(!showResults);
 	};
-
-	// const handleCompleteProfileClick = () => {
-	// 	router.push("/applicant");
-	// };
 
 	const formatResultsForDisplay = () => {
 		return [
@@ -192,7 +203,7 @@ const ApplicantDashboard = () => {
 		);
 	};
 
-	if (isLoading) {
+	if (isLoading || profileLoading) {
 		return (
 			<div className="flex items-center justify-center h-64">
 				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base" />
@@ -200,12 +211,17 @@ const ApplicantDashboard = () => {
 		);
 	}
 
+	// Get username from profile if available
+	const userName = profileData
+		? `${profileData.personalInfo.firstName} ${profileData.personalInfo.lastName}`
+		: "John Doe";
+
 	return (
 		<div className="space-y-8">
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 				<div className="md:col-span-2">
 					<WelcomeBanner
-						userName="John Doe"
+						userName={userName}
 						primaryButtonText={getActionButtonLabel()}
 						onPrimaryButtonClick={handleActionButtonClick}
 						showSecondaryButton={completionPercentage === 100 || showResults}

@@ -78,7 +78,7 @@ export default function ProfileContent() {
 
 			{activeSection === "skills" && (
 				<SkillsTab
-					technicalSkills={profileData.skills.technical}
+					technicalSkills={profileData .skills.technical}
 					softSkills={profileData.skills.soft}
 					languages={profileData.languages}
 					department={profileData.department}
