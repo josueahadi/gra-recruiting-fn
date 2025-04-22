@@ -16,7 +16,7 @@ export interface AddressInfo {
 	country: string;
 	city: string;
 	postalCode: string;
-	address: string; // Maps to street in API
+	address: string;
 }
 
 export interface Skill {
@@ -27,7 +27,7 @@ export interface Skill {
 export interface LanguageProficiency {
 	languageId?: number;
 	language: string;
-	level: number; // 1-10 scale for UI, maps to BEGINNER, ELEMENTARY, etc. in API
+	level: number;
 }
 
 export interface Education {
@@ -214,7 +214,6 @@ export function useProfile(options: UseProfileOptions) {
 	const queryClient = useQueryClient();
 	const canEdit = userType === "applicant" || !id;
 
-	// Fetch basic profile data
 	const basicProfileQuery = useQuery({
 		queryKey: ["user-profile", id],
 		queryFn: async () => {
@@ -231,7 +230,6 @@ export function useProfile(options: UseProfileOptions) {
 		enabled: !id, // Only fetch for current user if no id is provided
 	});
 
-	// Fetch detailed profile data (application profile)
 	const detailedProfileQuery = useQuery({
 		queryKey: ["application-profile", id],
 		queryFn: async () => {
@@ -245,22 +243,20 @@ export function useProfile(options: UseProfileOptions) {
 				throw new Error("Failed to load detailed profile data");
 			}
 		},
-		enabled: !!basicProfileQuery.data, // Only fetch after basic profile data is loaded
+		enabled: !!basicProfileQuery.data,
 	});
 
-	// Transform API data to our frontend format
+	// Transform API data to frontend format
 	useEffect(() => {
 		const fetchAndTransformData = async () => {
 			setIsLoading(true);
 			setError(null);
 
 			try {
-				// If we have both profile data responses
 				if (basicProfileQuery.data && detailedProfileQuery.data) {
 					const basicProfile = basicProfileQuery.data;
 					const detailedProfile = detailedProfileQuery.data;
 
-					// Transform the data
 					const transformed: ApplicantData = {
 						id: basicProfile.id.toString(),
 						name: `${basicProfile.firstName} ${basicProfile.lastName}`,
@@ -286,15 +282,15 @@ export function useProfile(options: UseProfileOptions) {
 									name: skill.skillName,
 								}),
 							),
-							soft: [], // API doesn't differentiate, so keeping this empty for now
+							soft: [], // API doesn't differentiate (keeping this empty for now)
 						},
-						// Map languages with appropriate level conversion
+
 						languages: detailedProfile.languagesProficiency.map((lang) => ({
 							languageId: lang.languageId,
 							language: lang.languageName,
 							level: REVERSE_LANGUAGE_LEVEL_MAP[lang.proficiencyLevel] || 5,
 						})),
-						// Map education
+
 						education: detailedProfile.educations.map((edu) => ({
 							id: String(edu.id || Date.now()),
 							institution: edu.institutionName,
@@ -305,7 +301,7 @@ export function useProfile(options: UseProfileOptions) {
 							startYear: formatDateString(edu.dateJoined),
 							endYear: formatDateString(edu.dateGraduated),
 						})),
-						// Map experience
+
 						experience: detailedProfile.experiences.map((exp) => {
 							// Create formatted duration
 							const startDate = formatDateString(exp.startDate);
@@ -324,7 +320,7 @@ export function useProfile(options: UseProfileOptions) {
 									exp.employmentType,
 							};
 						}),
-						// Map documents
+
 						documents: {
 							resume: detailedProfile.documents[0]?.resumeUrl
 								? {
@@ -334,21 +330,19 @@ export function useProfile(options: UseProfileOptions) {
 								: null,
 							samples: [],
 						},
-						// Map portfolio links
+
 						portfolioLinks: {
 							portfolio: detailedProfile.documents[0]?.portfolioUrl || "",
 							github: detailedProfile.documents[0]?.githubProfileUrl || "",
 							behance: detailedProfile.documents[0]?.behanceProfileUrl || "",
 							linkedin: detailedProfile.documents[0]?.linkedinProfileUrl || "",
 						},
-						avatarSrc: "/images/avatar.jpg", // Placeholder, API doesn't provide avatar
+						avatarSrc: "/images/avatar.jpg", // Placeholder (API doesn't provide avatar)
 					};
 
 					setProfileData(transformed);
 				} else if (id) {
-					// For admin viewing a specific user, simulate with mock data for now
-					// This is where we'd make a specific API call to get another user's profile
-					// For now we're using mock data
+					// For admin viewing a specific user, (simulating with mock data for now)
 					await new Promise((resolve) => setTimeout(resolve, 500));
 
 					const mockData: ApplicantData = {
@@ -472,7 +466,6 @@ export function useProfile(options: UseProfileOptions) {
 			let completed = 0;
 			let total = 0;
 
-			// Personal info
 			if (profileData.personalInfo) {
 				total += 5; // 5 fields
 				if (profileData.personalInfo.firstName) completed++;
@@ -482,7 +475,6 @@ export function useProfile(options: UseProfileOptions) {
 				if (profileData.personalInfo.bio) completed++;
 			}
 
-			// Address
 			if (profileData.addressInfo) {
 				total += 4; // 4 fields
 				if (profileData.addressInfo.country) completed++;
@@ -491,32 +483,27 @@ export function useProfile(options: UseProfileOptions) {
 				if (profileData.addressInfo.address) completed++;
 			}
 
-			// Skills
 			if (profileData.skills) {
 				total += 2; // Technical and soft skills
 				if (profileData.skills.technical.length > 0) completed++;
 				if (profileData.skills.soft.length > 0) completed++;
 			}
 
-			// Languages
 			if (profileData.languages) {
 				total += 1;
 				if (profileData.languages.length > 0) completed++;
 			}
 
-			// Education
 			if (profileData.education) {
 				total += 1;
 				if (profileData.education.length > 0) completed++;
 			}
 
-			// Experience
 			if (profileData.experience) {
 				total += 1;
 				if (profileData.experience.length > 0) completed++;
 			}
 
-			// Documents
 			if (profileData.documents) {
 				total += 2;
 				if (profileData.documents.resume) completed++;
@@ -553,7 +540,7 @@ export function useProfile(options: UseProfileOptions) {
 				setIsLoading(true);
 
 				// We don't have a direct endpoint for updating personal information
-				// For now, let's simulate an update by updating the local state only
+				// For now, I am simulating an update by updating the local state only
 				// This is a temporary solution until an appropriate API is provided
 
 				// Update local state
@@ -588,7 +575,7 @@ export function useProfile(options: UseProfileOptions) {
 				setIsLoading(true);
 
 				// We don't have a direct endpoint for updating address information
-				// For now, let's simulate an update by updating the local state only
+				// For now, I am simulating an update by updating the local state only
 				// This is a temporary solution until an appropriate API is provided
 
 				// Update local state
@@ -717,13 +704,10 @@ export function useProfile(options: UseProfileOptions) {
 				// Process education updates
 				const existingEducation = profileData.education || [];
 
-				// For each education entry in the new data
 				for (const edu of data.education) {
-					// Check if this is a new entry or an update to an existing one
 					const existingEntry = existingEducation.find((e) => e.id === edu.id);
 
 					if (!existingEntry) {
-						// New education entry
 						await api.post("/api/v1/applicants/add-education", {
 							institutionName: edu.institution,
 							educationLevel: EDUCATION_LEVEL_MAP[edu.degree] || "BACHELOR", // Default to bachelor
@@ -736,7 +720,6 @@ export function useProfile(options: UseProfileOptions) {
 							),
 						});
 					} else {
-						// Update existing education entry - find the ID from the original ID
 						const originalId = edu.id.includes("-edit-")
 							? edu.id.split("-edit-")[0]
 							: edu.id;
@@ -761,7 +744,6 @@ export function useProfile(options: UseProfileOptions) {
 				// Process experience updates
 				const existingExperience = profileData.experience || [];
 
-				// For each experience entry in the new data
 				for (const exp of data.experience) {
 					// Parse the duration to get start and end dates
 					const durationParts = exp.duration.split("-").map((p) => p.trim());
@@ -773,11 +755,9 @@ export function useProfile(options: UseProfileOptions) {
 							? undefined
 							: endDateWithParentheses.split("(")[0].trim();
 
-					// Check if this is a new entry or an update to an existing one
 					const existingEntry = existingExperience.find((e) => e.id === exp.id);
 
 					if (!existingEntry) {
-						// New experience entry
 						await api.post("/api/v1/applicants/add-experience", {
 							companyName: exp.company,
 							jobTitle: exp.role,
@@ -808,7 +788,6 @@ export function useProfile(options: UseProfileOptions) {
 					}
 				}
 
-				// Update local state
 				setProfileData((prev) =>
 					prev
 						? {
@@ -819,7 +798,6 @@ export function useProfile(options: UseProfileOptions) {
 						: null,
 				);
 
-				// Invalidate queries to refetch data
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
 				toast.success("Work and education information updated");
@@ -840,14 +818,12 @@ export function useProfile(options: UseProfileOptions) {
 			try {
 				setIsLoading(true);
 
-				// Create form data for file upload
 				const formData = new FormData();
 				formData.append("file", file);
 
 				let uploadUrl = "";
 
 				if (type === "avatar") {
-					// Upload profile picture
 					const { data } = await api.post(
 						"/api/v1/users/upload-profile-picture",
 						formData,
@@ -857,14 +833,12 @@ export function useProfile(options: UseProfileOptions) {
 							},
 						},
 					);
-					uploadUrl = data.fileUrl || URL.createObjectURL(file); // Fallback to local URL if API doesn't return URL
+					uploadUrl = data.fileUrl || URL.createObjectURL(file);
 
-					// Update local state for avatar
 					setProfileData((prev) =>
 						prev ? { ...prev, avatarSrc: uploadUrl } : null,
 					);
 				} else if (type === "resume") {
-					// Upload resume
 					const { data } = await api.post(
 						"/api/v1/users/upload-resume",
 						formData,
@@ -876,7 +850,6 @@ export function useProfile(options: UseProfileOptions) {
 					);
 					uploadUrl = data.fileUrl || URL.createObjectURL(file);
 
-					// Update local state for resume
 					setProfileData((prev) =>
 						prev
 							? {
@@ -889,7 +862,6 @@ export function useProfile(options: UseProfileOptions) {
 							: null,
 					);
 				} else if (type === "sample") {
-					// Upload sample work
 					const { data } = await api.post(
 						"/api/v1/users/upload-sample",
 						formData,
@@ -901,7 +873,6 @@ export function useProfile(options: UseProfileOptions) {
 					);
 					uploadUrl = data.fileUrl || URL.createObjectURL(file);
 
-					// Update local state for sample
 					setProfileData((prev) =>
 						prev
 							? {
@@ -918,7 +889,6 @@ export function useProfile(options: UseProfileOptions) {
 					);
 				}
 
-				// Invalidate queries to refetch data
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
 				toast.success(`${file.name} uploaded successfully`);
@@ -940,10 +910,8 @@ export function useProfile(options: UseProfileOptions) {
 				setIsLoading(true);
 
 				if (type === "resume") {
-					// API call to remove resume
 					await api.delete("/api/v1/applicants/delete-resume");
 
-					// Update local state
 					setProfileData((prev) =>
 						prev
 							? {
@@ -957,7 +925,6 @@ export function useProfile(options: UseProfileOptions) {
 					);
 				} else if (type === "sample" && index !== undefined) {
 					// For samples, we don't have a specific API endpoint yet
-					// For now, just update the local state
 					setProfileData((prev) =>
 						prev
 							? {
@@ -973,7 +940,6 @@ export function useProfile(options: UseProfileOptions) {
 					);
 				}
 
-				// Invalidate queries to refetch data
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
 				toast.success(
@@ -996,7 +962,6 @@ export function useProfile(options: UseProfileOptions) {
 			try {
 				setIsLoading(true);
 
-				// Check if documents exist already to determine add vs update
 				const documentsExist =
 					detailedProfileQuery.data?.documents &&
 					detailedProfileQuery.data.documents.length > 0;
@@ -1009,18 +974,15 @@ export function useProfile(options: UseProfileOptions) {
 					portfolioUrl: links.portfolio || "",
 				};
 
-				// Update documents via API
 				await api.patch(
 					"/api/v1/applicants/update-applicantion-documents",
 					documentsPayload,
 				);
 
-				// Update local state
 				setProfileData((prev) =>
 					prev ? { ...prev, portfolioLinks: links } : null,
 				);
 
-				// Invalidate queries to refetch data
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
 				toast.success("Portfolio links updated");
@@ -1108,14 +1070,12 @@ export function useProfile(options: UseProfileOptions) {
 		},
 	});
 
-	// Function to get the profile completion percentage
 	const getProfileCompletion = () => {
 		if (!profileData) return 0;
 
 		let completed = 0;
 		let total = 0;
 
-		// Personal info
 		if (profileData.personalInfo) {
 			total += 5; // 5 fields
 			if (profileData.personalInfo.firstName) completed++;
@@ -1125,7 +1085,6 @@ export function useProfile(options: UseProfileOptions) {
 			if (profileData.personalInfo.bio) completed++;
 		}
 
-		// Address
 		if (profileData.addressInfo) {
 			total += 4; // 4 fields
 			if (profileData.addressInfo.country) completed++;
@@ -1134,26 +1093,22 @@ export function useProfile(options: UseProfileOptions) {
 			if (profileData.addressInfo.address) completed++;
 		}
 
-		// Skills
 		if (profileData.skills) {
 			total += 2; // Technical and soft skills
 			if (profileData.skills.technical.length > 0) completed++;
 			if (profileData.skills.soft.length > 0) completed++;
 		}
 
-		// Languages
 		if (profileData.languages) {
 			total += 1;
 			if (profileData.languages.length > 0) completed++;
 		}
 
-		// Education
 		if (profileData.education) {
 			total += 1;
 			if (profileData.education.length > 0) completed++;
 		}
 
-		// Experience
 		if (profileData.experience) {
 			total += 1;
 			if (profileData.experience.length > 0) completed++;

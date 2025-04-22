@@ -94,9 +94,13 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 			</div>
 
 			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-				{languages.map((lang) => (
+				{languages.map((lang, index) => (
 					<div
-						key={lang.language}
+						key={
+							lang.languageId
+								? `${lang.language}-${lang.languageId}`
+								: `${lang.language}-${index}`
+						}
 						className="bg-blue-50 rounded-lg p-4 relative"
 					>
 						<div className="font-medium text-lg">{lang.language}</div>
