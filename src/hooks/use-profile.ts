@@ -45,6 +45,7 @@ export interface WorkExperience {
 	role: string;
 	duration: string;
 	responsibilities: string;
+	country?: string;
 }
 
 export interface Document {
@@ -318,6 +319,7 @@ export function useProfile(options: UseProfileOptions) {
 								responsibilities:
 									REVERSE_EMPLOYMENT_TYPE_MAP[exp.employmentType] ||
 									exp.employmentType,
+								country: exp.country,
 							};
 						}),
 
@@ -393,6 +395,7 @@ export function useProfile(options: UseProfileOptions) {
 								role: "Web Developer",
 								duration: "Jun 2021 - Present (3 yrs 4 mos)",
 								responsibilities: "Full-time",
+								country: "USA",
 							},
 						],
 						documents: {

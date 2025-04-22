@@ -16,6 +16,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 	const [endDate, setEndDate] = useState("");
 	const [role, setRole] = useState("");
 	const [employmentType, setEmploymentType] = useState("");
+	const [country, setCountry] = useState("Rwanda");
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -78,6 +79,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 				role,
 				duration: `${formattedStartDate} - ${formattedEndDate}${duration ? ` (${duration})` : ""}`,
 				responsibilities: employmentType || "Full-time",
+				country,
 			});
 
 			// Reset form
@@ -86,6 +88,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 			setEndDate("");
 			setRole("");
 			setEmploymentType("");
+			setCountry("Rwanda");
 		}
 	};
 
@@ -136,22 +139,33 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 				/>
 			</div>
 
-			<div>
-				<Label className="block text-sm font-medium mb-1">
-					Employment Type
-				</Label>
-				<select
-					className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
-					value={employmentType}
-					onChange={(e) => setEmploymentType(e.target.value)}
-				>
-					<option value="">Select Employment Type</option>
-					<option value="Full-time">Full-time</option>
-					<option value="Part-time">Part-time</option>
-					<option value="Contract">Contract</option>
-					<option value="Internship">Internship</option>
-					<option value="Freelance">Freelance</option>
-				</select>
+			<div className="grid grid-cols-2 gap-4">
+				<div>
+					<Label className="block text-sm font-medium mb-1">
+						Employment Type
+					</Label>
+					<select
+						className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+						value={employmentType}
+						onChange={(e) => setEmploymentType(e.target.value)}
+					>
+						<option value="">Select Employment Type</option>
+						<option value="Full-time">Full-time</option>
+						<option value="Part-time">Part-time</option>
+						<option value="Contract">Contract</option>
+						<option value="Internship">Internship</option>
+						<option value="Freelance">Freelance</option>
+					</select>
+				</div>
+				<div>
+					<Label className="block text-sm font-medium mb-1">Country</Label>
+					<Input
+						placeholder="Country"
+						value={country}
+						onChange={(e) => setCountry(e.target.value)}
+						required
+					/>
+				</div>
 			</div>
 
 			<Button
