@@ -6,13 +6,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { Bell, Lock, LogOut, Save, Shield, Trash2, UserCog, Users } from "lucide-react";
+import {
+	Bell,
+	Lock,
+	LogOut,
+	Save,
+	Shield,
+	Trash2,
+	UserCog,
+	Users,
+} from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useProfile } from "@/hooks/use-profile";
+import toast from "react-hot-toast";
+import type React from "react";
 
 const AdminSettingsSection = () => {
 	const { user, signOut } = useAuth();
-	
+	const { updatePassword } = useProfile({ userType: "admin" });
+
 	const [passwordForm, setPasswordForm] = useState({
 		currentPassword: "",
 		newPassword: "",
@@ -40,9 +53,7 @@ const AdminSettingsSection = () => {
 		});
 	};
 
-	const handleAdminToggle = (
-		setting: keyof typeof adminSettings,
-	) => {
+	const handleAdminToggle = (setting: keyof typeof adminSettings) => {
 		setAdminSettings({
 			...adminSettings,
 			[setting]: !adminSettings[setting],
@@ -58,7 +69,18 @@ const AdminSettingsSection = () => {
 
 	const handlePasswordSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		console.log("Password change submitted:", passwordForm);
+
+		if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+			toast.error("New password and confirmation don't match");
+			return;
+		}
+
+		updatePassword({
+			currentPassword: passwordForm.currentPassword,
+			newPassword: passwordForm.newPassword,
+			confirmPassword: passwordForm.confirmPassword,
+		});
+
 		setPasswordForm({
 			currentPassword: "",
 			newPassword: "",
@@ -88,9 +110,7 @@ const AdminSettingsSection = () => {
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<Lock className="h-5 w-5 text-primary-500" />
-						<CardTitle className="text-xl text-primary-500">
-							Security
-						</CardTitle>
+						<CardTitle className="text-xl text-primary-500">Security</CardTitle>
 					</CardHeader>
 
 					<Separator className="mb-4" />
@@ -122,7 +142,8 @@ const AdminSettingsSection = () => {
 									required
 								/>
 								<p className="text-xs text-gray-500 mt-1">
-									Password must be at least 8 characters long with a mix of letters, numbers, and symbols.
+									Password must be at least 8 characters long with a mix of
+									letters, numbers, and symbols.
 								</p>
 							</div>
 
@@ -205,9 +226,7 @@ const AdminSettingsSection = () => {
 								</div>
 								<Switch
 									checked={adminSettings.securityAlerts}
-									onCheckedChange={() =>
-										handleAdminToggle("securityAlerts")
-									}
+									onCheckedChange={() => handleAdminToggle("securityAlerts")}
 								/>
 							</div>
 
@@ -234,7 +253,9 @@ const AdminSettingsSection = () => {
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<UserCog className="h-5 w-5 text-primary-500" />
-						<CardTitle className="text-xl text-primary-500">System Settings</CardTitle>
+						<CardTitle className="text-xl text-primary-500">
+							System Settings
+						</CardTitle>
 					</CardHeader>
 
 					<Separator className="mb-4" />
@@ -250,9 +271,7 @@ const AdminSettingsSection = () => {
 								</div>
 								<Switch
 									checked={systemSettings.maintenanceMode}
-									onCheckedChange={() =>
-										handleSystemToggle("maintenanceMode")
-									}
+									onCheckedChange={() => handleSystemToggle("maintenanceMode")}
 								/>
 							</div>
 
@@ -275,16 +294,16 @@ const AdminSettingsSection = () => {
 
 							<div className="flex items-center justify-between">
 								<div>
-									<h3 className="font-medium">
-										Allow New Registrations
-									</h3>
+									<h3 className="font-medium">Allow New Registrations</h3>
 									<p className="text-sm text-gray-500">
 										Enable new applicant registrations
 									</p>
 								</div>
 								<Switch
 									checked={systemSettings.allowNewRegistrations}
-									onCheckedChange={() => handleSystemToggle("allowNewRegistrations")}
+									onCheckedChange={() =>
+										handleSystemToggle("allowNewRegistrations")
+									}
 								/>
 							</div>
 						</div>
@@ -294,7 +313,9 @@ const AdminSettingsSection = () => {
 				<Card className="border-red-200">
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<Trash2 className="h-5 w-5 text-red-500" />
-						<CardTitle className="text-xl text-red-500">Account Actions</CardTitle>
+						<CardTitle className="text-xl text-red-500">
+							Account Actions
+						</CardTitle>
 					</CardHeader>
 
 					<Separator className="mb-4 bg-red-100" />
@@ -342,4 +363,4 @@ const AdminSettingsSection = () => {
 	);
 };
 
-export default AdminSettingsSection; 
+export default AdminSettingsSection;

@@ -9,7 +9,6 @@ export interface ProfileInfo {
 	lastName: string;
 	email: string;
 	phone: string;
-	bio: string;
 }
 
 export interface AddressInfo {
@@ -106,6 +105,14 @@ interface UserProfileResponse {
 	careerName: string | null;
 	createdAt: string;
 	updatedAt: string;
+}
+
+interface ApiError extends Error {
+	response?: {
+		data?: {
+			message?: string;
+		};
+	};
 }
 
 interface SkillRating {
@@ -266,7 +273,6 @@ export function useProfile(options: UseProfileOptions) {
 							lastName: basicProfile.lastName || "",
 							email: basicProfile.email || "",
 							phone: basicProfile.phoneNumber || "",
-							bio: "", // Not provided by the API currently
 						},
 						addressInfo: {
 							country: basicProfile.country || "",
@@ -355,7 +361,6 @@ export function useProfile(options: UseProfileOptions) {
 							lastName: "Doe",
 							email: "johndoe01@gmail.com",
 							phone: "+250 787 435 382",
-							bio: "Full stack developer with experience in React and Node.js",
 						},
 						addressInfo: {
 							country: "Rwanda",
@@ -428,7 +433,6 @@ export function useProfile(options: UseProfileOptions) {
 							lastName: basicProfile.lastName || "",
 							email: basicProfile.email || "",
 							phone: basicProfile.phoneNumber || "",
-							bio: "",
 						},
 						addressInfo: {
 							country: basicProfile.country || "",
@@ -475,7 +479,6 @@ export function useProfile(options: UseProfileOptions) {
 				if (profileData.personalInfo.lastName) completed++;
 				if (profileData.personalInfo.email) completed++;
 				if (profileData.personalInfo.phone) completed++;
-				if (profileData.personalInfo.bio) completed++;
 			}
 
 			if (profileData.addressInfo) {
@@ -542,9 +545,12 @@ export function useProfile(options: UseProfileOptions) {
 			try {
 				setIsLoading(true);
 
-				// We don't have a direct endpoint for updating personal information
-				// For now, I am simulating an update by updating the local state only
-				// This is a temporary solution until an appropriate API is provided
+				// Only include fields we want to update - leave out email
+				await api.patch("/api/v1/users/update-user-profile", {
+					firstName: info.firstName,
+					lastName: info.lastName,
+					phoneNumber: info.phone,
+				});
 
 				// Update local state
 				setProfileData((prev) =>
@@ -561,7 +567,14 @@ export function useProfile(options: UseProfileOptions) {
 				return true;
 			} catch (err) {
 				console.error("Error updating personal info:", err);
-				toast.error("Failed to update personal information");
+
+				// Extract structured error message if available
+				const apiError = err as ApiError;
+				const errorMessage =
+					apiError.response?.data?.message ||
+					"Failed to update personal information";
+
+				toast.error(errorMessage);
 				return false;
 			} finally {
 				setIsLoading(false);
@@ -577,9 +590,13 @@ export function useProfile(options: UseProfileOptions) {
 			try {
 				setIsLoading(true);
 
-				// We don't have a direct endpoint for updating address information
-				// For now, I am simulating an update by updating the local state only
-				// This is a temporary solution until an appropriate API is provided
+				// Only include address fields
+				await api.patch("/api/v1/users/update-user-profile", {
+					country: info.country,
+					city: info.city,
+					postalCode: info.postalCode,
+					street: info.address,
+				});
 
 				// Update local state
 				setProfileData((prev) =>
@@ -590,7 +607,14 @@ export function useProfile(options: UseProfileOptions) {
 				return true;
 			} catch (err) {
 				console.error("Error updating address:", err);
-				toast.error("Failed to update address information");
+
+				// Extract structured error message if available
+				const apiError = err as ApiError;
+				const errorMessage =
+					apiError.response?.data?.message ||
+					"Failed to update address information";
+
+				toast.error(errorMessage);
 				return false;
 			} finally {
 				setIsLoading(false);
@@ -704,7 +728,6 @@ export function useProfile(options: UseProfileOptions) {
 			try {
 				setIsLoading(true);
 
-				// Process education updates
 				const existingEducation = profileData.education || [];
 
 				for (const edu of data.education) {
@@ -713,7 +736,7 @@ export function useProfile(options: UseProfileOptions) {
 					if (!existingEntry) {
 						await api.post("/api/v1/applicants/add-education", {
 							institutionName: edu.institution,
-							educationLevel: EDUCATION_LEVEL_MAP[edu.degree] || "BACHELOR", // Default to bachelor
+							educationLevel: EDUCATION_LEVEL_MAP[edu.degree] || "BACHELOR",
 							program: edu.program,
 							dateJoined: convertUIDateToApiDate(edu.startYear),
 							dateGraduated: convertUIDateToApiDate(
@@ -723,36 +746,39 @@ export function useProfile(options: UseProfileOptions) {
 							),
 						});
 					} else {
-						const originalId = edu.id.includes("-edit-")
-							? edu.id.split("-edit-")[0]
-							: edu.id;
+						if (edu.id) {
+							const originalId = edu.id.includes("-edit-")
+								? edu.id.split("-edit-")[0]
+								: edu.id;
 
-						await api.patch(
-							`/api/v1/applicants/update-education/${originalId}`,
-							{
-								institutionName: edu.institution,
-								educationLevel: EDUCATION_LEVEL_MAP[edu.degree] || "BACHELOR",
-								program: edu.program,
-								dateJoined: convertUIDateToApiDate(edu.startYear),
-								dateGraduated: convertUIDateToApiDate(
-									edu.endYear === "Present"
-										? new Date().toLocaleDateString()
-										: edu.endYear,
-								),
-							},
-						);
+							const educationId = Number.isNaN(Number(originalId))
+								? originalId
+								: Number(originalId);
+
+							await api.patch(
+								`/api/v1/applicants/update-education/${educationId}`,
+								{
+									institutionName: edu.institution,
+									educationLevel: EDUCATION_LEVEL_MAP[edu.degree] || "BACHELOR",
+									program: edu.program,
+									dateJoined: convertUIDateToApiDate(edu.startYear),
+									dateGraduated: convertUIDateToApiDate(
+										edu.endYear === "Present"
+											? new Date().toLocaleDateString()
+											: edu.endYear,
+									),
+								},
+							);
+						}
 					}
 				}
 
-				// Process experience updates
 				const existingExperience = profileData.experience || [];
 
 				for (const exp of data.experience) {
-					// Parse the duration to get start and end dates
 					const durationParts = exp.duration.split("-").map((p) => p.trim());
 					const startDate = durationParts[0];
 					const endDateWithParentheses = durationParts[1];
-					// Extract just the date part before any parentheses
 					const endDate =
 						endDateWithParentheses.split("(")[0].trim() === "Present"
 							? undefined
@@ -766,12 +792,11 @@ export function useProfile(options: UseProfileOptions) {
 							jobTitle: exp.role,
 							employmentType:
 								EMPLOYMENT_TYPE_MAP[exp.responsibilities] || "FULL_TIME",
-							country: "Rwanda", // Default
+							country: exp.country || "Rwanda",
 							startDate: convertUIDateToApiDate(startDate),
 							endDate: endDate ? convertUIDateToApiDate(endDate) : undefined,
 						});
 					} else {
-						// Update existing experience entry - find the ID from the original ID
 						const originalId = exp.id.includes("-edit-")
 							? exp.id.split("-edit-")[0]
 							: exp.id;
@@ -783,7 +808,7 @@ export function useProfile(options: UseProfileOptions) {
 								jobTitle: exp.role,
 								employmentType:
 									EMPLOYMENT_TYPE_MAP[exp.responsibilities] || "FULL_TIME",
-								country: "Rwanda", // Default
+								country: "Rwanda",
 								startDate: convertUIDateToApiDate(startDate),
 								endDate: endDate ? convertUIDateToApiDate(endDate) : undefined,
 							},
@@ -1048,8 +1073,8 @@ export function useProfile(options: UseProfileOptions) {
 	// API mutation for password update
 	const updatePassword = useMutation({
 		mutationFn: async (data: PasswordUpdateData) => {
-			return api.patch("/api/v1/users/update-password", {
-				currentPassword: data.currentPassword,
+			return api.patch("/api/v1/users/update-user-profile", {
+				oldPassword: data.currentPassword,
 				newPassword: data.newPassword,
 			});
 		},
@@ -1057,19 +1082,11 @@ export function useProfile(options: UseProfileOptions) {
 			toast.success("Password updated successfully!");
 		},
 		onError: (error: unknown) => {
-			// Cast to a more specific type with expected properties
-			interface ApiError extends Error {
-				response?: {
-					data?: {
-						message?: string;
-					};
-				};
-			}
 			const apiError = error as ApiError;
-			const errorMessage = apiError.response?.data?.message || apiError.message;
-			toast.error(
-				`Failed to update password: ${errorMessage}. Please try again!`,
-			);
+			// Extract structured error from response
+			const errorMessage =
+				apiError.response?.data?.message || "Failed to update password";
+			toast.error(`${errorMessage}. Please try again!`);
 		},
 	});
 
@@ -1085,7 +1102,6 @@ export function useProfile(options: UseProfileOptions) {
 			if (profileData.personalInfo.lastName) completed++;
 			if (profileData.personalInfo.email) completed++;
 			if (profileData.personalInfo.phone) completed++;
-			if (profileData.personalInfo.bio) completed++;
 		}
 
 		if (profileData.addressInfo) {

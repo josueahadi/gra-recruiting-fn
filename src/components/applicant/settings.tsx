@@ -9,8 +9,12 @@ import { Switch } from "@/components/ui/switch";
 import { Bell, Lock, LogOut, Save, Shield, Trash2 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
+import { useProfile } from "@/hooks/use-profile";
+import toast from "react-hot-toast";
 
 const ApplicantSettingsSection = () => {
+	const { updatePassword } = useProfile({ userType: "applicant" });
+
 	const [passwordForm, setPasswordForm] = useState({
 		currentPassword: "",
 		newPassword: "",
@@ -56,7 +60,18 @@ const ApplicantSettingsSection = () => {
 
 	const handlePasswordSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		console.log("Password change submitted:", passwordForm);
+
+		if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+			toast.error("New password and confirmation don't match");
+			return;
+		}
+
+		updatePassword({
+			currentPassword: passwordForm.currentPassword,
+			newPassword: passwordForm.newPassword,
+			confirmPassword: passwordForm.confirmPassword,
+		});
+
 		setPasswordForm({
 			currentPassword: "",
 			newPassword: "",
