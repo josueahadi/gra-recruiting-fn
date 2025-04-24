@@ -11,6 +11,7 @@ import GoogleAuthButton from "./google-auth-button";
 import { LoginFields } from "./login-fields";
 import ProgressIndicator from "./progress-indicator";
 import Link from "next/link";
+import { showToast } from "@/services/toast";
 
 const REGISTRATION_STEPS = [
 	{ number: 1, label: "Contact Info" },
@@ -60,7 +61,9 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 	} = useAuth({
 		onSuccess: () => {
 			// Custom success handler that doesn't trigger additional redirects
-			console.log('[AuthForm] Authentication successful, middleware will handle redirection');
+			console.log(
+				"[AuthForm] Authentication successful, middleware will handle redirection",
+			);
 			// Just set the state to indicate success and prevent additional form submissions
 			setIsAuthInProgress(false);
 			if (onSuccess) onSuccess();
@@ -78,7 +81,15 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 	useEffect(() => {
 		setServerError(null);
 		clearErrors?.();
-	}, [mode, clearErrors]);
+
+		// Cleanup function to clear data if component unmounts
+		return () => {
+			if (mode === "signup" && currentStep === 1) {
+				// Keep step 1 data in case user comes back
+				clearSignupData(true);
+			}
+		};
+	}, [mode, clearErrors, currentStep]);
 
 	useEffect(() => {
 		if (authError) {
@@ -92,6 +103,53 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			}
 		}
 	}, [authError]);
+
+	// Restore saved form data when component mounts
+	useEffect(() => {
+		if (mode === "signup") {
+			try {
+				const step1DataStr = localStorage.getItem("signupStep1Data");
+				if (step1DataStr) {
+					const step1Data = JSON.parse(step1DataStr);
+					setFormData((prev) => ({
+						...prev,
+						firstName: step1Data.firstName || prev.firstName,
+						lastName: step1Data.lastName || prev.lastName,
+						email: step1Data.email || prev.email,
+						phoneNumber: step1Data.phoneNumber || prev.phoneNumber,
+					}));
+				}
+
+				// Check if there's pending step 2 data (for users who completed step 1)
+				const pendingDataStr = localStorage.getItem("signupPendingData");
+				if (pendingDataStr) {
+					const pendingData = JSON.parse(pendingDataStr);
+
+					// Update form data with saved step 2 values
+					setFormData((prev) => ({
+						...prev,
+						career: pendingData.career || prev.career,
+						levelOfEducation:
+							pendingData.levelOfEducation || prev.levelOfEducation,
+						university: pendingData.university || prev.university,
+						graduationDate: pendingData.graduationDate || prev.graduationDate,
+						major: pendingData.major || prev.major,
+						linkedinProfileUrl:
+							pendingData.linkedinProfileUrl || prev.linkedinProfileUrl,
+						githubProfileUrl:
+							pendingData.githubProfileUrl || prev.githubProfileUrl,
+					}));
+
+					// If we have step 2 data, user likely refreshed while on step 2
+					if (pendingData.career || pendingData.levelOfEducation) {
+						setCurrentStep(2);
+					}
+				}
+			} catch (error) {
+				console.error("Error restoring saved form data:", error);
+			}
+		}
+	}, [mode]);
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value, type, checked } = e.target;
@@ -124,7 +182,20 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		}
 	};
 
+	const clearSignupData = (keepStep1 = false) => {
+		try {
+			if (!keepStep1) {
+				localStorage.removeItem("signupStep1Data");
+			}
+			localStorage.removeItem("signupPendingData");
+		} catch (error) {
+			console.error("Error clearing signup data:", error);
+		}
+	};
+
 	const toggleMode = () => {
+		// Clear signup data when switching modes
+		clearSignupData();
 		router.push(`/auth?mode=${mode === "login" ? "signup" : "login"}`);
 	};
 
@@ -175,17 +246,21 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			errors.phoneNumber = "Phone number is required";
 			isValid = false;
 		} else {
-			const cleanNumber = formData.phoneNumber.replace(/[\s\-()]/g, '');
+			const cleanNumber = formData.phoneNumber.replace(/[\s\-()]/g, "");
 			const withCountryCode = /^\+250[7][0-9]{8}$/;
 			const withoutCountryCode = /^0[7][0-9]{8}$/;
-			
-			if (!withCountryCode.test(cleanNumber) && !withoutCountryCode.test(cleanNumber)) {
-				errors.phoneNumber = "Please enter a valid Rwanda phone number (+250789000000 or 0789000000)";
+
+			if (
+				!withCountryCode.test(cleanNumber) &&
+				!withoutCountryCode.test(cleanNumber)
+			) {
+				errors.phoneNumber =
+					"Please enter a valid Rwanda phone number (+250789000000 or 0789000000)";
 				isValid = false;
 			} else {
-				setFormData(prev => ({
+				setFormData((prev) => ({
 					...prev,
-					phoneNumber: cleanNumber
+					phoneNumber: cleanNumber,
 				}));
 			}
 		}
@@ -232,51 +307,93 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 
 	const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setServerError(null);
-		
-		// Prevent multiple submissions
-		if (isLoading || isAuthInProgress) {
-			return;
-		}
+		setIsAuthInProgress(true);
 
-		if (mode === "login") {
-			if (validateLoginForm()) {
-				setIsAuthInProgress(true);
-				signIn({
+		try {
+			if (mode === "login") {
+				const isValid = validateLoginForm();
+				if (!isValid) {
+					setIsAuthInProgress(false);
+					return;
+				}
+
+				await signIn({
 					email: formData.email,
 					password: formData.password,
 				});
-			}
-		} else {
-			if (currentStep === 1) {
-				if (validateSignupStep1()) {
-					setCurrentStep(2);
-				}
 			} else {
-				if (validateSignupStep2()) {
-					setIsAuthInProgress(true);
-					const formattedPhoneNumber = formData.phoneNumber.startsWith('+250') 
-						? formData.phoneNumber
-						: formData.phoneNumber.startsWith('0') 
-							? '+250' + formData.phoneNumber.slice(1) 
-							: '+250' + formData.phoneNumber;
+				if (currentStep === 1) {
+					const isValid = validateSignupStep1();
+					if (!isValid) {
+						setIsAuthInProgress(false);
+						return;
+					}
 
-					signUp({
+					localStorage.setItem(
+						"signupStep1Data",
+						JSON.stringify({
+							firstName: formData.firstName,
+							lastName: formData.lastName,
+							email: formData.email,
+							phoneNumber: formData.phoneNumber,
+						}),
+					);
+
+					// Call the signup API at step 1
+					const formattedPhoneNumber = formData.phoneNumber.startsWith("+250")
+						? formData.phoneNumber
+						: formData.phoneNumber.startsWith("0")
+							? `+250${formData.phoneNumber.slice(1)}`
+							: `+250${formData.phoneNumber}`;
+
+					await signUp({
 						firstName: formData.firstName,
 						lastName: formData.lastName,
 						email: formData.email,
 						password: formData.password,
 						phoneNumber: formattedPhoneNumber,
-						career: formData.career,
-						levelOfEducation: formData.levelOfEducation,
-						university: formData.university,
-						graduationDate: formData.graduationDate,
-						major: formData.major,
-						linkedinProfileUrl: formData.linkedinProfileUrl,
-						githubProfileUrl: formData.githubProfileUrl,
 					});
+
+					// Save email for verification pending page
+					localStorage.setItem("pendingVerificationEmail", formData.email);
+
+					// Redirect to verification pending page
+					router.push("/auth/verification-pending");
+				} else {
+					const isValid = validateSignupStep2();
+					if (!isValid) {
+						setIsAuthInProgress(false);
+						return;
+					}
+
+					// Save step 2 data
+					localStorage.setItem(
+						"signupPendingData",
+						JSON.stringify({
+							career: formData.career,
+							levelOfEducation: formData.levelOfEducation,
+							university: formData.university,
+							graduationDate: formData.graduationDate,
+							major: formData.major,
+							linkedinProfileUrl: formData.linkedinProfileUrl,
+							githubProfileUrl: formData.githubProfileUrl,
+						}),
+					);
+
+					showToast({
+						title: "Profile data saved",
+						description: "Please complete email verification to continue.",
+						variant: "success",
+					});
+
+					// Redirect to verification pending page
+					router.push("/auth/verification-pending");
 				}
 			}
+		} catch (error) {
+			console.error("[AuthForm] Form submission error:", error);
+			setIsAuthInProgress(false);
+			showToast("An error occurred. Please try again.", { type: "error" });
 		}
 	};
 
@@ -306,12 +423,12 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 							onEmailChange={(value) =>
 								handleInputChange({
 									target: { name: "email", value, type: "text" },
-								} as any)
+								} as React.ChangeEvent<HTMLInputElement>)
 							}
 							onPasswordChange={(value) =>
 								handleInputChange({
 									target: { name: "password", value, type: "text" },
-								} as any)
+								} as React.ChangeEvent<HTMLInputElement>)
 							}
 							showPassword={showPassword}
 							setShowPassword={setShowPassword}
@@ -335,7 +452,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 										value,
 										type: typeof value === "boolean" ? "checkbox" : "text",
 									},
-								} as any)
+								} as React.ChangeEvent<HTMLInputElement>)
 							}
 							showPassword={showPassword}
 							setShowPassword={setShowPassword}
@@ -355,7 +472,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 							onInputChange={(name, value) =>
 								handleInputChange({
 									target: { name, value, type: "text" },
-								} as any)
+								} as React.ChangeEvent<HTMLInputElement>)
 							}
 							onSelectChange={handleSelectChange}
 							onBack={() => setCurrentStep(1)}
@@ -363,21 +480,19 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 						/>
 					)}
 
-					{(mode === "login" || (mode === "signup" && currentStep === 1)) && (
+					{(mode === "login" || mode === "signup") && (
 						<Button
 							type="submit"
 							className="w-full h-12 rounded-xl bg-primary-base hover:bg-primary-dark text-white font-semibold"
 							disabled={isLoading}
 						>
-							{isLoading ? (
-								"Please wait..."
-							) : mode === "login" ? (
-								AUTH_CONSTANTS.LOGIN.buttons.submit
-							) : currentStep === 1 ? (
-								AUTH_CONSTANTS.SIGNUP.buttons.next
-							) : (
-								AUTH_CONSTANTS.SIGNUP.buttons.submit
-							)}
+							{isLoading
+								? "Please wait..."
+								: mode === "login"
+									? AUTH_CONSTANTS.LOGIN.buttons.submit
+									: currentStep === 1
+										? AUTH_CONSTANTS.SIGNUP.buttons.next
+										: "Save & Continue"}
 						</Button>
 					)}
 				</form>

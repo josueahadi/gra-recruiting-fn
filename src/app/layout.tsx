@@ -4,6 +4,7 @@ import "./globals.css";
 import { BackgroundGradient } from "@/components/layout/background-gradient";
 import Providers from "@/components/providers";
 import { AuthCheck } from "@/components/auth/auth-check";
+import { ToastProvider } from "@/services/toast";
 
 const raleway = Raleway({
 	subsets: ["latin"],
@@ -25,7 +26,9 @@ export default function RootLayout({
 			<body className={`${raleway.variable} font-sans antialiased`}>
 				<BackgroundGradient />
 				<Providers>
-					<AuthCheck>{children}</AuthCheck>
+					<ToastProvider>
+						<AuthCheck>{children}</AuthCheck>
+					</ToastProvider>
 				</Providers>
 			</body>
 		</html>

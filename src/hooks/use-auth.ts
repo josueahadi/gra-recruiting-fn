@@ -1,6 +1,7 @@
 "use client";
 
 import { api } from "@/services/api";
+import type { ApiError } from "@/types/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
@@ -15,7 +16,7 @@ import {
 	formatUserName,
 	syncTokenToCookie,
 } from "@/lib/utils/auth-utils";
-import { toast } from "react-hot-toast";
+import { showToast } from "@/services/toast";
 
 interface UseAuthOptions {
 	onSuccess?: () => void;
@@ -66,11 +67,11 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const router = useRouter();
 	const queryClient = useQueryClient();
 
-	const { 
-		token, 
-		user, 
-		isAuthenticated, 
-		isLoading, 
+	const {
+		token,
+		user,
+		isAuthenticated,
+		isLoading,
 		error,
 		setToken,
 		setUser,
@@ -78,10 +79,9 @@ export const useAuth = (options?: UseAuthOptions) => {
 		setError,
 		clearError: storeClearError,
 		logout: storeLogout,
-		initializeAuth: storeInitializeAuth
+		initializeAuth: storeInitializeAuth,
 	} = useAuthStore();
 
-	// Use memoized callbacks to prevent infinite loops
 	const logout = useCallback(() => {
 		storeLogout();
 	}, [storeLogout]);
@@ -97,12 +97,13 @@ export const useAuth = (options?: UseAuthOptions) => {
 	useEffect(() => {
 		if (token && isTokenExpired(token)) {
 			console.log("[Auth] Token expired, logging out");
-			toast.error("Your session has expired. Please sign in again.");
+			showToast("Your session has expired. Please sign in again.", {
+				type: "error",
+			});
 			logout();
 		}
 	}, [token, logout]);
 
-	// Update user type based on role
 	useEffect(() => {
 		if (token) {
 			const role = getRoleFromToken(token);
@@ -110,59 +111,66 @@ export const useAuth = (options?: UseAuthOptions) => {
 		}
 	}, [token]);
 
-	// Initialize auth on component mount
 	useEffect(() => {
 		console.log("[useAuth] Component mounted, initializing auth...");
 		initializeAuth();
 	}, [initializeAuth]);
 
-	const handleAuth = useCallback((type: "login" | "signup") => {
-		router.push(`/auth?mode=${type}`);
-	}, [router]);
+	const handleAuth = useCallback(
+		(type: "login" | "signup") => {
+			router.push(`/auth?mode=${type}`);
+		},
+		[router],
+	);
 
-	const handleRedirect = useCallback((authToken: string) => {
-		const role = getRoleFromToken(authToken);
+	const handleRedirect = useCallback(
+		(authToken: string) => {
+			const role = getRoleFromToken(authToken);
 
-		// Simple redirect logic based on user role
-		const redirectPath = isAdminRole(role)
-			? "/admin/dashboard"
-			: "/applicant/dashboard";
+			const redirectPath = isAdminRole(role)
+				? "/admin/dashboard"
+				: "/applicant/dashboard";
 
-		console.log("[useAuth] Redirecting to:", redirectPath);
-		router.replace(redirectPath);
+			console.log("[useAuth] Redirecting to:", redirectPath);
+			router.replace(redirectPath);
 
-		options?.onSuccess?.();
-	}, [router, options]);
+			options?.onSuccess?.();
+		},
+		[router, options],
+	);
 
 	const fetchUserProfile = async (
 		retryCount = 0,
 	): Promise<UserProfileResponse | null> => {
 		const currentToken = useAuthStore.getState().token;
-		
+
 		if (!currentToken) {
 			console.error("[useAuth] fetchUserProfile called but no token in store");
 			return null;
 		}
-		
+
 		const MAX_RETRIES = 2;
 
 		try {
-			console.log("[useAuth] Making API request to fetch user profile with token:", currentToken.substring(0, 10) + "...");
-			
+			console.log(
+				"[useAuth] Making API request to fetch user profile with token:",
+				`${currentToken.substring(0, 10)}...`,
+			);
+
 			const { data } = await api.get<UserProfileResponse>(
 				"/api/v1/users/view-profile",
 				{
 					headers: {
-						Authorization: `Bearer ${cleanToken(currentToken)}`
-					}
-				}
+						Authorization: `Bearer ${cleanToken(currentToken)}`,
+					},
+				},
 			);
-			
+
 			console.log("[useAuth] Successfully fetched user profile:", {
 				id: data.id,
 				firstName: data.firstName,
 				lastName: data.lastName,
-				email: data.email
+				email: data.email,
 			});
 
 			const userData = {
@@ -173,21 +181,24 @@ export const useAuth = (options?: UseAuthOptions) => {
 				role: getRoleFromToken(currentToken) || "USER",
 				phoneNumber: data.phoneNumber,
 				isEmailVerified: true,
-				isTemporary: false // Explicitly mark as not temporary
+				isTemporary: false,
 			};
 
 			console.log("[useAuth] Setting user data in store");
 			setUser(userData);
 			return data;
-		} catch (error: any) {
+		} catch (error: unknown) {
+			const apiError = error as ApiError;
 			console.error(
 				`[useAuth] Error fetching user profile (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`,
-				error.response?.status,
-				error.response?.data
+				apiError.response?.status,
+				apiError.response?.data,
 			);
 
-			if (error.response?.status === 401) {
-				console.error("[useAuth] Unauthorized error fetching profile, token may be invalid");
+			if (apiError.response?.status === 401) {
+				console.error(
+					"[useAuth] Unauthorized error fetching profile, token may be invalid",
+				);
 				return null;
 			}
 
@@ -198,7 +209,9 @@ export const useAuth = (options?: UseAuthOptions) => {
 				return fetchUserProfile(retryCount + 1);
 			}
 
-			toast.error("Could not load your profile. Some features may be limited.");
+			showToast("Could not load your profile. Some features may be limited.", {
+				type: "error",
+			});
 			throw error;
 		}
 	};
@@ -215,7 +228,10 @@ export const useAuth = (options?: UseAuthOptions) => {
 				response = await api.post("/api/v1/auth/signin", credentials);
 			} catch (error: any) {
 				console.error("[Auth] API signin error:", error.message);
-				const errorMessage = error.response?.data?.message || error.message || "Invalid email or password";
+				const errorMessage =
+					error.response?.data?.message ||
+					error.message ||
+					"Invalid email or password";
 				throw new Error(errorMessage);
 			}
 
@@ -225,7 +241,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 				throw new Error("No access token received");
 			}
 
-			// Validate the token before proceeding
 			try {
 				const role = getRoleFromToken(accessToken);
 				if (!role) {
@@ -237,40 +252,37 @@ export const useAuth = (options?: UseAuthOptions) => {
 			}
 
 			console.log("[Auth] Successfully signed in");
-			
-			// Set token in store and cookie
+
 			syncTokenToCookie(accessToken);
 			setToken(accessToken);
 
-			// Set auth header immediately
 			api.defaults.headers.common.Authorization = `Bearer ${cleanToken(accessToken)}`;
 
-			// Small delay to ensure token is set
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise((resolve) => setTimeout(resolve, 100));
 
 			try {
-				// Load user profile
-				console.log("[Auth] Fetching user profile with token:", accessToken.substring(0, 10) + "...");
+				console.log(
+					"[Auth] Fetching user profile with token:",
+					`${accessToken.substring(0, 10)}...`,
+				);
 				const profile = await fetchUserProfile();
-				
+
 				if (!profile) {
 					throw new Error("Failed to load user profile");
 				}
 
-				// Validate that the profile email matches the login email
 				if (profile.email.toLowerCase() !== credentials.email.toLowerCase()) {
 					throw new Error("Profile mismatch detected");
 				}
-				
-				// Redirect to appropriate dashboard
+
 				const role = getRoleFromToken(accessToken);
-				const redirectPath = isAdminRole(role) 
-					? "/admin/dashboard" 
+				const redirectPath = isAdminRole(role)
+					? "/admin/dashboard"
 					: "/applicant/dashboard";
-				
+
 				console.log("[Auth] Redirecting to:", redirectPath);
 				router.replace(redirectPath);
-				
+
 				if (options?.onSuccess) {
 					options.onSuccess();
 				}
@@ -280,15 +292,17 @@ export const useAuth = (options?: UseAuthOptions) => {
 			}
 		} catch (error: any) {
 			console.error("[Auth] Signin error:", error);
-			const errorMessage = error.response?.data?.message || error.message || "Login failed. Please try again.";
+			const errorMessage =
+				error.response?.data?.message ||
+				error.message ||
+				"Login failed. Please try again.";
 			setError(errorMessage);
-			toast.error(errorMessage);
-			
-			// Ensure cleanup on error
+			showToast(errorMessage, { type: "error" });
+
 			logout();
 			queryClient.removeQueries({ queryKey: ["current-user"] });
 			syncTokenToCookie(null);
-			
+
 			if (options?.onError) {
 				options.onError(new Error(errorMessage));
 			}
@@ -307,19 +321,16 @@ export const useAuth = (options?: UseAuthOptions) => {
 				lastName: data.lastName,
 				email: data.email,
 				password: data.password,
+				phoneNumber: data.phoneNumber,
 			});
 
-			const { accessToken } = response.data;
-
-			if (!accessToken) {
-				throw new Error("No access token received from signup");
-			}
-
+			// Store signup data for later completion after email verification
 			if (data.career) {
 				try {
-					await api.post(
-						"/api/v1/applicants/complete-application-profile",
-						{
+					// Save step 2 data for later completion after verification
+					localStorage.setItem(
+						"signupPendingData",
+						JSON.stringify({
 							career: data.career,
 							levelOfEducation: data.levelOfEducation,
 							university: data.university,
@@ -327,42 +338,67 @@ export const useAuth = (options?: UseAuthOptions) => {
 							major: data.major,
 							linkedinProfileUrl: data.linkedinProfileUrl,
 							githubProfileUrl: data.githubProfileUrl,
-						},
-						{
-							headers: { Authorization: `Bearer ${accessToken}` },
-						},
+							email: data.email,
+						}),
 					);
-				} catch (profileError) {
-					console.error("[useAuth] Error completing profile:", profileError);
+				} catch (error) {
+					console.error("[useAuth] Error saving signup data:", error);
 				}
 			}
 
 			return response.data;
 		},
 		onSuccess: async (data) => {
-			if (!data.accessToken) {
-				throw new Error("No access token received");
-			}
+			// We don't set the token here since the user needs to verify email first
+			if (data?.message?.includes("verification")) {
+				try {
+					localStorage.removeItem("signupStep1Data");
+				} catch (error) {
+					console.error("[useAuth] Error clearing signup step 1 data:", error);
+				}
 
-			setToken(data.accessToken);
+				showToast(
+					"Account created! Please check your email to verify your account.",
+					{ type: "success" },
+				);
 
-			toast.success("Your account has been created successfully");
+				router.push("/auth/verification-pending");
 
-			try {
-				console.log("[useAuth] Fetching user profile before redirecting...");
-				await fetchUserProfile();
-				handleRedirect(data.accessToken);
-			} catch (error) {
-				console.error("[useAuth] Error fetching profile during signup:", error);
-				handleRedirect(data.accessToken);
+				if (options?.onSuccess) {
+					options.onSuccess();
+				}
+			} else {
+				setToken(data.accessToken);
+				showToast("Your account has been created successfully", {
+					type: "success",
+				});
+
+				try {
+					localStorage.removeItem("signupStep1Data");
+					localStorage.removeItem("signupPendingData");
+				} catch (error) {
+					console.error("[useAuth] Error clearing signup data:", error);
+				}
+
+				try {
+					await fetchUserProfile();
+					handleRedirect(data.accessToken);
+				} catch (error) {
+					console.error(
+						"[useAuth] Error fetching profile during signup:",
+						error,
+					);
+					handleRedirect(data.accessToken);
+				}
 			}
 		},
 		onError: (error: any) => {
 			setError(error.response?.data?.message || "Registration failed");
 
-			toast.error(
+			showToast(
 				error.response?.data?.message ||
 					"Something went wrong. Please try again.",
+				{ type: "error" },
 			);
 
 			options?.onError?.(error);
@@ -384,16 +420,52 @@ export const useAuth = (options?: UseAuthOptions) => {
 				setToken(data.accessToken);
 			}
 
-			toast.success("Your email has been verified successfully");
+			showToast("Your email has been verified successfully", {
+				type: "success",
+			});
 
 			fetchUserProfile();
 		},
 		onError: (error: any) => {
 			setError(error.response?.data?.message || "Verification failed");
 
-			toast.error(
+			showToast(
 				error.response?.data?.message ||
 					"Failed to verify email. Please try again.",
+				{ type: "error" },
+			);
+		},
+		onSettled: () => {
+			setLoading(false);
+		},
+	});
+
+	const resendVerificationMutation = useMutation({
+		mutationFn: async (email: string) => {
+			setLoading(true);
+			clearError();
+			const { data } = await api.post(
+				"/api/v1/auth/resend-verification-email",
+				{
+					email,
+				},
+			);
+			return data;
+		},
+		onSuccess: () => {
+			showToast(
+				"Verification email has been resent. Please check your inbox.",
+				{ type: "success" },
+			);
+		},
+		onError: (error: any) => {
+			setError(
+				error.response?.data?.message || "Failed to resend verification email",
+			);
+			showToast(
+				error.response?.data?.message ||
+					"Failed to resend verification email. Please try again.",
+				{ type: "error" },
 			);
 		},
 		onSettled: () => {
@@ -413,12 +485,16 @@ export const useAuth = (options?: UseAuthOptions) => {
 		staleTime: 5 * 60 * 1000,
 	});
 
-	// If we have a token but no user data, fetch the profile
 	useEffect(() => {
 		if (token && !user) {
-			console.log("[useAuth] Token exists but no user data, fetching profile...");
-			fetchUserProfile().catch(err => {
-				console.error("[useAuth] Error fetching profile during initialization:", err);
+			console.log(
+				"[useAuth] Token exists but no user data, fetching profile...",
+			);
+			fetchUserProfile().catch((err) => {
+				console.error(
+					"[useAuth] Error fetching profile during initialization:",
+					err,
+				);
 			});
 		}
 	}, [token, user]);
@@ -430,7 +506,13 @@ export const useAuth = (options?: UseAuthOptions) => {
 		} else if (userQuery.isError) {
 			console.error("[useAuth] User query failed:", userQuery.error);
 		}
-	}, [userQuery.isPending, userQuery.isError, userQuery.data, user, setUserType]);
+	}, [
+		userQuery.isPending,
+		userQuery.isError,
+		userQuery.data,
+		user,
+		setUserType,
+	]);
 
 	useEffect(() => {
 		if (token) {
@@ -442,24 +524,19 @@ export const useAuth = (options?: UseAuthOptions) => {
 	}, [token]);
 
 	const signOut = () => {
-		// Clear auth token from cookies first for immediate server-side logout
 		syncTokenToCookie(null);
-		
-		// Clear auth header
+
 		api.defaults.headers.common.Authorization = undefined;
 
-		// Clear state in Zustand store
 		logout();
 
-		// Clear any cached queries
 		queryClient.removeQueries({ queryKey: ["current-user"] });
 
-		toast.success("You have been logged out", {
+		showToast("You have been logged out", {
 			duration: 3000,
 			position: "top-center",
 		});
 
-		// Force a page reload to clear any cached state
 		window.location.href = "/auth?mode=login";
 	};
 
@@ -470,7 +547,9 @@ export const useAuth = (options?: UseAuthOptions) => {
 			console.error("[useAuth] Google auth error:", error);
 			setError("Google authentication failed");
 
-			toast.error("Failed to authenticate with Google. Please try again.");
+			showToast("Failed to authenticate with Google. Please try again.", {
+				type: "error",
+			});
 
 			options?.onError?.(error);
 		}
@@ -480,15 +559,50 @@ export const useAuth = (options?: UseAuthOptions) => {
 		return user ? formatUserName(user.firstName, user.lastName) : "";
 	};
 
+	const completeSignupAfterVerification = async (authToken: string) => {
+		try {
+			const storedDataStr = localStorage.getItem("signupPendingData");
+			if (!storedDataStr) return;
+
+			const storedData = JSON.parse(storedDataStr);
+
+			await api.post(
+				"/api/v1/applicants/complete-application-profile",
+				{
+					career: storedData.career,
+					levelOfEducation: storedData.levelOfEducation,
+					university: storedData.university,
+					graduationDate: storedData.graduationDate,
+					major: storedData.major,
+					linkedinProfileUrl: storedData.linkedinProfileUrl,
+					githubProfileUrl: storedData.githubProfileUrl,
+				},
+				{
+					headers: { Authorization: `Bearer ${authToken}` },
+				},
+			);
+
+			localStorage.removeItem("signupPendingData");
+
+			showToast("Your profile setup is complete!", { type: "success" });
+		} catch (error) {
+			console.error(
+				"[useAuth] Error completing profile after verification:",
+				error,
+			);
+			showToast(
+				"Failed to complete your profile. You can update it later in your settings.",
+				{ type: "error" },
+			);
+		}
+	};
+
 	return {
 		// State
 		user,
 		token,
 		isAuthenticated,
-		isLoading:
-			isLoading ||
-			signUpMutation.isPending ||
-			userQuery.isLoading,
+		isLoading: isLoading || signUpMutation.isPending || userQuery.isLoading,
 		error,
 		showPassword,
 		userType,
@@ -512,5 +626,9 @@ export const useAuth = (options?: UseAuthOptions) => {
 		refreshProfile: () => fetchUserProfile(),
 		isTokenExpired: () => (token ? isTokenExpired(token) : true),
 		getUserDisplayName,
+
+		// New methods
+		completeSignupAfterVerification,
+		resendVerification: resendVerificationMutation.mutate,
 	};
 };
