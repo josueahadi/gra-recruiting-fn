@@ -10,7 +10,14 @@ import { useAuthStore } from "@/store/auth";
 export default function VerifyAccountPage() {
 	const router = useRouter();
 	const searchParams = useSearchParams();
-	const token = searchParams.get("token");
+	let token = searchParams.get("token");
+
+	if (!token) {
+		const raw = window.location.search;
+		if (raw.startsWith("?") && raw.length > 1 && !raw.includes("=")) {
+			token = raw.substring(1);
+		}
+	}
 	const setToken = useAuthStore((state) => state.setToken);
 
 	const [verificationState, setVerificationState] = useState<
@@ -20,7 +27,6 @@ export default function VerifyAccountPage() {
 	const [hasSignupData, setHasSignupData] = useState(false);
 
 	useEffect(() => {
-		// Check if there's pending signup data
 		try {
 			const pendingData = localStorage.getItem("signupPendingData");
 			setHasSignupData(!!pendingData);
