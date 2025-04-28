@@ -1,12 +1,13 @@
 import type React from "react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import ProfileSection from "@/components/profile/core/profile-section";
 import type { Skill } from "@/hooks/use-profile";
 import SkillsInput from "./skills/skills-input";
 import SkillsDisplay from "./skills/skills-display";
+import { showToast } from "@/services/toast";
 
 interface SkillsSectionProps {
-	skills: Skill[]; // Combined skills array
+	skills: Skill[];
 	canEdit: boolean;
 	onUpdate: (skills: Skill[]) => void;
 }
@@ -17,29 +18,77 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({
 	onUpdate,
 }) => {
 	const [isEditing, setIsEditing] = useState(false);
-	const [skills, setSkills] = useState<Skill[]>(initialSkills);
+	const [skills, setSkills] = useState<Skill[]>(initialSkills || []);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	const handleEdit = () => {
+	const handleEdit = useCallback(() => {
 		setIsEditing(true);
-	};
+	}, []);
 
-	const handleSave = () => {
-		setIsEditing(false);
-		onUpdate(skills);
-	};
+	const handleSave = useCallback(async () => {
+		try {
+			setIsSubmitting(true);
 
-	const handleCancel = () => {
+			setIsEditing(false);
+
+			await onUpdate(skills);
+
+			showToast({
+				title: "Skills updated successfully",
+				variant: "success",
+			});
+		} catch (error) {
+			setIsEditing(true);
+			setSkills(initialSkills);
+			showToast({
+				title: "Failed to update skills. Please try again.",
+				variant: "error",
+			});
+			console.error("Error updating skills:", error);
+		} finally {
+			setIsSubmitting(false);
+		}
+	}, [skills, onUpdate, initialSkills]);
+
+	const handleCancel = useCallback(() => {
 		setIsEditing(false);
 		setSkills(initialSkills);
-	};
+	}, [initialSkills]);
 
-	const handleAddSkill = (skillName: string) => {
-		setSkills([...skills, { id: Date.now().toString(), name: skillName }]);
-	};
+	const generateUniqueId = useCallback(() => {
+		const timestamp = Date.now();
+		const randomStr = Math.random().toString(36).substring(2, 9);
+		return `skill-${timestamp}-${randomStr}`;
+	}, []);
 
-	const handleRemoveSkill = (id: string) => {
-		setSkills(skills.filter((skill) => skill.id !== id));
-	};
+	const handleAddSkill = useCallback(
+		(skillName: string) => {
+			if (
+				skills.some((s) => s.name.toLowerCase() === skillName.toLowerCase())
+			) {
+				showToast({
+					title: "This skill already exists",
+					variant: "error",
+				});
+				return;
+			}
+
+			let newId = generateUniqueId();
+			while (skills.some((s) => s.id === newId)) {
+				newId = generateUniqueId();
+			}
+
+			setSkills((prevSkills) => [
+				...prevSkills,
+				{ id: newId, name: skillName },
+			]);
+		},
+		[skills, generateUniqueId],
+	);
+
+	const handleRemoveSkill = useCallback((id: string) => {
+		setSkills((prevSkills) => prevSkills.filter((skill) => skill.id !== id));
+	}, []);
 
 	return (
 		<ProfileSection
@@ -49,6 +98,7 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({
 			onEdit={handleEdit}
 			onSave={handleSave}
 			onCancel={handleCancel}
+			isSubmitting={isSubmitting}
 		>
 			<div className="md:px-4">
 				{isEditing ? (

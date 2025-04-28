@@ -1,7 +1,7 @@
 import type React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { Edit1 } from "@/components/icons/edit-1";
 
 interface ProfileSectionProps {
@@ -9,6 +9,7 @@ interface ProfileSectionProps {
 	children: React.ReactNode;
 	canEdit?: boolean;
 	isEditing: boolean;
+	isSubmitting?: boolean;
 	onEdit: () => void;
 	onSave: () => void;
 	onCancel?: () => void;
@@ -21,6 +22,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 	children,
 	canEdit = false,
 	isEditing,
+	isSubmitting = false,
 	onEdit,
 	onSave,
 	onCancel,
@@ -35,12 +37,21 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 				{canEdit && (
 					<button
 						type="button"
-						className="text-primary-500 hover:text-primary-600"
+						className={cn(
+							"text-primary-500 hover:text-primary-600",
+							(isSubmitting || (isEditing && !onCancel)) &&
+								"opacity-50 cursor-not-allowed",
+						)}
 						aria-label={isEditing ? "Save changes" : `Edit ${title}`}
 						onClick={isEditing ? onSave : onEdit}
+						disabled={isSubmitting || (isEditing && !onCancel)}
 					>
 						{isEditing ? (
-							<Check className="h-5 w-5" />
+							isSubmitting ? (
+								<Loader2 className="h-5 w-5 animate-spin" />
+							) : (
+								<Check className="h-5 w-5" />
+							)
 						) : (
 							<Edit1 className="h-5 w-5" />
 						)}
@@ -50,16 +61,29 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
 			<div className={cn("px-6", contentClassName)}>{children}</div>
 
-			{isEditing && (
+			{isEditing && onCancel && (
 				<div className="flex justify-end mt-6 px-6">
-					<Button variant="outline" className="mr-4" onClick={onCancel}>
+					<Button
+						variant="outline"
+						className="mr-4"
+						onClick={onCancel}
+						disabled={isSubmitting}
+					>
 						Cancel
 					</Button>
 					<Button
 						onClick={onSave}
 						className="bg-primary-base hover:bg-custom-skyBlue"
+						disabled={isSubmitting}
 					>
-						Save Changes
+						{isSubmitting ? (
+							<>
+								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+								Saving...
+							</>
+						) : (
+							"Save Changes"
+						)}
 					</Button>
 				</div>
 			)}

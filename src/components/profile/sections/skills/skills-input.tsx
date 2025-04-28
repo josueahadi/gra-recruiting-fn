@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -24,24 +24,39 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 	className,
 }) => {
 	const [newSkill, setNewSkill] = useState("");
+	const [isAdding, setIsAdding] = useState(false);
 
-	const handleAddSkill = () => {
-		if (newSkill.trim()) {
-			onAddSkill(newSkill.trim());
-			setNewSkill("");
-		}
-	};
+	const handleAddSkill = useCallback(
+		(skillName: string) => {
+			if (!skillName.trim()) return;
 
-	const handleInputKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter") {
-			e.preventDefault();
-			handleAddSkill();
-		}
-	};
+			setIsAdding(true);
+
+			try {
+				onAddSkill(skillName.trim());
+				setNewSkill("");
+			} catch (error) {
+				console.error("Error adding skill:", error);
+			} finally {
+				setIsAdding(false);
+			}
+		},
+		[onAddSkill],
+	);
+
+	const handleInputKeyPress = useCallback(
+		(e: React.KeyboardEvent<HTMLInputElement>) => {
+			if (e.key === "Enter") {
+				e.preventDefault();
+				handleAddSkill(newSkill);
+			}
+		},
+		[newSkill, handleAddSkill],
+	);
 
 	return (
 		<div className={className}>
-			<h3 className="text-lg font-medium mb-4">{title}</h3>
+			{title && <h3 className="text-lg font-medium mb-4">{title}</h3>}
 
 			<div className="flex gap-2 mb-4">
 				<Input
@@ -50,13 +65,19 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 					placeholder={placeholder}
 					onKeyPress={handleInputKeyPress}
 					className="flex-grow"
+					disabled={isAdding}
 				/>
 				<Button
-					onClick={handleAddSkill}
+					onClick={() => handleAddSkill(newSkill)}
 					size="sm"
 					className="bg-sky-500 hover:bg-sky-600"
+					disabled={isAdding || !newSkill.trim()}
 				>
-					<Plus className="h-4 w-4 mr-1" />
+					{isAdding ? (
+						<div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin mr-2" />
+					) : (
+						<Plus className="h-4 w-4 mr-1" />
+					)}
 					Add Skill
 				</Button>
 			</div>

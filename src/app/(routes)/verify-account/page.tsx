@@ -100,6 +100,13 @@ export default function VerifyAccountPage() {
 
 							setVerificationState("success");
 							setTimeout(() => {
+								if (!pendingDataStr) {
+									setErrorMessage(
+										"Your email has been verified, but we couldn't complete your profile automatically. Please log in and complete your profile.",
+									);
+									router.push("/auth?mode=login");
+									return;
+								}
 								router.push("/applicant/dashboard");
 							}, 3000);
 							return;

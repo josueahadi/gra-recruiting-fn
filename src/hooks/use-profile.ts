@@ -1,8 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { api } from "@/services/api";
 import { formatDateRange, formatDateString } from "@/lib/utils/date-utils";
+import { useOptimisticUpdate } from "@/hooks/use-optimistic-update";
+import { languageApiQueue } from "@/lib/utils/api-queue-utils";
 
 export interface ProfileInfo {
 	firstName: string;
@@ -25,6 +27,7 @@ export interface Skill {
 
 export interface LanguageProficiency {
 	languageId?: number;
+	tempId?: string;
 	language: string;
 	level: number;
 }
@@ -91,79 +94,6 @@ interface UseProfileOptions {
 	userType: "applicant" | "admin";
 }
 
-// API response types
-interface UserProfileResponse {
-	id: number;
-	firstName: string;
-	lastName: string;
-	email: string;
-	phoneNumber: string | null;
-	country: string | null;
-	city: string | null;
-	postalCode: string | null;
-	street: string | null;
-	careerName: string | null;
-	createdAt: string;
-	updatedAt: string;
-}
-
-interface ApiError extends Error {
-	response?: {
-		data?: {
-			message?: string;
-		};
-	};
-}
-
-interface SkillRating {
-	skillId?: number;
-	skillName: string;
-	experienceRating: string; // ONE, TWO, THREE, FOUR, FIVE
-}
-
-interface ApiLanguageProficiency {
-	languageId?: number;
-	languageName: string;
-	proficiencyLevel: string; // BEGINNER, ELEMENTARY, INTERMEDIATE, ADVANCED, NATIVE
-}
-
-interface ApiEducation {
-	id?: number;
-	institutionName: string;
-	educationLevel: string;
-	program: string;
-	dateJoined: string;
-	dateGraduated: string;
-}
-
-interface ApiExperience {
-	id?: number;
-	companyName: string;
-	jobTitle: string;
-	employmentType: string;
-	country: string;
-	startDate: string;
-	endDate?: string;
-}
-
-interface ApiDocuments {
-	linkedinProfileUrl?: string;
-	githubProfileUrl?: string;
-	resumeUrl?: string;
-	behanceProfileUrl?: string;
-	portfolioUrl?: string;
-}
-
-interface ApplicationProfileResponse {
-	userProfile: UserProfileResponse;
-	skillsAndExperienceRatings: SkillRating[];
-	languagesProficiency: ApiLanguageProficiency[];
-	educations: ApiEducation[];
-	experiences: ApiExperience[];
-	documents: ApiDocuments[];
-}
-
-// Mapping constants
 const LANGUAGE_LEVEL_MAP: Record<number, string> = {
 	1: "BEGINNER",
 	3: "ELEMENTARY",
@@ -216,19 +146,28 @@ const REVERSE_EMPLOYMENT_TYPE_MAP: Record<string, string> = {
 
 export function useProfile(options: UseProfileOptions) {
 	const { id, userType } = options;
-	const [profileData, setProfileData] = useState<ApplicantData | null>(null);
-	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
 	const queryClient = useQueryClient();
 	const canEdit = userType === "applicant" || !id;
+
+	// Use optimistic updates
+	const {
+		state: profileData,
+		setState: setProfileData,
+		isUpdating,
+		updateError,
+		update,
+		clearError,
+	} = useOptimisticUpdate<ApplicantData | null>(null);
+
+	const [isLoading, setIsLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const pendingOperationsRef = useRef(0);
 
 	const basicProfileQuery = useQuery({
 		queryKey: ["user-profile", id],
 		queryFn: async () => {
 			try {
-				const { data } = await api.get<UserProfileResponse>(
-					"/api/v1/users/view-profile",
-				);
+				const { data } = await api.get("/api/v1/users/view-profile");
 				return data;
 			} catch (error) {
 				console.error("Error fetching user profile:", error);
@@ -242,7 +181,7 @@ export function useProfile(options: UseProfileOptions) {
 		queryKey: ["application-profile", id],
 		queryFn: async () => {
 			try {
-				const { data } = await api.get<ApplicationProfileResponse>(
+				const { data } = await api.get(
 					"/api/v1/applicants/get-application-profile",
 				);
 				return data;
@@ -254,7 +193,6 @@ export function useProfile(options: UseProfileOptions) {
 		enabled: !!basicProfileQuery.data,
 	});
 
-	// Transform API data to frontend format
 	useEffect(() => {
 		const fetchAndTransformData = async () => {
 			setIsLoading(true);
@@ -463,7 +401,7 @@ export function useProfile(options: UseProfileOptions) {
 		};
 
 		fetchAndTransformData();
-	}, [basicProfileQuery.data, detailedProfileQuery.data, id]);
+	}, [basicProfileQuery.data, detailedProfileQuery.data, id, setProfileData]);
 
 	// Calculate and update profile completion
 	useEffect(() => {
@@ -537,90 +475,81 @@ export function useProfile(options: UseProfileOptions) {
 		}
 	}, [profileData]);
 
-	// API Mutations
+	// API Mutations with optimistic updates
 	const updatePersonalInfo = useCallback(
 		async (info: ProfileInfo) => {
-			if (!profileData) return;
+			if (!profileData) return false;
 
-			try {
-				setIsLoading(true);
+			return update(
+				(currentData) => {
+					if (!currentData) return null;
+					return {
+						...currentData,
+						personalInfo: info,
+						name: `${info.firstName} ${info.lastName}`,
+					};
+				},
+				async (newData) => {
+					if (!newData) throw new Error("No profile data available");
 
-				// Only include fields we want to update - leave out email
-				await api.patch("/api/v1/users/update-user-profile", {
-					firstName: info.firstName,
-					lastName: info.lastName,
-					phoneNumber: info.phone,
-				});
+					// Only include fields we want to update - leave out email
+					await api.patch("/api/v1/users/update-user-profile", {
+						firstName: info.firstName,
+						lastName: info.lastName,
+						phoneNumber: info.phone,
+					});
 
-				// Update local state
-				setProfileData((prev) =>
-					prev
-						? {
-								...prev,
-								personalInfo: info,
-								name: `${info.firstName} ${info.lastName}`,
-							}
-						: null,
-				);
+					// Invalidate queries to ensure fresh data
+					queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 
-				toast.success("Personal information updated");
-				return true;
-			} catch (err) {
+					toast.success("Personal information updated");
+					return true;
+				},
+			).catch((err) => {
 				console.error("Error updating personal info:", err);
-
-				// Extract structured error message if available
-				const apiError = err as ApiError;
-				const errorMessage =
-					apiError.response?.data?.message ||
-					"Failed to update personal information";
-
-				toast.error(errorMessage);
+				toast.error("Failed to update personal information");
 				return false;
-			} finally {
-				setIsLoading(false);
-			}
+			});
 		},
-		[profileData],
+		[profileData, update, queryClient],
 	);
 
 	const updateAddress = useCallback(
 		async (info: AddressInfo) => {
-			if (!profileData) return;
+			if (!profileData) return false;
 
-			try {
-				setIsLoading(true);
+			return update(
+				(currentData) => {
+					if (!currentData) return null;
+					return {
+						...currentData,
+						addressInfo: info,
+					};
+				},
+				async (newData) => {
+					if (!newData) throw new Error("No profile data available");
 
-				// Only include address fields
-				await api.patch("/api/v1/users/update-user-profile", {
-					country: info.country,
-					city: info.city,
-					postalCode: info.postalCode,
-					street: info.address,
-				});
+					// Only include address fields
+					await api.patch("/api/v1/users/update-user-profile", {
+						country: info.country,
+						city: info.city,
+						postalCode: info.postalCode,
+						street: info.address,
+					});
 
-				// Update local state
-				setProfileData((prev) =>
-					prev ? { ...prev, addressInfo: info } : null,
-				);
+					// Invalidate queries
+					queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 
-				toast.success("Address information updated");
-				return true;
-			} catch (err) {
+					toast.success("Address information updated");
+					return true;
+				},
+			).catch((err) => {
 				console.error("Error updating address:", err);
-
-				// Extract structured error message if available
-				const apiError = err as ApiError;
-				const errorMessage =
-					apiError.response?.data?.message ||
-					"Failed to update address information";
-
-				toast.error(errorMessage);
+				toast.error("Failed to update address information");
 				return false;
-			} finally {
-				setIsLoading(false);
-			}
+			});
 		},
-		[profileData],
+		[profileData, update, queryClient],
 	);
 
 	const updateSkills = useCallback(
@@ -630,12 +559,34 @@ export function useProfile(options: UseProfileOptions) {
 			languages: LanguageProficiency[];
 			department?: string;
 		}) => {
-			if (!profileData) return;
+			if (!profileData) return false;
+
+			pendingOperationsRef.current += 1;
 
 			try {
-				setIsLoading(true);
+				// Optimistic update
+				setProfileData((prevData) => {
+					if (!prevData) return null;
+					return {
+						...prevData,
+						skills: {
+							technical: data.technical,
+							soft: data.soft,
+						},
+						department: data.department,
+					};
+				});
 
-				// Update skills
+				if (data.department !== profileData.department) {
+					try {
+						await api.patch("/api/v1/users/update-user-profile", {
+							careerName: data.department,
+						});
+					} catch (error) {
+						console.error("Error updating department:", error);
+					}
+				}
+
 				if (data.technical.length > 0) {
 					const skillsPayload = data.technical.map((skill) => ({
 						skillName: skill.name,
@@ -645,77 +596,42 @@ export function useProfile(options: UseProfileOptions) {
 					// Use update or add based on whether we have skills already
 					const hasSkills = profileData.skills.technical.length > 0;
 
-					if (hasSkills) {
-						await api.patch("/api/v1/applicants/update-skills", {
-							skillsAndExperienceRatings: skillsPayload,
-						});
-					} else {
-						await api.post("/api/v1/applicants/add-skills", {
-							skillsAndExperienceRatings: skillsPayload,
-						});
-					}
-				}
-
-				// Update languages
-				if (data.languages.length > 0) {
-					// For each language, check if it has an ID (existing) or not (new)
-					for (const lang of data.languages) {
-						const apiLevel = LANGUAGE_LEVEL_MAP[lang.level] || "INTERMEDIATE";
-
-						if (lang.languageId) {
-							// Update existing language
-							await api.patch(
-								`/api/v1/applicants/update-language-proficiency/${lang.languageId}`,
-								{
-									languageName: lang.language,
-									proficiencyLevel: apiLevel,
-								},
-							);
+					try {
+						if (hasSkills) {
+							await api.patch("/api/v1/applicants/update-skills", {
+								skillsAndExperienceRatings: skillsPayload,
+							});
 						} else {
-							// Add new language
-							await api.post("/api/v1/applicants/add-language-proficiency", {
-								languageName: lang.language,
-								proficiencyLevel: apiLevel,
+							await api.post("/api/v1/applicants/add-skills", {
+								skillsAndExperienceRatings: skillsPayload,
 							});
 						}
+					} catch (error) {
+						console.error("Error updating skills:", error);
+						throw error;
 					}
 				}
-
-				// Update career/department if provided
-				if (data.department && data.department !== profileData.department) {
-					// We don't have a direct endpoint for updating department/career name
-					// Just update the local state for now
-					console.log("Department update:", data.department);
-				}
-
-				// Update local state
-				setProfileData((prev) =>
-					prev
-						? {
-								...prev,
-								skills: {
-									technical: data.technical,
-									soft: data.soft,
-								},
-								languages: data.languages,
-								department: data.department,
-							}
-						: null,
-				);
 
 				// Invalidate queries to refetch data
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 				queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 
-				toast.success("Skills and languages updated");
-			} catch (err) {
-				console.error("Error updating skills:", err);
-				toast.error("Failed to update skills and languages");
+				// Languages are now handled separately by specialized hook
+
+				return true;
+			} catch (error) {
+				console.error("Error updating skills:", error);
+
+				// Revert to original state
+				setProfileData(profileData);
+
+				toast.error("Failed to update skills");
+				return false;
 			} finally {
-				setIsLoading(false);
+				pendingOperationsRef.current -= 1;
 			}
 		},
-		[profileData, queryClient],
+		[profileData, setProfileData, queryClient],
 	);
 
 	const updateWorkEducation = useCallback(
@@ -723,305 +639,325 @@ export function useProfile(options: UseProfileOptions) {
 			education: Education[];
 			experience: WorkExperience[];
 		}) => {
-			if (!profileData) return;
+			if (!profileData) return false;
 
-			try {
-				setIsLoading(true);
+			return update(
+				(currentData) => {
+					if (!currentData) return null;
+					return {
+						...currentData,
+						education: data.education,
+						experience: data.experience,
+					};
+				},
+				async (newData) => {
+					if (!newData) throw new Error("No profile data available");
 
-				const existingEducation = profileData.education || [];
+					const existingEducation = profileData.education || [];
 
-				for (const edu of data.education) {
-					const existingEntry = existingEducation.find((e) => e.id === edu.id);
+					for (const edu of data.education) {
+						const existingEntry = existingEducation.find(
+							(e) => e.id === edu.id,
+						);
 
-					if (!existingEntry) {
-						await api.post("/api/v1/applicants/add-education", {
-							institutionName: edu.institution,
-							educationLevel: EDUCATION_LEVEL_MAP[edu.degree] || "BACHELOR",
-							program: edu.program,
-							dateJoined: convertUIDateToApiDate(edu.startYear),
-							dateGraduated: convertUIDateToApiDate(
-								edu.endYear === "Present"
-									? new Date().toLocaleDateString()
-									: edu.endYear,
-							),
-						});
-					} else {
-						if (edu.id) {
-							const originalId = edu.id.includes("-edit-")
-								? edu.id.split("-edit-")[0]
-								: edu.id;
+						if (!existingEntry) {
+							await api.post("/api/v1/applicants/add-education", {
+								institutionName: edu.institution,
+								educationLevel: EDUCATION_LEVEL_MAP[edu.degree] || "BACHELOR",
+								program: edu.program,
+								dateJoined: convertUIDateToApiDate(edu.startYear),
+								dateGraduated: convertUIDateToApiDate(
+									edu.endYear === "Present"
+										? new Date().toLocaleDateString()
+										: edu.endYear,
+								),
+							});
+						} else {
+							if (edu.id) {
+								const originalId = edu.id.includes("-edit-")
+									? edu.id.split("-edit-")[0]
+									: edu.id;
 
-							const educationId = Number.isNaN(Number(originalId))
-								? originalId
-								: Number(originalId);
+								const educationId = Number.isNaN(Number(originalId))
+									? originalId
+									: Number(originalId);
 
-							await api.patch(
-								`/api/v1/applicants/update-education/${educationId}`,
-								{
-									institutionName: edu.institution,
-									educationLevel: EDUCATION_LEVEL_MAP[edu.degree] || "BACHELOR",
-									program: edu.program,
-									dateJoined: convertUIDateToApiDate(edu.startYear),
-									dateGraduated: convertUIDateToApiDate(
-										edu.endYear === "Present"
-											? new Date().toLocaleDateString()
-											: edu.endYear,
-									),
-								},
-							);
+								await api.patch(
+									`/api/v1/applicants/update-education/${educationId}`,
+									{
+										institutionName: edu.institution,
+										educationLevel:
+											EDUCATION_LEVEL_MAP[edu.degree] || "BACHELOR",
+										program: edu.program,
+										dateJoined: convertUIDateToApiDate(edu.startYear),
+										dateGraduated: convertUIDateToApiDate(
+											edu.endYear === "Present"
+												? new Date().toLocaleDateString()
+												: edu.endYear,
+										),
+									},
+								);
+							}
 						}
 					}
-				}
 
-				const existingExperience = profileData.experience || [];
+					const existingExperience = profileData.experience || [];
 
-				for (const exp of data.experience) {
-					const durationParts = exp.duration.split("-").map((p) => p.trim());
-					const startDate = durationParts[0];
-					const endDateWithParentheses = durationParts[1];
-					const endDate =
-						endDateWithParentheses.split("(")[0].trim() === "Present"
-							? undefined
-							: endDateWithParentheses.split("(")[0].trim();
+					for (const exp of data.experience) {
+						const durationParts = exp.duration.split("-").map((p) => p.trim());
+						const startDate = durationParts[0];
+						const endDateWithParentheses = durationParts[1];
+						const endDate =
+							endDateWithParentheses.split("(")[0].trim() === "Present"
+								? undefined
+								: endDateWithParentheses.split("(")[0].trim();
 
-					const existingEntry = existingExperience.find((e) => e.id === exp.id);
+						const existingEntry = existingExperience.find(
+							(e) => e.id === exp.id,
+						);
 
-					if (!existingEntry) {
-						await api.post("/api/v1/applicants/add-experience", {
-							companyName: exp.company,
-							jobTitle: exp.role,
-							employmentType:
-								EMPLOYMENT_TYPE_MAP[exp.responsibilities] || "FULL_TIME",
-							country: exp.country || "Rwanda",
-							startDate: convertUIDateToApiDate(startDate),
-							endDate: endDate ? convertUIDateToApiDate(endDate) : undefined,
-						});
-					} else {
-						const originalId = exp.id.includes("-edit-")
-							? exp.id.split("-edit-")[0]
-							: exp.id;
-
-						await api.patch(
-							`/api/v1/applicants/update-experience/${originalId}`,
-							{
+						if (!existingEntry) {
+							await api.post("/api/v1/applicants/add-experience", {
 								companyName: exp.company,
 								jobTitle: exp.role,
 								employmentType:
 									EMPLOYMENT_TYPE_MAP[exp.responsibilities] || "FULL_TIME",
-								country: "Rwanda",
+								country: exp.country || "Rwanda",
 								startDate: convertUIDateToApiDate(startDate),
 								endDate: endDate ? convertUIDateToApiDate(endDate) : undefined,
-							},
-						);
+							});
+						} else {
+							const originalId = exp.id.includes("-edit-")
+								? exp.id.split("-edit-")[0]
+								: exp.id;
+
+							await api.patch(
+								`/api/v1/applicants/update-experience/${originalId}`,
+								{
+									companyName: exp.company,
+									jobTitle: exp.role,
+									employmentType:
+										EMPLOYMENT_TYPE_MAP[exp.responsibilities] || "FULL_TIME",
+									country: "Rwanda",
+									startDate: convertUIDateToApiDate(startDate),
+									endDate: endDate
+										? convertUIDateToApiDate(endDate)
+										: undefined,
+								},
+							);
+						}
 					}
-				}
 
-				setProfileData((prev) =>
-					prev
-						? {
-								...prev,
-								education: data.education,
-								experience: data.experience,
-							}
-						: null,
-				);
+					queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
-				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
-
-				toast.success("Work and education information updated");
-			} catch (err) {
+					toast.success("Work and education information updated");
+					return true;
+				},
+			).catch((err) => {
 				console.error("Error updating work/education:", err);
 				toast.error("Failed to update work and education information");
-			} finally {
-				setIsLoading(false);
-			}
+				return false;
+			});
 		},
-		[profileData, queryClient],
+		[profileData, update, queryClient],
 	);
 
 	const uploadFile = useCallback(
 		async (type: "avatar" | "resume" | "sample", file: File) => {
 			if (!profileData) return;
 
-			try {
-				setIsLoading(true);
+			return update(
+				(currentData) => {
+					if (!currentData) return null;
 
-				const formData = new FormData();
-				formData.append("file", file);
-
-				let uploadUrl = "";
-
-				if (type === "avatar") {
-					const { data } = await api.post(
-						"/api/v1/users/upload-profile-picture",
-						formData,
-						{
-							headers: {
-								"Content-Type": "multipart/form-data",
+					if (type === "avatar") {
+						return {
+							...currentData,
+							avatarSrc: URL.createObjectURL(file),
+						};
+					} else if (type === "resume") {
+						return {
+							...currentData,
+							documents: {
+								...currentData.documents,
+								resume: {
+									name: file.name,
+									url: URL.createObjectURL(file),
+								},
 							},
-						},
-					);
-					uploadUrl = data.fileUrl || URL.createObjectURL(file);
-
-					setProfileData((prev) =>
-						prev ? { ...prev, avatarSrc: uploadUrl } : null,
-					);
-				} else if (type === "resume") {
-					const { data } = await api.post(
-						"/api/v1/users/upload-resume",
-						formData,
-						{
-							headers: {
-								"Content-Type": "multipart/form-data",
+						};
+					} else if (type === "sample") {
+						return {
+							...currentData,
+							documents: {
+								...currentData.documents,
+								samples: [
+									...currentData.documents.samples,
+									{ name: file.name, url: URL.createObjectURL(file) },
+								],
 							},
-						},
-					);
-					uploadUrl = data.fileUrl || URL.createObjectURL(file);
+						};
+					}
 
-					setProfileData((prev) =>
-						prev
-							? {
-									...prev,
-									documents: {
-										...prev.documents,
-										resume: { name: file.name, url: uploadUrl },
-									},
-								}
-							: null,
-					);
-				} else if (type === "sample") {
-					const { data } = await api.post(
-						"/api/v1/users/upload-sample",
-						formData,
-						{
-							headers: {
-								"Content-Type": "multipart/form-data",
+					return currentData;
+				},
+				async (newData) => {
+					if (!newData) throw new Error("No profile data available");
+
+					const formData = new FormData();
+					formData.append("file", file);
+
+					let uploadUrl = "";
+					let responseData;
+
+					if (type === "avatar") {
+						const { data } = await api.post(
+							"/api/v1/users/upload-profile-picture",
+							formData,
+							{
+								headers: {
+									"Content-Type": "multipart/form-data",
+								},
 							},
-						},
-					);
-					uploadUrl = data.fileUrl || URL.createObjectURL(file);
+						);
+						responseData = data;
+						uploadUrl = data.fileUrl || URL.createObjectURL(file);
+					} else if (type === "resume") {
+						const { data } = await api.post(
+							"/api/v1/users/upload-resume",
+							formData,
+							{
+								headers: {
+									"Content-Type": "multipart/form-data",
+								},
+							},
+						);
+						responseData = data;
+						uploadUrl = data.fileUrl || URL.createObjectURL(file);
+					} else if (type === "sample") {
+						const { data } = await api.post(
+							"/api/v1/users/upload-sample",
+							formData,
+							{
+								headers: {
+									"Content-Type": "multipart/form-data",
+								},
+							},
+						);
+						responseData = data;
+						uploadUrl = data.fileUrl || URL.createObjectURL(file);
+					}
 
-					setProfileData((prev) =>
-						prev
-							? {
-									...prev,
-									documents: {
-										...prev.documents,
-										samples: [
-											...prev.documents.samples,
-											{ name: file.name, url: uploadUrl },
-										],
-									},
-								}
-							: null,
-					);
-				}
+					queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
-				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
-
-				toast.success(`${file.name} uploaded successfully`);
-			} catch (err) {
+					toast.success(`${file.name} uploaded successfully`);
+					return responseData;
+				},
+			).catch((err) => {
 				console.error("Error uploading file:", err);
 				toast.error("Failed to upload file");
-			} finally {
-				setIsLoading(false);
-			}
+				return null;
+			});
 		},
-		[profileData, queryClient],
+		[profileData, update, queryClient],
 	);
 
 	const removeDocument = useCallback(
 		async (type: "resume" | "sample", index?: number) => {
-			if (!profileData) return;
+			if (!profileData) return false;
 
-			try {
-				setIsLoading(true);
+			return update(
+				(currentData) => {
+					if (!currentData) return null;
 
-				if (type === "resume") {
-					await api.delete("/api/v1/applicants/delete-resume");
+					if (type === "resume") {
+						return {
+							...currentData,
+							documents: {
+								...currentData.documents,
+								resume: null,
+							},
+						};
+					} else if (type === "sample" && index !== undefined) {
+						return {
+							...currentData,
+							documents: {
+								...currentData.documents,
+								samples: currentData.documents.samples.filter(
+									(_, i) => i !== index,
+								),
+							},
+						};
+					}
 
-					setProfileData((prev) =>
-						prev
-							? {
-									...prev,
-									documents: {
-										...prev.documents,
-										resume: null,
-									},
-								}
-							: null,
+					return currentData;
+				},
+				async (newData) => {
+					if (!newData) throw new Error("No profile data available");
+
+					if (type === "resume") {
+						await api.delete("/api/v1/applicants/delete-resume");
+					} else if (type === "sample" && index !== undefined) {
+						// await api.delete(`/api/v1/applicants/delete-sample/${sampleId}`);
+						console.log("Delete sample at index", index);
+					}
+
+					queryClient.invalidateQueries({ queryKey: ["application-profile"] });
+
+					toast.success(
+						`${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`,
 					);
-				} else if (type === "sample" && index !== undefined) {
-					// For samples, we don't have a specific API endpoint yet
-					setProfileData((prev) =>
-						prev
-							? {
-									...prev,
-									documents: {
-										...prev.documents,
-										samples: prev.documents.samples.filter(
-											(_, i) => i !== index,
-										),
-									},
-								}
-							: null,
-					);
-				}
-
-				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
-
-				toast.success(
-					`${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`,
-				);
-			} catch (err) {
+					return true;
+				},
+			).catch((err) => {
 				console.error(`Error removing ${type}:`, err);
 				toast.error(`Failed to remove ${type}`);
-			} finally {
-				setIsLoading(false);
-			}
+				return false;
+			});
 		},
-		[profileData, queryClient],
+		[profileData, update, queryClient],
 	);
 
 	const updatePortfolioLinks = useCallback(
 		async (links: PortfolioLinks) => {
-			if (!profileData) return;
+			if (!profileData) return false;
 
-			try {
-				setIsLoading(true);
+			return update(
+				(currentData) => {
+					if (!currentData) return null;
+					return {
+						...currentData,
+						portfolioLinks: links,
+					};
+				},
+				async (newData) => {
+					if (!newData) throw new Error("No profile data available");
 
-				const documentsExist =
-					detailedProfileQuery.data?.documents &&
-					detailedProfileQuery.data.documents.length > 0;
+					const documentsPayload = {
+						linkedinProfileUrl: links.linkedin || "",
+						githubProfileUrl: links.github || "",
+						resumeUrl: profileData.documents.resume?.url || "",
+						behanceProfileUrl: links.behance || "",
+						portfolioUrl: links.portfolio || "",
+					};
 
-				const documentsPayload = {
-					linkedinProfileUrl: links.linkedin || "",
-					githubProfileUrl: links.github || "",
-					resumeUrl: profileData.documents.resume?.url || "",
-					behanceProfileUrl: links.behance || "",
-					portfolioUrl: links.portfolio || "",
-				};
+					await api.patch(
+						"/api/v1/applicants/update-applicantion-documents",
+						documentsPayload,
+					);
 
-				await api.patch(
-					"/api/v1/applicants/update-applicantion-documents",
-					documentsPayload,
-				);
+					queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
-				setProfileData((prev) =>
-					prev ? { ...prev, portfolioLinks: links } : null,
-				);
-
-				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
-
-				toast.success("Portfolio links updated");
-			} catch (err) {
+					toast.success("Portfolio links updated");
+					return true;
+				},
+			).catch((err) => {
 				console.error("Error updating portfolio links:", err);
 				toast.error("Failed to update portfolio links");
-			} finally {
-				setIsLoading(false);
-			}
+				return false;
+			});
 		},
-		[profileData, detailedProfileQuery.data, queryClient],
+		[profileData, update, queryClient],
 	);
 
 	// Helper function to convert UI date format to API date format
@@ -1082,7 +1018,7 @@ export function useProfile(options: UseProfileOptions) {
 			toast.success("Password updated successfully!");
 		},
 		onError: (error: unknown) => {
-			const apiError = error as ApiError;
+			const apiError = error as { response?: { data?: { message?: string } } };
 			// Extract structured error from response
 			const errorMessage =
 				apiError.response?.data?.message || "Failed to update password";
@@ -1090,7 +1026,7 @@ export function useProfile(options: UseProfileOptions) {
 		},
 	});
 
-	const getProfileCompletion = () => {
+	const getProfileCompletion = useCallback(() => {
 		if (!profileData) return 0;
 
 		let completed = 0;
@@ -1147,12 +1083,24 @@ export function useProfile(options: UseProfileOptions) {
 		}
 
 		return Math.round((completed / total) * 100);
-	};
+	}, [profileData]);
+
+	// Clear any API operations when component unmounts
+	useEffect(() => {
+		return () => {
+			// Cancel any pending language operations
+			languageApiQueue.clear();
+		};
+	}, []);
 
 	return {
 		profileData,
-		isLoading,
-		error,
+		isLoading:
+			isLoading ||
+			isUpdating ||
+			basicProfileQuery.isLoading ||
+			detailedProfileQuery.isLoading,
+		error: error || updateError?.message || null,
 		canEdit,
 		updatePersonalInfo,
 		updateAddress,
@@ -1163,5 +1111,7 @@ export function useProfile(options: UseProfileOptions) {
 		updatePortfolioLinks,
 		updatePassword: (data: PasswordUpdateData) => updatePassword.mutate(data),
 		getProfileCompletion,
+		pendingOperations: pendingOperationsRef.current > 0,
+		clearError,
 	};
 }
