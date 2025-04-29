@@ -16,12 +16,10 @@ const ContactSection = () => {
 		setIsSubmitting(true);
 
 		try {
-			// Add your contact form submission logic here
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 
 			toast.success("Your message has been sent successfully.");
 
-			// Reset form
 			(e.target as HTMLFormElement).reset();
 		} catch {
 			toast.error("Failed to send message. Please try again.");
@@ -31,7 +29,7 @@ const ContactSection = () => {
 	};
 
 	return (
-		<section className="max-w-screen-2xl px-5 md:px-20 py-16 mb-8 flex justify-center items-center">
+		<section className="!w-full !mx-auto max-w-screen-2xl px-5 md:px-20 py-16 mb-8 flex justify-center items-center">
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
 				<div className="rounded-2xl flex items-center justify-center w-full">
 					<div className="rounded-2xl overflow-hidden w-full h-full">
