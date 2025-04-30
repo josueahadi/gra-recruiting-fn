@@ -24,7 +24,9 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [accessToken, setAccessToken] = useState<string | null>(null);
+
+	const [requestToken, setRequestToken] = useState<string | null>(null);
+	const [verifyToken, setVerifyToken] = useState<string | null>(null);
 
 	const clearError = useCallback(() => {
 		if (error) setError(null);
@@ -48,7 +50,7 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 			);
 
 			const { accessToken: token, message } = response.data;
-			setAccessToken(token);
+			setRequestToken(token);
 			setStep("verify");
 
 			showToast({
@@ -85,15 +87,18 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 		setIsLoading(true);
 
 		try {
-			if (!accessToken) {
+			if (!requestToken) {
 				throw new Error("Session expired. Please try again.");
 			}
 
-			await api.post(
+			const response = await api.post(
 				"/api/v1/auth/verify-reset-password-via-email",
 				{ email, code },
-				{ headers: { Authorization: `Bearer ${accessToken}` } },
+				{ headers: { Authorization: `Bearer ${requestToken}` } },
 			);
+
+			const { accessToken: newToken } = response.data;
+			setVerifyToken(newToken);
 
 			setStep("reset");
 			showToast({
@@ -118,7 +123,7 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [code, email, accessToken, clearError, options]);
+	}, [code, email, requestToken, clearError, options]);
 
 	const resetPassword = useCallback(async () => {
 		if (password.length < 8) {
@@ -135,14 +140,14 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 		setIsLoading(true);
 
 		try {
-			if (!accessToken) {
-				throw new Error("Session expired. Please try again.");
+			if (!verifyToken) {
+				throw new Error("Verification session expired. Please start over.");
 			}
 
 			await api.patch(
 				"/api/v1/auth/reset-password",
 				{ password },
-				{ headers: { Authorization: `Bearer ${accessToken}` } },
+				{ headers: { Authorization: `Bearer ${verifyToken}` } },
 			);
 
 			setStep("success");
@@ -168,7 +173,7 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 		} finally {
 			setIsLoading(false);
 		}
-	}, [password, confirmPassword, accessToken, clearError, options]);
+	}, [password, confirmPassword, verifyToken, clearError, options]);
 
 	const resendCode = useCallback(async () => {
 		clearError();
@@ -183,7 +188,7 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 			);
 
 			const { accessToken: token } = response.data;
-			setAccessToken(token);
+			setRequestToken(token);
 
 			showToast({
 				title: "New code sent",
