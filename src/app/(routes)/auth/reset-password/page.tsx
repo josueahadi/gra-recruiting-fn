@@ -101,7 +101,11 @@ export default function ResetPasswordPage() {
 								</div>
 							</div>
 
-							<Button type="submit" className="w-full" disabled={isLoading}>
+							<Button
+								type="submit"
+								className="w-full bg-primary-base font-bold hover:bg-custom-skyBlue"
+								disabled={isLoading}
+							>
 								{isLoading ? (
 									<>
 										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -170,7 +174,11 @@ export default function ResetPasswordPage() {
 								</p>
 							</div>
 
-							<Button type="submit" className="w-full" disabled={isLoading}>
+							<Button
+								type="submit"
+								className="w-full bg-primary-base hover:bg-custom-skyBlue font-bold"
+								disabled={isLoading}
+							>
 								{isLoading ? (
 									<>
 										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
