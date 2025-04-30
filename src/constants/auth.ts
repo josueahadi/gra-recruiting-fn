@@ -89,15 +89,16 @@ export const AUTH_CONSTANTS = {
 	},
 	RESET_PASSWORD: {
 		title: "Reset Your Password",
-		subtitle: "We'll send you instructions to reset your password",
+		subtitle: "We'll send you a verification code to reset your password",
 		buttons: {
-			submit: "Send Reset Link",
+			submit: "Send Verification Code",
 			back: "Back to Login",
+			verify: "Verify Code",
 		},
 		steps: {
 			request: {
 				title: "Reset Your Password",
-				subtitle: "Enter your email and we'll send you a reset link",
+				subtitle: "Enter your email and we'll send you a verification code",
 			},
 			verify: {
 				title: "Verify Your Email",

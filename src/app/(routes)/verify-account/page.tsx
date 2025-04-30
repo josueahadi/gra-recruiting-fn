@@ -44,11 +44,15 @@ export default function VerifyAccountPage() {
 			}
 
 			try {
-				const response = await api.patch("/api/v1/users/verify-email", null, {
-					headers: {
-						Authorization: `Bearer ${token}`,
+				const response = await api.patch(
+					"/api/v1/users/verify-email",
+					{},
+					{
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
 					},
-				});
+				);
 
 				if (response.data?.accessToken) {
 					setToken(response.data.accessToken);

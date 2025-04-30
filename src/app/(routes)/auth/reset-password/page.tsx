@@ -21,6 +21,9 @@ import {
 	Eye,
 	EyeOff,
 } from "lucide-react";
+import PasswordStrengthMeter from "@/components/auth/password-strength-meter";
+import { useState, useEffect } from "react";
+import { AUTH_CONSTANTS } from "@/constants";
 
 export default function ResetPasswordPage() {
 	const {
@@ -46,6 +49,11 @@ export default function ResetPasswordPage() {
 		goBack,
 	} = useResetPassword();
 
+	// State for resend cooldown
+	const [resendCooldown, setResendCooldown] = useState(false);
+	const [cooldownTime, setCooldownTime] = useState(0);
+
+	// Handle form submissions
 	const handleRequestResetSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 		requestReset();
@@ -61,16 +69,45 @@ export default function ResetPasswordPage() {
 		resetPassword();
 	};
 
+	// Handle resend verification code with cooldown
+	const handleResendCode = () => {
+		if (resendCooldown) return;
+
+		resendCode();
+		setResendCooldown(true);
+		setCooldownTime(60);
+
+		const interval = setInterval(() => {
+			setCooldownTime((prev) => {
+				if (prev <= 1) {
+					clearInterval(interval);
+					setResendCooldown(false);
+					return 0;
+				}
+				return prev - 1;
+			});
+		}, 1000);
+	};
+
+	// Clear cooldown on unmount
+	useEffect(() => {
+		return () => {
+			setCooldownTime(0);
+			setResendCooldown(false);
+		};
+	}, []);
+
 	return (
 		<div className="w-full max-w-md mx-auto">
+			{/* Request Reset Step */}
 			{step === "request" && (
 				<Card>
 					<CardHeader>
 						<CardTitle className="text-2xl font-bold text-center">
-							Reset Your Password
+							{AUTH_CONSTANTS.RESET_PASSWORD.steps.request.title}
 						</CardTitle>
 						<CardDescription className="text-center">
-							Enter your email and we'll send you a verification code
+							{AUTH_CONSTANTS.RESET_PASSWORD.steps.request.subtitle}
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -103,7 +140,7 @@ export default function ResetPasswordPage() {
 
 							<Button
 								type="submit"
-								className="w-full bg-primary-base font-bold hover:bg-custom-skyBlue"
+								className="w-full bg-primary-base hover:bg-custom-skyBlue font-bold"
 								disabled={isLoading}
 							>
 								{isLoading ? (
@@ -130,14 +167,18 @@ export default function ResetPasswordPage() {
 				</Card>
 			)}
 
+			{/* Verify Code Step */}
 			{step === "verify" && (
 				<Card>
 					<CardHeader>
 						<CardTitle className="text-2xl font-bold text-center">
-							Verify Code
+							{AUTH_CONSTANTS.RESET_PASSWORD.steps.verify.title}
 						</CardTitle>
 						<CardDescription className="text-center">
-							Enter the 6-digit verification code sent to {email}
+							{AUTH_CONSTANTS.RESET_PASSWORD.steps.verify.subtitle}
+							<span className="block font-medium text-primary-base mt-1">
+								{email}
+							</span>
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -157,15 +198,20 @@ export default function ResetPasswordPage() {
 										id="code"
 										type="text"
 										placeholder="Enter 6-digit code"
-										className="pl-10"
+										className="pl-10 text-left text-lg tracking-wider"
 										value={code}
 										onChange={(e) => {
-											setCode(e.target.value.replace(/\D/g, "").slice(0, 6));
+											// Only allow digits and max length of 6
+											const value = e.target.value
+												.replace(/\D/g, "")
+												.slice(0, 6);
+											setCode(value);
 											clearError();
 										}}
 										required
 										maxLength={6}
 										pattern="\d{6}"
+										inputMode="numeric"
 									/>
 								</div>
 								<p className="text-xs text-gray-500">
@@ -194,10 +240,12 @@ export default function ResetPasswordPage() {
 									type="button"
 									variant="outline"
 									className="w-full"
-									onClick={resendCode}
-									disabled={isLoading}
+									onClick={handleResendCode}
+									disabled={isLoading || resendCooldown}
 								>
-									Resend Code
+									{resendCooldown
+										? `Resend available in ${cooldownTime}s`
+										: "Resend Code"}
 								</Button>
 
 								<Button
@@ -216,14 +264,15 @@ export default function ResetPasswordPage() {
 				</Card>
 			)}
 
+			{/* Reset Password Step */}
 			{step === "reset" && (
 				<Card>
 					<CardHeader>
 						<CardTitle className="text-2xl font-bold text-center">
-							Create New Password
+							{AUTH_CONSTANTS.RESET_PASSWORD.steps.reset.title}
 						</CardTitle>
 						<CardDescription className="text-center">
-							Your password must be at least 8 characters
+							{AUTH_CONSTANTS.RESET_PASSWORD.steps.reset.subtitle}
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
@@ -259,6 +308,10 @@ export default function ResetPasswordPage() {
 										{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
 									</button>
 								</div>
+
+								{password && (
+									<PasswordStrengthMeter password={password} className="mt-1" />
+								)}
 							</div>
 
 							<div className="space-y-2">
@@ -278,9 +331,20 @@ export default function ResetPasswordPage() {
 										required
 									/>
 								</div>
+								{password &&
+									confirmPassword &&
+									password !== confirmPassword && (
+										<p className="text-red-500 text-sm mt-1">
+											Passwords don't match
+										</p>
+									)}
 							</div>
 
-							<Button type="submit" className="w-full" disabled={isLoading}>
+							<Button
+								type="submit"
+								className="w-full bg-primary-base hover:bg-custom-skyBlue font-bold"
+								disabled={isLoading || password !== confirmPassword}
+							>
 								{isLoading ? (
 									<>
 										<Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -306,6 +370,7 @@ export default function ResetPasswordPage() {
 				</Card>
 			)}
 
+			{/* Success Step */}
 			{step === "success" && (
 				<Card>
 					<CardHeader>
@@ -313,14 +378,17 @@ export default function ResetPasswordPage() {
 							<Check className="h-8 w-8 text-green-600" />
 						</div>
 						<CardTitle className="text-2xl font-bold text-center">
-							Password Reset Successful
+							{AUTH_CONSTANTS.RESET_PASSWORD.steps.success.title}
 						</CardTitle>
 						<CardDescription className="text-center">
-							Your password has been updated successfully
+							{AUTH_CONSTANTS.RESET_PASSWORD.steps.success.subtitle}
 						</CardDescription>
 					</CardHeader>
 					<CardContent>
-						<Button className="w-full" onClick={goToLogin}>
+						<Button
+							className="w-full bg-primary-base hover:bg-custom-skyBlue font-bold"
+							onClick={goToLogin}
+						>
 							Back to Login
 						</Button>
 					</CardContent>
