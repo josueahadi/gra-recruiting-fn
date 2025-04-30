@@ -197,7 +197,7 @@ export default function ResetPasswordPage() {
 	};
 
 	return (
-		<div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+		<div className="min-h-screen flex items-center justify-center p-4">
 			{step === "request" && (
 				<Card className="w-full max-w-md mx-auto">
 					<CardHeader>
