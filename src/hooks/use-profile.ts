@@ -221,67 +221,94 @@ export function useProfile(options: UseProfileOptions) {
 						department: basicProfile.careerName || undefined,
 						skills: {
 							// Map skills - treating all as technical for now
-							technical: detailedProfile.skillsAndExperienceRatings.map(
-								(skill) => ({
-									id: String(skill.skillId || Date.now()),
-									name: skill.skillName,
-								}),
-							),
+							technical: Array.isArray(
+								detailedProfile.skillsAndExperienceRatings,
+							)
+								? detailedProfile.skillsAndExperienceRatings.map((skill) => ({
+										id: String(skill.skillId || Date.now()),
+										name: skill.skillName,
+									}))
+								: [],
 							soft: [], // API doesn't differentiate (keeping this empty for now)
 						},
 
-						languages: detailedProfile.languagesProficiency.map((lang) => ({
-							languageId: lang.languageId,
-							language: lang.languageName,
-							level: REVERSE_LANGUAGE_LEVEL_MAP[lang.proficiencyLevel] || 5,
-						})),
+						languages: Array.isArray(detailedProfile.languagesProficiency)
+							? detailedProfile.languagesProficiency.map((lang) => ({
+									languageId: lang.languageId,
+									language: lang.languageName,
+									level: REVERSE_LANGUAGE_LEVEL_MAP[lang.proficiencyLevel] || 5,
+								}))
+							: [],
 
-						education: detailedProfile.educations.map((edu) => ({
-							id: String(edu.id || Date.now()),
-							institution: edu.institutionName,
-							degree:
-								REVERSE_EDUCATION_LEVEL_MAP[edu.educationLevel] ||
-								edu.educationLevel,
-							program: edu.program,
-							startYear: formatDateString(edu.dateJoined),
-							endYear: formatDateString(edu.dateGraduated),
-						})),
+						education: Array.isArray(detailedProfile.educations)
+							? detailedProfile.educations.map((edu) => ({
+									id: String(edu.id || Date.now()),
+									institution: edu.institutionName,
+									degree:
+										REVERSE_EDUCATION_LEVEL_MAP[edu.educationLevel] ||
+										edu.educationLevel,
+									program: edu.program,
+									startYear: formatDateString(edu.dateJoined),
+									endYear: formatDateString(edu.dateGraduated),
+								}))
+							: [],
 
-						experience: detailedProfile.experiences.map((exp) => {
-							// Create formatted duration
-							const startDate = formatDateString(exp.startDate);
-							const endDate = exp.endDate
-								? formatDateString(exp.endDate)
-								: "Present";
-							const duration = formatDateRange(startDate, endDate);
+						experience: Array.isArray(detailedProfile.experiences)
+							? detailedProfile.experiences.map((exp) => {
+									// Create formatted duration
+									const startDate = formatDateString(exp.startDate);
+									const endDate = exp.endDate
+										? formatDateString(exp.endDate)
+										: "Present";
+									const duration = formatDateRange(startDate, endDate);
 
-							return {
-								id: String(exp.id || Date.now()),
-								company: exp.companyName,
-								role: exp.jobTitle,
-								duration: duration,
-								responsibilities:
-									REVERSE_EMPLOYMENT_TYPE_MAP[exp.employmentType] ||
-									exp.employmentType,
-								country: exp.country,
-							};
-						}),
+									return {
+										id: String(exp.id || Date.now()),
+										company: exp.companyName,
+										role: exp.jobTitle,
+										duration: duration,
+										responsibilities:
+											REVERSE_EMPLOYMENT_TYPE_MAP[exp.employmentType] ||
+											exp.employmentType,
+										country: exp.country,
+									};
+								})
+							: [],
 
 						documents: {
-							resume: detailedProfile.documents[0]?.resumeUrl
-								? {
-										name: "Resume",
-										url: detailedProfile.documents[0].resumeUrl,
-									}
-								: null,
+							resume:
+								Array.isArray(detailedProfile.documents) &&
+								detailedProfile.documents.length > 0 &&
+								detailedProfile.documents[0]?.resumeUrl
+									? {
+											name: "Resume",
+											url: detailedProfile.documents[0].resumeUrl,
+										}
+									: null,
 							samples: [],
 						},
 
 						portfolioLinks: {
-							portfolio: detailedProfile.documents[0]?.portfolioUrl || "",
-							github: detailedProfile.documents[0]?.githubProfileUrl || "",
-							behance: detailedProfile.documents[0]?.behanceProfileUrl || "",
-							linkedin: detailedProfile.documents[0]?.linkedinProfileUrl || "",
+							portfolio:
+								Array.isArray(detailedProfile.documents) &&
+								detailedProfile.documents.length > 0
+									? detailedProfile.documents[0]?.portfolioUrl || ""
+									: "",
+							github:
+								Array.isArray(detailedProfile.documents) &&
+								detailedProfile.documents.length > 0
+									? detailedProfile.documents[0]?.githubProfileUrl || ""
+									: "",
+							behance:
+								Array.isArray(detailedProfile.documents) &&
+								detailedProfile.documents.length > 0
+									? detailedProfile.documents[0]?.behanceProfileUrl || ""
+									: "",
+							linkedin:
+								Array.isArray(detailedProfile.documents) &&
+								detailedProfile.documents.length > 0
+									? detailedProfile.documents[0]?.linkedinProfileUrl || ""
+									: "",
 						},
 						avatarSrc: "/images/avatar.jpg", // Placeholder (API doesn't provide avatar)
 					};
