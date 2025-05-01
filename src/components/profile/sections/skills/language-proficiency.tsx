@@ -1,8 +1,8 @@
 import type React from "react";
-import { useState, useId, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, Check, X, Loader2 } from "lucide-react";
+import { Plus, Pencil, Check, X, Loader2, Trash2 } from "lucide-react";
 import {
 	Select,
 	SelectContent,
@@ -10,53 +10,61 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import type { LanguageProficiency as LanguageProficiencyType } from "@/hooks/use-profile";
+import type { LanguageProficiency } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
 import { showToast } from "@/services/toast";
+import { api } from "@/services/api";
+import { ApiQueueManager } from "@/lib/utils/api-queue-utils";
 
 interface LanguageProficiencyProps {
-	languages: LanguageProficiencyType[];
-	onAddLanguage: (language: string, level: number) => void;
-	onRemoveLanguage: (language: string) => void;
-	onUpdateLanguage?: (
-		languageId: number,
-		language: string,
-		level: number,
-	) => void;
+	languages: LanguageProficiency[];
+	onLanguagesChange: (languages: LanguageProficiency[]) => void;
 	className?: string;
-	isSubmitting?: boolean;
 }
 
 const PROFICIENCY_LEVELS = [
-	{ value: "1", label: "Beginner" },
-	{ value: "3", label: "Elementary" },
-	{ value: "5", label: "Intermediate" },
-	{ value: "7", label: "Advanced" },
-	{ value: "9", label: "Native" },
+	{ value: "1", label: "Beginner", apiValue: "BEGINNER" },
+	{ value: "5", label: "Intermediate", apiValue: "INTERMEDIATE" },
+	{ value: "7", label: "Fluent", apiValue: "FLUENT" },
+	{ value: "9", label: "Native", apiValue: "NATIVE" },
 ];
+
+const PROFICIENCY_MAP: Record<string, string> = {
+	"1": "BEGINNER",
+	"5": "INTERMEDIATE",
+	"7": "FLUENT",
+	"9": "NATIVE",
+};
+
+const REVERSE_PROFICIENCY_MAP: Record<string, string> = {
+	BEGINNER: "1",
+	INTERMEDIATE: "5",
+	FLUENT: "7",
+	NATIVE: "9",
+};
 
 const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 	languages,
-	onAddLanguage,
-	onRemoveLanguage,
-	onUpdateLanguage,
+	onLanguagesChange,
 	className,
-	isSubmitting = false,
 }) => {
 	const [newLanguage, setNewLanguage] = useState("");
 	const [selectedProficiency, setSelectedProficiency] = useState("5");
 	const [editIndex, setEditIndex] = useState<number | null>(null);
 	const [editLanguage, setEditLanguage] = useState("");
 	const [editProficiency, setEditProficiency] = useState("5");
-	const [error, setError] = useState("");
-	const [isAdding, setIsAdding] = useState(false);
-	const uniqueId = useId();
+	const [errorMessage, setErrorMessage] = useState("");
+	const [pendingLanguages, setPendingLanguages] = useState<Set<string>>(
+		new Set(),
+	);
+
+	const apiQueue = new ApiQueueManager({ delayBetweenRequests: 500 });
 
 	const MAX_LANGUAGES = 10;
 
-	const handleAddLanguage = useCallback(() => {
+	const handleAddLanguage = useCallback(async () => {
 		if (!newLanguage.trim()) {
-			setError("Please enter a language");
+			setErrorMessage("Please enter a language name");
 			return;
 		}
 
@@ -74,104 +82,316 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 					lang.language.toLowerCase() === newLanguage.trim().toLowerCase(),
 			)
 		) {
-			setError("This language already exists.");
+			setErrorMessage("This language already exists.");
 			return;
 		}
 
-		setIsAdding(true);
+		setPendingLanguages((prev) => new Set(prev).add(newLanguage));
+		setErrorMessage("");
 
 		try {
-			onAddLanguage(
-				newLanguage.trim(),
-				Number.parseInt(selectedProficiency, 10),
-			);
+			const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+			const newLangObj: LanguageProficiency = {
+				language: newLanguage.trim(),
+				level: parseInt(selectedProficiency, 10),
+				tempId,
+			};
+
+			const updatedLanguages = [...languages, newLangObj];
+			onLanguagesChange(updatedLanguages);
+
+			const apiCall = async () => {
+				console.log(
+					"Adding language:",
+					newLanguage.trim(),
+					"with proficiency:",
+					PROFICIENCY_MAP[selectedProficiency],
+				);
+
+				const response = await api.post(
+					"/api/v1/applicants/add-language-proficiency",
+					{
+						languageName: newLanguage.trim(),
+						proficiencyLevel:
+							PROFICIENCY_MAP[selectedProficiency] || "INTERMEDIATE",
+					},
+				);
+
+				console.log("Language add response:", response.data);
+
+				const serverLanguageId = response.data?.id || response.data?.languageId;
+
+				if (serverLanguageId) {
+					console.log(
+						`Language ${newLanguage} received server ID:`,
+						serverLanguageId,
+					);
+
+					const finalLanguages = updatedLanguages.map((lang) => {
+						if (lang.tempId === tempId) {
+							return {
+								language: lang.language,
+								level: lang.level,
+								languageId: serverLanguageId,
+								tempId: undefined,
+							};
+						}
+						return lang;
+					});
+
+					onLanguagesChange(finalLanguages);
+				} else {
+					console.warn(
+						"Server did not return a language ID, using temporary ID for now",
+					);
+				}
+
+				return response.data;
+			};
+
+			await apiQueue.enqueue(apiCall);
+
 			setNewLanguage("");
 			setSelectedProficiency("5");
-			setError("");
-		} catch (error) {
-			console.error("Error adding language:", error);
-			setError("Failed to add language. Please try again.");
-		} finally {
-			setIsAdding(false);
-		}
-	}, [newLanguage, selectedProficiency, languages, onAddLanguage]);
 
-	const handleEdit = useCallback(
-		(index: number) => {
-			setEditIndex(index);
-			setEditLanguage(languages[index].language);
-			setEditProficiency(languages[index].level.toString());
-			setError("");
+			showToast({
+				title: "Language added successfully",
+				variant: "success",
+			});
+		} catch (error: any) {
+			console.error("Error adding language:", error);
+
+			onLanguagesChange(
+				languages.filter(
+					(lang) => lang.language.toLowerCase() !== newLanguage.toLowerCase(),
+				),
+			);
+
+			showToast({
+				title: "Failed to add language",
+				description: error.message || "Please try again",
+				variant: "error",
+			});
+		} finally {
+			setPendingLanguages((prev) => {
+				const newSet = new Set(prev);
+				newSet.delete(newLanguage);
+				return newSet;
+			});
+		}
+	}, [
+		newLanguage,
+		selectedProficiency,
+		languages,
+		onLanguagesChange,
+		apiQueue,
+	]);
+
+	const handleDeleteLanguage = useCallback(
+		async (languageToDelete: LanguageProficiency) => {
+			const isTemporary =
+				languageToDelete.tempId || !languageToDelete.languageId;
+
+			console.log("Deleting language:", {
+				name: languageToDelete.language,
+				id: languageToDelete.languageId,
+				isTemporary,
+			});
+
+			const originalLanguages = [...languages];
+			const updatedLanguages = languages.filter(
+				(lang) =>
+					(isTemporary && lang.tempId !== languageToDelete.tempId) ||
+					(!isTemporary &&
+						(lang.language !== languageToDelete.language ||
+							lang.languageId !== languageToDelete.languageId)),
+			);
+
+			onLanguagesChange(updatedLanguages);
+
+			setPendingLanguages((prev) =>
+				new Set(prev).add(languageToDelete.language),
+			);
+
+			try {
+				if (!isTemporary && languageToDelete.languageId) {
+					const apiCall = async () => {
+						try {
+							await api.delete(
+								`/api/v1/applicants/delete-language-proficiency/${languageToDelete.languageId}`,
+							);
+							console.log(
+								`Successfully deleted language with ID ${languageToDelete.languageId}`,
+							);
+							return true;
+						} catch (error: any) {
+							if (error.response?.status === 404) {
+								console.warn(
+									`Language with ID ${languageToDelete.languageId} not found on server, may already be deleted`,
+								);
+								return true;
+							}
+							throw error;
+						}
+					};
+
+					await apiQueue.enqueue(apiCall);
+
+					showToast({
+						title: "Language removed successfully",
+						variant: "success",
+					});
+				} else {
+					console.log("Removed temporary language (no API call needed)");
+				}
+			} catch (error: any) {
+				console.error("Error deleting language:", error);
+
+				onLanguagesChange(originalLanguages);
+
+				showToast({
+					title: "Failed to remove language",
+					description: error.message || "Please try again",
+					variant: "error",
+				});
+			} finally {
+				setPendingLanguages((prev) => {
+					const newSet = new Set(prev);
+					newSet.delete(languageToDelete.language);
+					return newSet;
+				});
+			}
 		},
-		[languages],
+		[languages, onLanguagesChange, apiQueue],
 	);
 
-	const handleSaveEdit = useCallback(
-		(languageId?: number) => {
+	const handleUpdateLanguage = useCallback(
+		async (index: number) => {
 			if (!editLanguage.trim()) {
-				setError("Language name cannot be empty");
+				setErrorMessage("Language name cannot be empty");
 				return;
 			}
+
+			const languageToUpdate = languages[index];
+			if (!languageToUpdate) return;
 
 			if (
 				languages.some(
 					(lang, idx) =>
-						idx !== editIndex &&
+						idx !== index &&
 						lang.language.toLowerCase() === editLanguage.trim().toLowerCase(),
 				)
 			) {
-				setError("This language already exists.");
+				setErrorMessage("This language already exists.");
 				return;
 			}
 
-			if (onUpdateLanguage && languageId) {
-				onUpdateLanguage(
-					languageId,
-					editLanguage.trim(),
-					Number.parseInt(editProficiency, 10),
-				);
-			}
+			const originalLanguage = languages[index].language;
+			setPendingLanguages((prev) => new Set(prev).add(originalLanguage));
+			setErrorMessage("");
 
-			if (editIndex !== null) {
-				const updatedLanguages = [...languages];
-				updatedLanguages[editIndex] = {
-					...updatedLanguages[editIndex],
-					language: editLanguage.trim(),
-					level: Number.parseInt(editProficiency, 10),
-				};
-				// setLanguages(updatedLanguages);
-			}
+			const isTemporary =
+				languageToUpdate.tempId || !languageToUpdate.languageId;
 
-			setEditIndex(null);
-			setEditLanguage("");
-			setEditProficiency("5");
-			setError("");
+			const originalLanguages = [...languages];
+
+			const updatedLanguages = [...languages];
+			updatedLanguages[index] = {
+				...updatedLanguages[index],
+				language: editLanguage.trim(),
+				level: parseInt(editProficiency, 10),
+			};
+
+			onLanguagesChange(updatedLanguages);
+
+			try {
+				if (!isTemporary && languageToUpdate.languageId) {
+					const apiCall = async () => {
+						console.log("Updating language:", {
+							id: languageToUpdate.languageId,
+							name: editLanguage.trim(),
+							level: PROFICIENCY_MAP[editProficiency],
+						});
+
+						await api.patch(
+							`/api/v1/applicants/update-language-proficiency/${languageToUpdate.languageId}`,
+							{
+								languageName: editLanguage.trim(),
+								proficiencyLevel:
+									PROFICIENCY_MAP[editProficiency] || "INTERMEDIATE",
+							},
+						);
+
+						return true;
+					};
+
+					await apiQueue.enqueue(apiCall);
+
+					showToast({
+						title: "Language updated successfully",
+						variant: "success",
+					});
+				} else if (isTemporary) {
+					console.log("Updated temporary language (optimistic UI only)");
+				}
+
+				setEditIndex(null);
+				setEditLanguage("");
+				setEditProficiency("5");
+			} catch (error: any) {
+				console.error("Error updating language:", error);
+
+				onLanguagesChange(originalLanguages);
+
+				showToast({
+					title: "Failed to update language",
+					description: error.message || "Please try again",
+					variant: "error",
+				});
+			} finally {
+				setPendingLanguages((prev) => {
+					const newSet = new Set(prev);
+					newSet.delete(originalLanguage);
+					return newSet;
+				});
+			}
 		},
-		[editLanguage, editProficiency, editIndex, languages, onUpdateLanguage],
+		[editLanguage, editProficiency, languages, onLanguagesChange, apiQueue],
+	);
+
+	const handleEditStart = useCallback(
+		(index: number) => {
+			const language = languages[index];
+			setEditIndex(index);
+			setEditLanguage(language.language);
+			setEditProficiency(language.level.toString());
+			setErrorMessage("");
+		},
+		[languages],
 	);
 
 	const handleCancelEdit = useCallback(() => {
 		setEditIndex(null);
 		setEditLanguage("");
 		setEditProficiency("5");
-		setError("");
+		setErrorMessage("");
 	}, []);
 
 	const getProficiencyLabel = useCallback((level: number) => {
 		if (level >= 9) return "Native";
-		if (level >= 7) return "Advanced";
+		if (level >= 7) return "Fluent";
 		if (level >= 5) return "Intermediate";
-		if (level >= 3) return "Elementary";
 		return "Beginner";
 	}, []);
 
-	const generateLanguageKey = useCallback(
-		(lang: LanguageProficiencyType, index: number) => {
+	const getLanguageKey = useCallback(
+		(lang: LanguageProficiency, index: number) => {
 			if (lang.languageId) return `lang-${lang.languageId}`;
 			if (lang.tempId) return lang.tempId;
-			return `${uniqueId}-${index}-${lang.language.replace(/\s+/g, "-")}`;
+			return `lang-${index}-${lang.language.replace(/\s+/g, "-")}`;
 		},
-		[uniqueId],
+		[],
 	);
 
 	const handleKeyPress = useCallback(
@@ -184,6 +404,13 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 		[handleAddLanguage],
 	);
 
+	const isPending = useCallback(
+		(language: string) => {
+			return pendingLanguages.has(language);
+		},
+		[pendingLanguages],
+	);
+
 	return (
 		<div className={className}>
 			<div className="flex flex-col sm:flex-row gap-2 mb-6">
@@ -193,13 +420,13 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 					onKeyPress={handleKeyPress}
 					placeholder="Enter language"
 					className="flex-grow"
-					disabled={isSubmitting || isAdding}
+					disabled={pendingLanguages.size > 0}
 				/>
 
 				<Select
 					value={selectedProficiency}
 					onValueChange={setSelectedProficiency}
-					disabled={isSubmitting || isAdding}
+					disabled={pendingLanguages.size > 0}
 				>
 					<SelectTrigger className="w-full sm:w-[180px]">
 						<SelectValue placeholder="Select proficiency" />
@@ -217,13 +444,12 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 					onClick={handleAddLanguage}
 					className="bg-sky-500 hover:bg-sky-600"
 					disabled={
-						isSubmitting ||
-						isAdding ||
+						pendingLanguages.size > 0 ||
 						languages.length >= MAX_LANGUAGES ||
 						!newLanguage.trim()
 					}
 				>
-					{isAdding ? (
+					{pendingLanguages.has(newLanguage) ? (
 						<Loader2 className="h-4 w-4 mr-1 animate-spin" />
 					) : (
 						<Plus className="h-4 w-4 mr-1" />
@@ -232,7 +458,9 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 				</Button>
 			</div>
 
-			{error && <div className="text-red-500 text-sm mb-4">{error}</div>}
+			{errorMessage && (
+				<div className="text-red-500 text-sm mb-4">{errorMessage}</div>
+			)}
 
 			{languages.length >= MAX_LANGUAGES && (
 				<div className="text-amber-600 text-sm mb-4">
@@ -244,10 +472,11 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
 				{languages.map((lang, index) => (
 					<div
-						key={generateLanguageKey(lang, index)}
+						key={getLanguageKey(lang, index)}
 						className={cn(
 							"bg-blue-50 rounded-lg p-4 relative",
 							lang.tempId && "border-2 border-blue-200",
+							isPending(lang.language) && "opacity-70",
 						)}
 					>
 						{editIndex === index ? (
@@ -256,12 +485,12 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 									value={editLanguage}
 									onChange={(e) => setEditLanguage(e.target.value)}
 									className="mb-2"
-									disabled={isSubmitting}
+									disabled={isPending(lang.language)}
 								/>
 								<Select
 									value={editProficiency}
 									onValueChange={setEditProficiency}
-									disabled={isSubmitting}
+									disabled={isPending(lang.language)}
 								>
 									<SelectTrigger className="w-full mb-2">
 										<SelectValue placeholder="Select proficiency" />
@@ -278,8 +507,8 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 									<Button
 										size="sm"
 										className="bg-green-500 hover:bg-green-600 text-white"
-										onClick={() => handleSaveEdit(lang.languageId)}
-										disabled={isSubmitting}
+										onClick={() => handleUpdateLanguage(index)}
+										disabled={isPending(lang.language)}
 									>
 										<Check className="h-4 w-4" />
 									</Button>
@@ -287,7 +516,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 										size="sm"
 										variant="outline"
 										onClick={handleCancelEdit}
-										disabled={isSubmitting}
+										disabled={isPending(lang.language)}
 									>
 										<X className="h-4 w-4" />
 									</Button>
@@ -302,13 +531,13 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 											<span className="text-xs text-blue-500 ml-1">(New)</span>
 										)}
 									</span>
-									{!isSubmitting && (
+									{!isPending(lang.language) && (
 										<Button
 											size="icon"
 											variant="ghost"
 											className="ml-2"
-											onClick={() => handleEdit(index)}
-											disabled={isSubmitting}
+											onClick={() => handleEditStart(index)}
+											disabled={isPending(lang.language)}
 										>
 											<Pencil className="h-4 w-4 text-gray-500" />
 										</Button>
@@ -318,30 +547,34 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 									{getProficiencyLabel(lang.level)}
 								</div>
 
-								{!isSubmitting && (
+								<div className="flex items-center mt-2">
+									{Array.from({ length: 9 }).map((_, i) => (
+										<div
+											key={`level-${getLanguageKey(lang, index)}-${i + 1}`}
+											className={cn(
+												"h-2 w-2 rounded-full mx-0.5",
+												i < lang.level ? "bg-blue-500" : "bg-gray-200",
+											)}
+										/>
+									))}
+								</div>
+
+								{!isPending(lang.language) && (
 									<button
 										type="button"
-										onClick={() => onRemoveLanguage(lang.language)}
+										onClick={() => handleDeleteLanguage(lang)}
 										className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
 										aria-label={`Remove ${lang.language}`}
-										disabled={isSubmitting}
+										disabled={isPending(lang.language)}
 									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											width="16"
-											height="16"
-											viewBox="0 0 24 24"
-											fill="none"
-											stroke="currentColor"
-											strokeWidth="2"
-											strokeLinecap="round"
-											strokeLinejoin="round"
-										>
-											<title>Remove</title>
-											<line x1="18" y1="6" x2="6" y2="18" />
-											<line x1="6" y1="6" x2="18" y2="18" />
-										</svg>
+										<Trash2 className="h-4 w-4" />
 									</button>
+								)}
+
+								{isPending(lang.language) && (
+									<div className="absolute top-2 right-2">
+										<Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+									</div>
 								)}
 							</>
 						)}

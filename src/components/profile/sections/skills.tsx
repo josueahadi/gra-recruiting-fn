@@ -9,7 +9,7 @@ import { showToast } from "@/services/toast";
 interface SkillsSectionProps {
 	skills: Skill[];
 	canEdit: boolean;
-	onUpdate: (skills: Skill[]) => void;
+	onUpdate: (skills: Skill[]) => Promise<boolean>;
 }
 
 const SkillsSection: React.FC<SkillsSectionProps> = ({
@@ -25,69 +25,51 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({
 		setIsEditing(true);
 	}, []);
 
-	const handleSave = useCallback(async () => {
-		try {
-			setIsSubmitting(true);
-
-			setIsEditing(false);
-
-			await onUpdate(skills);
-
-			showToast({
-				title: "Skills updated successfully",
-				variant: "success",
-			});
-		} catch (error) {
-			setIsEditing(true);
-			setSkills(initialSkills);
-			showToast({
-				title: "Failed to update skills. Please try again.",
-				variant: "error",
-			});
-			console.error("Error updating skills:", error);
-		} finally {
-			setIsSubmitting(false);
-		}
-	}, [skills, onUpdate, initialSkills]);
-
 	const handleCancel = useCallback(() => {
 		setIsEditing(false);
 		setSkills(initialSkills);
 	}, [initialSkills]);
 
-	const generateUniqueId = useCallback(() => {
-		const timestamp = Date.now();
-		const randomStr = Math.random().toString(36).substring(2, 9);
-		return `skill-${timestamp}-${randomStr}`;
-	}, []);
+	// Save changes (batch update)
+	const handleSave = useCallback(async () => {
+		if (skills.length > 20) {
+			showToast({
+				title: "Too many skills. Maximum 20 allowed.",
+				variant: "error",
+			});
+			return;
+		}
 
-	const handleAddSkill = useCallback(
-		(skillName: string) => {
-			if (
-				skills.some((s) => s.name.toLowerCase() === skillName.toLowerCase())
-			) {
+		setIsSubmitting(true);
+
+		try {
+			const success = await onUpdate(skills);
+
+			if (success) {
+				setIsEditing(false);
 				showToast({
-					title: "This skill already exists",
-					variant: "error",
+					title: "Skills updated successfully",
+					variant: "success",
 				});
-				return;
+			} else {
+				throw new Error("Failed to update skills");
 			}
+		} catch (error) {
+			console.error("Error updating skills:", error);
+			setSkills(initialSkills);
 
-			let newId = generateUniqueId();
-			while (skills.some((s) => s.id === newId)) {
-				newId = generateUniqueId();
-			}
+			showToast({
+				title: "Failed to update skills. Please try again.",
+				variant: "error",
+			});
+		} finally {
+			setIsSubmitting(false);
+		}
+	}, [skills, onUpdate, initialSkills]);
 
-			setSkills((prevSkills) => [
-				...prevSkills,
-				{ id: newId, name: skillName },
-			]);
-		},
-		[skills, generateUniqueId],
-	);
-
-	const handleRemoveSkill = useCallback((id: string) => {
-		setSkills((prevSkills) => prevSkills.filter((skill) => skill.id !== id));
+	// Handle skills changes from direct API component
+	const handleSkillsChange = useCallback((updatedSkills: Skill[]) => {
+		setSkills(updatedSkills);
 	}, []);
 
 	return (
@@ -95,17 +77,16 @@ const SkillsSection: React.FC<SkillsSectionProps> = ({
 			title="Skills"
 			canEdit={canEdit}
 			isEditing={isEditing}
+			isSubmitting={isSubmitting}
 			onEdit={handleEdit}
 			onSave={handleSave}
 			onCancel={handleCancel}
-			isSubmitting={isSubmitting}
 		>
 			<div className="md:px-4">
 				{isEditing ? (
 					<SkillsInput
 						skills={skills}
-						onAddSkill={handleAddSkill}
-						onRemoveSkill={handleRemoveSkill}
+						onSkillsChange={handleSkillsChange}
 						title=""
 						placeholder="Enter Skill"
 					/>

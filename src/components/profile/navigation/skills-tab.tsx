@@ -2,16 +2,16 @@ import type React from "react";
 import DepartmentSection from "@/components/profile/sections/department";
 import SkillsSection from "@/components/profile/sections/skills";
 import LanguagesSection from "@/components/profile/sections/languages";
-import { Separator } from "@/components/ui/separator";
 import type { Skill, LanguageProficiency } from "@/hooks/use-profile";
 import ProfileNavigationButtons from "@/components/profile/navigation/profile-nav-buttons";
+import { Separator } from "@/components/ui/separator";
+import { useProfile } from "@/hooks/use-profile";
 
 interface SkillsTabProps {
 	technicalSkills: Skill[];
 	softSkills: Skill[];
 	languages: LanguageProficiency[];
 	department?: string;
-	canEdit?: boolean;
 	onUpdate: (data: {
 		technical: Skill[];
 		soft: Skill[];
@@ -21,60 +21,71 @@ interface SkillsTabProps {
 }
 
 const SkillsTab: React.FC<SkillsTabProps> = ({
-	technicalSkills = [],
-	softSkills = [],
-	languages = [],
+	technicalSkills,
+	softSkills,
+	languages,
 	department,
-	canEdit = true,
 	onUpdate,
 }) => {
-	// Ensure we have arrays and combine them
-	const combinedSkills = [
-		...(Array.isArray(technicalSkills) ? technicalSkills : []),
-		...(Array.isArray(softSkills) ? softSkills : []),
-	];
+	const { addLanguage, updateLanguage, deleteLanguage } = useProfile({
+		userType: "applicant",
+	});
 
-	// Department update handler
-	const handleDepartmentUpdate = (updatedDepartment?: string) => {
+	const handleUpdateSkills = (skills: Skill[]) => {
 		onUpdate({
-			technical: technicalSkills || [],
-			soft: softSkills || [],
-			languages: languages || [],
-			department: updatedDepartment,
-		});
-	};
-
-	// Skills update handler
-	const handleSkillsUpdate = (updatedSkills: Skill[]) => {
-		// All skills are treated as technical skills in this implementation
-		onUpdate({
-			technical: updatedSkills,
-			soft: [], // Keeping this for backward compatibility
-			languages: languages || [],
+			technical: skills,
+			soft: softSkills,
+			languages,
 			department,
 		});
 	};
 
-	// Languages update handler
+	const handleUpdateSoftSkills = (skills: Skill[]) => {
+		onUpdate({
+			technical: technicalSkills,
+			soft: skills,
+			languages,
+			department,
+		});
+	};
+
+	const handleDepartmentChange = (newDepartment: string | undefined) => {
+		onUpdate({
+			technical: technicalSkills,
+			soft: softSkills,
+			languages,
+			department: newDepartment,
+		});
+	};
+
 	const handleLanguagesUpdate = (updatedLanguages: LanguageProficiency[]) => {
 		onUpdate({
-			technical: technicalSkills || [],
-			soft: softSkills || [],
+			technical: technicalSkills,
+			soft: softSkills,
 			languages: updatedLanguages,
 			department,
 		});
 	};
 
+	const handleDeleteLanguage = async (
+		languageName: string,
+	): Promise<boolean> => {
+		try {
+			return await deleteLanguage(languageName);
+		} catch (error) {
+			console.error("Error in handleDeleteLanguage:", error);
+			return false;
+		}
+	};
+
 	return (
 		<>
-			<h1 className="text-2xl font-bold text-primary-base mb-6">
-				Skills & Competence
-			</h1>
+			<h1 className="text-2xl font-bold text-primary-base mb-6">Skills</h1>
 
 			<DepartmentSection
 				department={department}
-				canEdit={canEdit}
-				onUpdate={handleDepartmentUpdate}
+				canEdit={true}
+				onUpdate={handleDepartmentChange}
 			/>
 
 			<div className="md:px-10">
@@ -82,9 +93,9 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 			</div>
 
 			<SkillsSection
-				skills={combinedSkills}
-				canEdit={canEdit}
-				onUpdate={handleSkillsUpdate}
+				skills={technicalSkills}
+				canEdit={true}
+				onUpdate={handleUpdateSkills}
 			/>
 
 			<div className="md:px-10">
@@ -92,9 +103,12 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 			</div>
 
 			<LanguagesSection
-				languages={languages || []}
-				canEdit={canEdit}
+				languages={languages}
+				canEdit={true}
 				onUpdate={handleLanguagesUpdate}
+				onAddLanguage={addLanguage}
+				onUpdateLanguage={updateLanguage}
+				onDeleteLanguage={handleDeleteLanguage}
 			/>
 
 			<ProfileNavigationButtons />

@@ -4,7 +4,8 @@ import { toast } from "react-hot-toast";
 import { api } from "@/services/api";
 import { formatDateRange, formatDateString } from "@/lib/utils/date-utils";
 import { useOptimisticUpdate } from "@/hooks/use-optimistic-update";
-import { languageApiQueue } from "@/lib/utils/api-queue-utils";
+import { ApiQueueManager } from "@/lib/utils/api-queue-utils";
+import { showToast } from "@/services/toast";
 
 export interface ProfileInfo {
 	firstName: string;
@@ -96,17 +97,15 @@ interface UseProfileOptions {
 
 const LANGUAGE_LEVEL_MAP: Record<number, string> = {
 	1: "BEGINNER",
-	3: "ELEMENTARY",
 	5: "INTERMEDIATE",
-	7: "ADVANCED",
+	7: "FLUENT",
 	9: "NATIVE",
 };
 
 const REVERSE_LANGUAGE_LEVEL_MAP: Record<string, number> = {
 	BEGINNER: 1,
-	ELEMENTARY: 3,
 	INTERMEDIATE: 5,
-	ADVANCED: 7,
+	FLUENT: 7,
 	NATIVE: 9,
 };
 
@@ -149,7 +148,6 @@ export function useProfile(options: UseProfileOptions) {
 	const queryClient = useQueryClient();
 	const canEdit = userType === "applicant" || !id;
 
-	// Use optimistic updates
 	const {
 		state: profileData,
 		setState: setProfileData,
@@ -162,6 +160,7 @@ export function useProfile(options: UseProfileOptions) {
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const pendingOperationsRef = useRef(0);
+	const languageApiQueue = new ApiQueueManager({ delayBetweenRequests: 500 });
 
 	const basicProfileQuery = useQuery({
 		queryKey: ["user-profile", id],
@@ -220,7 +219,6 @@ export function useProfile(options: UseProfileOptions) {
 						},
 						department: basicProfile.careerName || undefined,
 						skills: {
-							// Map skills - treating all as technical for now
 							technical: Array.isArray(
 								detailedProfile.skillsAndExperienceRatings,
 							)
@@ -229,7 +227,7 @@ export function useProfile(options: UseProfileOptions) {
 										name: skill.skillName,
 									}))
 								: [],
-							soft: [], // API doesn't differentiate (keeping this empty for now)
+							soft: [],
 						},
 
 						languages: Array.isArray(detailedProfile.languagesProficiency)
@@ -255,7 +253,6 @@ export function useProfile(options: UseProfileOptions) {
 
 						experience: Array.isArray(detailedProfile.experiences)
 							? detailedProfile.experiences.map((exp) => {
-									// Create formatted duration
 									const startDate = formatDateString(exp.startDate);
 									const endDate = exp.endDate
 										? formatDateString(exp.endDate)
@@ -376,6 +373,7 @@ export function useProfile(options: UseProfileOptions) {
 							portfolio: "",
 							github: "https://github.com/yourusername",
 							behance: "https://behance.net/yourprofile",
+							linkedin: "https://linkedin.com/in/yourprofile",
 						},
 						avatarSrc: "/images/avatar.jpg",
 					};
@@ -386,7 +384,6 @@ export function useProfile(options: UseProfileOptions) {
 				console.error("Error transforming profile data:", err);
 				setError("Failed to load profile data");
 
-				// Fallback to mock data
 				if (basicProfileQuery.data) {
 					const basicProfile = basicProfileQuery.data;
 
@@ -430,7 +427,6 @@ export function useProfile(options: UseProfileOptions) {
 		fetchAndTransformData();
 	}, [basicProfileQuery.data, detailedProfileQuery.data, id, setProfileData]);
 
-	// Calculate and update profile completion
 	useEffect(() => {
 		if (!profileData) return;
 
@@ -494,7 +490,6 @@ export function useProfile(options: UseProfileOptions) {
 		const completion = calculateCompletion();
 		localStorage.setItem("profileCompletion", String(completion));
 
-		// Update URL param for other components to detect
 		if (typeof window !== "undefined") {
 			const url = new URL(window.location.href);
 			url.searchParams.set("completion", String(completion));
@@ -502,7 +497,6 @@ export function useProfile(options: UseProfileOptions) {
 		}
 	}, [profileData]);
 
-	// API Mutations with optimistic updates
 	const updatePersonalInfo = useCallback(
 		async (info: ProfileInfo) => {
 			if (!profileData) return false;
@@ -519,14 +513,12 @@ export function useProfile(options: UseProfileOptions) {
 				async (newData) => {
 					if (!newData) throw new Error("No profile data available");
 
-					// Only include fields we want to update - leave out email
 					await api.patch("/api/v1/users/update-user-profile", {
 						firstName: info.firstName,
 						lastName: info.lastName,
 						phoneNumber: info.phone,
 					});
 
-					// Invalidate queries to ensure fresh data
 					queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 
 					toast.success("Personal information updated");
@@ -556,7 +548,6 @@ export function useProfile(options: UseProfileOptions) {
 				async (newData) => {
 					if (!newData) throw new Error("No profile data available");
 
-					// Only include address fields
 					await api.patch("/api/v1/users/update-user-profile", {
 						country: info.country,
 						city: info.city,
@@ -564,7 +555,6 @@ export function useProfile(options: UseProfileOptions) {
 						street: info.address,
 					});
 
-					// Invalidate queries
 					queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 
 					toast.success("Address information updated");
@@ -639,17 +629,13 @@ export function useProfile(options: UseProfileOptions) {
 					}
 				}
 
-				// Invalidate queries to refetch data
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 				queryClient.invalidateQueries({ queryKey: ["user-profile"] });
-
-				// Languages are now handled separately by specialized hook
 
 				return true;
 			} catch (error) {
 				console.error("Error updating skills:", error);
 
-				// Revert to original state
 				setProfileData(profileData);
 
 				toast.error("Failed to update skills");
@@ -925,7 +911,6 @@ export function useProfile(options: UseProfileOptions) {
 					if (type === "resume") {
 						await api.delete("/api/v1/applicants/delete-resume");
 					} else if (type === "sample" && index !== undefined) {
-						// await api.delete(`/api/v1/applicants/delete-sample/${sampleId}`);
 						console.log("Delete sample at index", index);
 					}
 
@@ -987,7 +972,6 @@ export function useProfile(options: UseProfileOptions) {
 		[profileData, update, queryClient],
 	);
 
-	// Helper function to convert UI date format to API date format
 	const convertUIDateToApiDate = (uiDate: string): string => {
 		try {
 			// If it's just a year (e.g., "2021")
@@ -1033,7 +1017,6 @@ export function useProfile(options: UseProfileOptions) {
 		}
 	};
 
-	// API mutation for password update
 	const updatePassword = useMutation({
 		mutationFn: async (data: PasswordUpdateData) => {
 			return api.patch("/api/v1/users/update-user-profile", {
@@ -1046,7 +1029,6 @@ export function useProfile(options: UseProfileOptions) {
 		},
 		onError: (error: unknown) => {
 			const apiError = error as { response?: { data?: { message?: string } } };
-			// Extract structured error from response
 			const errorMessage =
 				apiError.response?.data?.message || "Failed to update password";
 			toast.error(`${errorMessage}. Please try again!`);
@@ -1112,13 +1094,447 @@ export function useProfile(options: UseProfileOptions) {
 		return Math.round((completed / total) * 100);
 	}, [profileData]);
 
-	// Clear any API operations when component unmounts
 	useEffect(() => {
 		return () => {
-			// Cancel any pending language operations
 			languageApiQueue.clear();
 		};
-	}, []);
+	}, [languageApiQueue]);
+
+	const PROFICIENCY_LEVEL_MAP: Record<number, string> = {
+		1: "BEGINNER",
+		5: "INTERMEDIATE",
+		7: "FLUENT",
+		9: "NATIVE",
+	};
+
+	const REVERSE_PROFICIENCY_LEVEL_MAP: Record<string, number> = {
+		BEGINNER: 1,
+		INTERMEDIATE: 5,
+		FLUENT: 7,
+		NATIVE: 9,
+	};
+
+	const addLanguage = useCallback(
+		async (language: string, proficiencyLevel: number) => {
+			if (!profileData) return false;
+
+			try {
+				pendingOperationsRef.current += 1;
+
+				// Create a temporary ID for optimistic UI update
+				const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+				// Update UI immediately (optimistic update)
+				setProfileData((current) => {
+					if (!current) return null;
+					return {
+						...current,
+						languages: [
+							...current.languages,
+							{
+								language,
+								level: proficiencyLevel,
+								tempId,
+							},
+						],
+					};
+				});
+
+				// Make the API call
+				const { data } = await api.post(
+					"/api/v1/applicants/add-language-proficiency",
+					{
+						languageName: language,
+						proficiencyLevel:
+							LANGUAGE_LEVEL_MAP[proficiencyLevel] || "INTERMEDIATE",
+					},
+				);
+
+				// Update the language with the real ID from the server
+				setProfileData((current) => {
+					if (!current) return null;
+
+					const updatedLanguages = current.languages.map((lang) => {
+						if (lang.tempId === tempId) {
+							return {
+								language,
+								level: proficiencyLevel,
+								languageId: data.id || data.languageId,
+							};
+						}
+						return lang;
+					});
+
+					return {
+						...current,
+						languages: updatedLanguages,
+					};
+				});
+
+				// Invalidate queries to ensure data consistency
+				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
+
+				showToast({
+					title: `${language} added successfully`,
+					variant: "success",
+				});
+
+				return true;
+			} catch (error) {
+				console.error("Error adding language:", error);
+
+				// Rollback the optimistic update
+				setProfileData((current) => {
+					if (!current) return null;
+					return {
+						...current,
+						languages: current.languages.filter(
+							(lang) => !lang.tempId || lang.language !== language,
+						),
+					};
+				});
+
+				showToast({
+					title: `Failed to add ${language}`,
+					variant: "error",
+				});
+
+				return false;
+			} finally {
+				pendingOperationsRef.current -= 1;
+			}
+		},
+		[profileData, setProfileData, queryClient],
+	);
+
+	const updateLanguage = useCallback(
+		async (languageId: number, language: string, proficiencyLevel: number) => {
+			if (!profileData) return false;
+
+			try {
+				pendingOperationsRef.current += 1;
+
+				// Store original state for rollback
+				const originalLanguages = [...profileData.languages];
+
+				// Update UI immediately (optimistic update)
+				setProfileData((current) => {
+					if (!current) return null;
+
+					const updatedLanguages = current.languages.map((lang) => {
+						if (lang.languageId === languageId) {
+							return {
+								...lang,
+								language,
+								level: proficiencyLevel,
+							};
+						}
+						return lang;
+					});
+
+					return {
+						...current,
+						languages: updatedLanguages,
+					};
+				});
+
+				// Make the API call
+				await api.patch(
+					`/api/v1/applicants/update-language-proficiency/${languageId}`,
+					{
+						languageName: language,
+						proficiencyLevel:
+							LANGUAGE_LEVEL_MAP[proficiencyLevel] || "INTERMEDIATE",
+					},
+				);
+
+				// Invalidate queries to ensure data consistency
+				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
+
+				showToast({
+					title: `${language} updated successfully`,
+					variant: "success",
+				});
+
+				return true;
+			} catch (error) {
+				console.error("Error updating language:", error);
+
+				// Rollback to original state
+				if (profileData) {
+					setProfileData({
+						...profileData,
+						languages: [...originalLanguages],
+					});
+				}
+
+				showToast({
+					title: `Failed to update language`,
+					variant: "error",
+				});
+
+				return false;
+			} finally {
+				pendingOperationsRef.current -= 1;
+			}
+		},
+		[profileData, setProfileData, queryClient],
+	);
+
+	const deleteLanguage = useCallback(
+		async (languageName: string) => {
+			if (!profileData) return false;
+
+			const languageToDelete = profileData.languages.find(
+				(lang) => lang.language === languageName,
+			);
+
+			if (!languageToDelete || !languageToDelete.languageId) {
+				console.error(
+					"Cannot delete language - no valid ID found for:",
+					languageName,
+				);
+				return false;
+			}
+
+			const languageId = languageToDelete.languageId;
+
+			try {
+				pendingOperationsRef.current += 1;
+
+				// Store original state for rollback
+				const originalLanguages = [...profileData.languages];
+
+				// Update UI immediately (optimistic update)
+				setProfileData((current) => {
+					if (!current) return null;
+					return {
+						...current,
+						languages: current.languages.filter(
+							(lang) => lang.language !== languageName,
+						),
+					};
+				});
+
+				// Make the API call
+				await api.delete(
+					`/api/v1/applicants/delete-language-proficiency/${languageId}`,
+				);
+
+				// Invalidate queries to ensure data consistency
+				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
+
+				showToast({
+					title: `${languageToDelete.language} removed successfully`,
+					variant: "success",
+				});
+
+				return true;
+			} catch (error) {
+				console.error("Error deleting language:", error);
+
+				// Rollback to original state
+				if (profileData) {
+					setProfileData({
+						...profileData,
+						languages: [...originalLanguages],
+					});
+				}
+
+				showToast({
+					title: `Failed to remove ${languageToDelete.language}`,
+					variant: "error",
+				});
+
+				return false;
+			} finally {
+				pendingOperationsRef.current -= 1;
+			}
+		},
+		[profileData, setProfileData, queryClient],
+	);
+
+	const addSkill = useCallback(
+		async (skillName: string) => {
+			if (!profileData) return false;
+
+			try {
+				pendingOperationsRef.current += 1;
+
+				// Create a temporary ID for optimistic UI update
+				const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+				// Update UI immediately (optimistic update)
+				setProfileData((current) => {
+					if (!current) return null;
+					return {
+						...current,
+						skills: {
+							...current.skills,
+							technical: [
+								...current.skills.technical,
+								{
+									id: tempId,
+									name: skillName,
+									tempId,
+								},
+							],
+						},
+					};
+				});
+
+				// Make the API call
+				const { data } = await api.post("/api/v1/applicants/add-skills", {
+					skillsAndExperienceRatings: [
+						{
+							skillName,
+							experienceRating: "FIVE", // Default rating
+						},
+					],
+				});
+
+				// Update with server ID if available
+				const serverId =
+					data?.id || data?.skillId || (Array.isArray(data) && data[0]?.id);
+
+				if (serverId) {
+					setProfileData((current) => {
+						if (!current) return null;
+
+						const updatedSkills = current.skills.technical.map((skill) => {
+							if (skill.tempId === tempId) {
+								return {
+									id: serverId.toString(),
+									name: skillName,
+								};
+							}
+							return skill;
+						});
+
+						return {
+							...current,
+							skills: {
+								...current.skills,
+								technical: updatedSkills,
+							},
+						};
+					});
+				}
+
+				// Invalidate queries to ensure data consistency
+				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
+
+				showToast({
+					title: `${skillName} added successfully`,
+					variant: "success",
+				});
+
+				return true;
+			} catch (error) {
+				console.error("Error adding skill:", error);
+
+				// Rollback the optimistic update
+				setProfileData((current) => {
+					if (!current) return null;
+					return {
+						...current,
+						skills: {
+							...current.skills,
+							technical: current.skills.technical.filter(
+								(skill) => !skill.tempId || skill.name !== skillName,
+							),
+						},
+					};
+				});
+
+				showToast({
+					title: `Failed to add ${skillName}`,
+					variant: "error",
+				});
+
+				return false;
+			} finally {
+				pendingOperationsRef.current -= 1;
+			}
+		},
+		[profileData, setProfileData, queryClient],
+	);
+
+	// Delete a skill
+	const deleteSkill = useCallback(
+		async (skillId: string) => {
+			if (!profileData) return false;
+
+			const skillToDelete = profileData.skills.technical.find(
+				(skill) => skill.id === skillId,
+			);
+
+			if (!skillToDelete) {
+				console.error("Cannot delete skill - not found:", skillId);
+				return false;
+			}
+
+			try {
+				pendingOperationsRef.current += 1;
+
+				// Store original state for rollback
+				const originalSkills = [...profileData.skills.technical];
+
+				// Update UI immediately (optimistic update)
+				setProfileData((current) => {
+					if (!current) return null;
+					return {
+						...current,
+						skills: {
+							...current.skills,
+							technical: current.skills.technical.filter(
+								(skill) => skill.id !== skillId,
+							),
+						},
+					};
+				});
+
+				// Make the API call if it's not a temporary skill
+				if (!skillToDelete.tempId) {
+					await api.delete(`/api/v1/applicants/delete-skill/${skillId}`);
+				}
+
+				// Invalidate queries to ensure data consistency
+				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
+
+				showToast({
+					title: `${skillToDelete.name} removed successfully`,
+					variant: "success",
+				});
+
+				return true;
+			} catch (error) {
+				console.error("Error deleting skill:", error);
+
+				// Rollback to original state
+				setProfileData((current) => {
+					if (!current) return null;
+					return {
+						...current,
+						skills: {
+							...current.skills,
+							technical: originalSkills,
+						},
+					};
+				});
+
+				showToast({
+					title: `Failed to remove skill`,
+					variant: "error",
+				});
+
+				return false;
+			} finally {
+				pendingOperationsRef.current -= 1;
+			}
+		},
+		[profileData, setProfileData, queryClient],
+	);
 
 	return {
 		profileData,
@@ -1140,5 +1556,10 @@ export function useProfile(options: UseProfileOptions) {
 		getProfileCompletion,
 		pendingOperations: pendingOperationsRef.current > 0,
 		clearError,
+		addLanguage,
+		updateLanguage,
+		deleteLanguage,
+		addSkill,
+		deleteSkill,
 	};
 }

@@ -11,16 +11,13 @@ const LanguageDisplay: FC<LanguageDisplayProps> = ({
 	languages,
 	className,
 }) => {
-	// Helper function to get human-readable proficiency label
 	const getProficiencyLabel = (level: number) => {
 		if (level >= 9) return "Native";
-		if (level >= 7) return "Advanced";
+		if (level >= 7) return "Fluent";
 		if (level >= 5) return "Intermediate";
-		if (level >= 3) return "Elementary";
 		return "Beginner";
 	};
 
-	// Input validation
 	if (!Array.isArray(languages)) {
 		console.error("Languages is not an array:", languages);
 		return (
@@ -30,7 +27,6 @@ const LanguageDisplay: FC<LanguageDisplayProps> = ({
 		);
 	}
 
-	// Empty state
 	if (languages.length === 0) {
 		return (
 			<div className={className}>
@@ -39,12 +35,10 @@ const LanguageDisplay: FC<LanguageDisplayProps> = ({
 		);
 	}
 
-	// Render the languages grid
 	return (
 		<div className={className}>
 			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
 				{languages.map((lang, index) => {
-					// Create a unique key
 					const key = lang.languageId
 						? `lang-${lang.languageId}`
 						: lang.tempId
