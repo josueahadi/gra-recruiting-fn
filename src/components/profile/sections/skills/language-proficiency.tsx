@@ -10,15 +10,15 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import type { LanguageProficiency } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
 import { showToast } from "@/services/toast";
 import { api } from "@/services/api";
 import { ApiQueueManager } from "@/lib/utils/api-queue-utils";
+import type { LanguageProficiency as LanguageProficiencyType } from "@/hooks/use-profile";
 
 interface LanguageProficiencyProps {
-	languages: LanguageProficiency[];
-	onLanguagesChange: (languages: LanguageProficiency[]) => void;
+	languages: LanguageProficiencyType[];
+	onLanguagesChange: (languages: LanguageProficiencyType[]) => void;
 	className?: string;
 }
 
@@ -92,9 +92,9 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 		try {
 			const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-			const newLangObj: LanguageProficiency = {
+			const newLangObj: LanguageProficiencyType = {
 				language: newLanguage.trim(),
-				level: parseInt(selectedProficiency, 10),
+				level: Number.parseInt(selectedProficiency, 10),
 				tempId,
 			};
 
@@ -159,7 +159,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 				title: "Language added successfully",
 				variant: "success",
 			});
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error("Error adding language:", error);
 
 			onLanguagesChange(
@@ -170,7 +170,10 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 
 			showToast({
 				title: "Failed to add language",
-				description: error.message || "Please try again",
+				description:
+					typeof error === "object" && error && "message" in error
+						? (error as { message?: string }).message || "Please try again"
+						: "Please try again",
 				variant: "error",
 			});
 		} finally {
@@ -189,7 +192,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 	]);
 
 	const handleDeleteLanguage = useCallback(
-		async (languageToDelete: LanguageProficiency) => {
+		async (languageToDelete: LanguageProficiencyType) => {
 			const isTemporary =
 				languageToDelete.tempId || !languageToDelete.languageId;
 
@@ -225,8 +228,8 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 								`Successfully deleted language with ID ${languageToDelete.languageId}`,
 							);
 							return true;
-						} catch (error: any) {
-							if (error.response?.status === 404) {
+						} catch (error: unknown) {
+							if (hasResponseStatus(error) && error.response.status === 404) {
 								console.warn(
 									`Language with ID ${languageToDelete.languageId} not found on server, may already be deleted`,
 								);
@@ -245,14 +248,17 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 				} else {
 					console.log("Removed temporary language (no API call needed)");
 				}
-			} catch (error: any) {
+			} catch (error: unknown) {
 				console.error("Error deleting language:", error);
 
 				onLanguagesChange(originalLanguages);
 
 				showToast({
 					title: "Failed to remove language",
-					description: error.message || "Please try again",
+					description:
+						typeof error === "object" && error && "message" in error
+							? (error as { message?: string }).message || "Please try again"
+							: "Please try again",
 					variant: "error",
 				});
 			} finally {
@@ -300,7 +306,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 			updatedLanguages[index] = {
 				...updatedLanguages[index],
 				language: editLanguage.trim(),
-				level: parseInt(editProficiency, 10),
+				level: Number.parseInt(editProficiency, 10),
 			};
 
 			onLanguagesChange(updatedLanguages);
@@ -339,14 +345,17 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 				setEditIndex(null);
 				setEditLanguage("");
 				setEditProficiency("5");
-			} catch (error: any) {
+			} catch (error: unknown) {
 				console.error("Error updating language:", error);
 
 				onLanguagesChange(originalLanguages);
 
 				showToast({
 					title: "Failed to update language",
-					description: error.message || "Please try again",
+					description:
+						typeof error === "object" && error && "message" in error
+							? (error as { message?: string }).message || "Please try again"
+							: "Please try again",
 					variant: "error",
 				});
 			} finally {
@@ -386,7 +395,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 	}, []);
 
 	const getLanguageKey = useCallback(
-		(lang: LanguageProficiency, index: number) => {
+		(lang: LanguageProficiencyType, index: number) => {
 			if (lang.languageId) return `lang-${lang.languageId}`;
 			if (lang.tempId) return lang.tempId;
 			return `lang-${index}-${lang.language.replace(/\s+/g, "-")}`;
@@ -586,3 +595,16 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 };
 
 export default LanguageProficiency;
+
+// Type guard for error with response
+function hasResponseStatus(
+	error: unknown,
+): error is { response: { status: number } } {
+	return (
+		typeof error === "object" &&
+		error !== null &&
+		"response" in error &&
+		typeof (error as { response?: unknown }).response === "object" &&
+		(error as { response: { status?: unknown } }).response?.status !== undefined
+	);
+}

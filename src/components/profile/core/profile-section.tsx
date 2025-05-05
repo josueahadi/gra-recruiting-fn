@@ -11,10 +11,11 @@ interface ProfileSectionProps {
 	isEditing: boolean;
 	isSubmitting?: boolean;
 	onEdit: () => void;
-	onSave: () => void;
+	onSave?: () => void;
 	onCancel?: () => void;
 	className?: string;
 	contentClassName?: string;
+	saveButtonText?: string;
 }
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({
@@ -28,7 +29,11 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 	onCancel,
 	className,
 	contentClassName,
+	saveButtonText = "Save Changes",
 }) => {
+	const showSaveButtons = isEditing && onCancel && onSave;
+	const showCancelButton = isEditing && onCancel && !onSave;
+
 	return (
 		<div className={cn("mb-8 md:px-10", className)}>
 			<div className="flex items-center justify-between mb-6">
@@ -42,16 +47,16 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 							(isSubmitting || (isEditing && !onCancel)) &&
 								"opacity-50 cursor-not-allowed",
 						)}
-						aria-label={isEditing ? "Save changes" : `Edit ${title}`}
-						onClick={isEditing ? onSave : onEdit}
-						disabled={isSubmitting || (isEditing && !onCancel)}
+						aria-label={isEditing ? "Exit edit mode" : `Edit ${title}`}
+						onClick={onEdit}
+						disabled={isSubmitting}
 					>
 						{isEditing ? (
 							isSubmitting ? (
 								<Loader2 className="h-5 w-5 animate-spin" />
-							) : (
+							) : onSave ? (
 								<Check className="h-5 w-5" />
-							)
+							) : null
 						) : (
 							<Edit1 className="h-5 w-5" />
 						)}
@@ -61,7 +66,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
 			<div className={cn("px-6", contentClassName)}>{children}</div>
 
-			{isEditing && onCancel && (
+			{showSaveButtons && (
 				<div className="flex justify-end mt-6 px-6">
 					<Button
 						variant="outline"
@@ -82,8 +87,16 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 								Saving...
 							</>
 						) : (
-							"Save Changes"
+							saveButtonText
 						)}
+					</Button>
+				</div>
+			)}
+
+			{showCancelButton && (
+				<div className="flex justify-end mt-6 px-6">
+					<Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
+						Cancel
 					</Button>
 				</div>
 			)}

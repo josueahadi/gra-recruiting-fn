@@ -4,27 +4,24 @@ import ProfileSection from "@/components/profile/core/profile-section";
 import type { LanguageProficiency as LanguageProficiencyType } from "@/hooks/use-profile";
 import LanguageProficiency from "./skills/language-proficiency";
 import LanguageDisplay from "./skills/language-display";
-import { showToast } from "@/services/toast";
 
 interface LanguagesSectionProps {
 	languages: LanguageProficiencyType[];
 	canEdit: boolean;
-	onUpdate: (languages: LanguageProficiencyType[]) => Promise<boolean>;
+	onUpdate?: (languages: LanguageProficiencyType[]) => Promise<boolean>;
 }
 
 const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 	languages: initialLanguages,
 	canEdit,
-	onUpdate,
 }) => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [languages, setLanguages] = useState<LanguageProficiencyType[]>(
 		initialLanguages || [],
 	);
-	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const handleEdit = useCallback(() => {
-		setIsEditing(true);
+		setIsEditing((prev) => !prev);
 	}, []);
 
 	const handleCancel = useCallback(() => {
@@ -32,39 +29,11 @@ const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 		setLanguages(initialLanguages || []);
 	}, [initialLanguages]);
 
-	const handleSave = useCallback(async () => {
-		if (languages.length > 10) {
-			showToast({
-				title: "Too many languages. Maximum 10 allowed.",
-				variant: "error",
-			});
-			return;
-		}
-
-		setIsSubmitting(true);
-
-		try {
-			const success = await onUpdate(languages);
-
-			if (success) {
-				setIsEditing(false);
-				showToast({
-					title: "Languages updated successfully",
-					variant: "success",
-				});
-			} else {
-				throw new Error("Failed to update languages");
-			}
-		} catch (error) {
-			console.error("Error updating languages:", error);
-			showToast({
-				title: "Failed to update languages. Please try again.",
-				variant: "error",
-			});
-		} finally {
-			setIsSubmitting(false);
-		}
-	}, [languages, onUpdate]);
+	const handleApplyChanges = useCallback(() => {
+		setIsEditing(false);
+		// Keep the current state of languages, which reflects all API changes
+		// No need to reset to initialLanguages since all changes are already saved
+	}, []);
 
 	const handleLanguagesChange = useCallback(
 		(updatedLanguages: LanguageProficiencyType[]) => {
@@ -78,10 +47,10 @@ const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 			title="Language Proficiency"
 			canEdit={canEdit}
 			isEditing={isEditing}
-			isSubmitting={isSubmitting}
 			onEdit={handleEdit}
-			onSave={handleSave}
 			onCancel={handleCancel}
+			onSave={handleApplyChanges}
+			saveButtonText="Apply Changes"
 		>
 			<div className="md:px-4">
 				{isEditing ? (

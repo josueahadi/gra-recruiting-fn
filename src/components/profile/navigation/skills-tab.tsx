@@ -31,22 +31,34 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 		userType: "applicant",
 	});
 
-	const handleUpdateSkills = (skills: Skill[]) => {
-		onUpdate({
-			technical: skills,
-			soft: softSkills,
-			languages,
-			department,
-		});
+	const handleUpdateSkills = async (skills: Skill[]): Promise<boolean> => {
+		try {
+			onUpdate({
+				technical: skills,
+				soft: softSkills,
+				languages,
+				department,
+			});
+			return true;
+		} catch (error) {
+			console.error("Error updating skills:", error);
+			return false;
+		}
 	};
 
-	const handleUpdateSoftSkills = (skills: Skill[]) => {
-		onUpdate({
-			technical: technicalSkills,
-			soft: skills,
-			languages,
-			department,
-		});
+	const handleUpdateSoftSkills = async (skills: Skill[]): Promise<boolean> => {
+		try {
+			onUpdate({
+				technical: technicalSkills,
+				soft: skills,
+				languages,
+				department,
+			});
+			return true;
+		} catch (error) {
+			console.error("Error updating soft skills:", error);
+			return false;
+		}
 	};
 
 	const handleDepartmentChange = (newDepartment: string | undefined) => {
@@ -102,14 +114,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 				<Separator className="my-8 bg-custom-separator bg-opacity-50" />
 			</div>
 
-			<LanguagesSection
-				languages={languages}
-				canEdit={true}
-				onUpdate={handleLanguagesUpdate}
-				onAddLanguage={addLanguage}
-				onUpdateLanguage={updateLanguage}
-				onDeleteLanguage={handleDeleteLanguage}
-			/>
+			<LanguagesSection languages={languages} canEdit={true} />
 
 			<ProfileNavigationButtons />
 		</>

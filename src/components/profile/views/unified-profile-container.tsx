@@ -12,6 +12,7 @@ import { WorkEducationSection } from "@/components/profile";
 import DocumentsSection from "../sections/documents";
 import { useProfile } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
+import type { Skill } from "@/hooks/use-profile";
 
 interface ProfileContainerProps {
 	userId?: string;
@@ -92,25 +93,29 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 		});
 	};
 
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	const handleSkillsUpdate = (skills: any[]) => {
-		updateSkills({
-			technical: skills,
-			soft: [],
-			languages: profileData.languages || [],
-			department: profileData.department,
-		});
+	const handleSkillsUpdate = async (skills: Skill[]): Promise<boolean> => {
+		try {
+			updateSkills({
+				technical: skills,
+				soft: [],
+				languages: profileData.languages || [],
+				department: profileData.department,
+			});
+			return true;
+		} catch (error) {
+			console.error("Error updating skills:", error);
+			return false;
+		}
 	};
 
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	const handleLanguagesUpdate = (languages: any[]) => {
-		updateSkills({
-			technical: profileData.skills.technical || [],
-			soft: profileData.skills.soft || [],
-			languages,
-			department: profileData.department,
-		});
-	};
+	// const handleLanguagesUpdate = (languages: any[]) => {
+	// 	updateSkills({
+	// 		technical: profileData.skills.technical || [],
+	// 		soft: profileData.skills.soft || [],
+	// 		languages,
+	// 		department: profileData.department,
+	// 	});
+	// };
 
 	return (
 		<div className={cn("", wrapperClassName)}>
@@ -172,7 +177,6 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 				<LanguagesSection
 					languages={profileData.languages || []}
 					canEdit={canEdit}
-					onUpdate={handleLanguagesUpdate}
 				/>
 
 				<div className="md:px-10">
