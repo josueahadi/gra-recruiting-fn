@@ -1,24 +1,30 @@
 import type React from "react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import ProfileSection from "@/components/profile/core/profile-section";
-import type { LanguageProficiency as LanguageProficiencyType } from "@/hooks/use-profile";
+import type { LanguageProficiency as LanguageProficiencyType } from "@/types/profile";
 import LanguageProficiency from "./skills/language-proficiency";
 import LanguageDisplay from "./skills/language-display";
 
 interface LanguagesSectionProps {
 	languages: LanguageProficiencyType[];
 	canEdit: boolean;
-	onUpdate?: (languages: LanguageProficiencyType[]) => Promise<boolean>;
+	onUpdate?: (languages: LanguageProficiencyType[]) => void;
 }
 
 const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 	languages: initialLanguages,
 	canEdit,
+	onUpdate,
 }) => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [languages, setLanguages] = useState<LanguageProficiencyType[]>(
 		initialLanguages || [],
 	);
+
+	// Sync languages with parent component when initialLanguages prop changes
+	useEffect(() => {
+		setLanguages(initialLanguages || []);
+	}, [initialLanguages]);
 
 	const handleEdit = useCallback(() => {
 		setIsEditing((prev) => !prev);
@@ -29,17 +35,15 @@ const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 		setLanguages(initialLanguages || []);
 	}, [initialLanguages]);
 
-	const handleApplyChanges = useCallback(() => {
-		setIsEditing(false);
-		// Keep the current state of languages, which reflects all API changes
-		// No need to reset to initialLanguages since all changes are already saved
-	}, []);
-
 	const handleLanguagesChange = useCallback(
 		(updatedLanguages: LanguageProficiencyType[]) => {
 			setLanguages(updatedLanguages);
+			// Notify parent component of the change
+			if (onUpdate) {
+				onUpdate(updatedLanguages);
+			}
 		},
-		[],
+		[onUpdate],
 	);
 
 	return (
@@ -49,8 +53,6 @@ const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 			isEditing={isEditing}
 			onEdit={handleEdit}
 			onCancel={handleCancel}
-			onSave={handleApplyChanges}
-			saveButtonText="Apply Changes"
 		>
 			<div className="md:px-4">
 				{isEditing ? (

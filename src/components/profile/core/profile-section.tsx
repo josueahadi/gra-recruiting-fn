@@ -36,6 +36,8 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 	const showSaveButtons = isEditing && onCancel && onSave && !customActions;
 	const showCancelButton = isEditing && onCancel && !onSave && !customActions;
 
+	const isLanguageSection = title === "Language Proficiency";
+
 	return (
 		<div className={cn("mb-8 md:px-10", className)}>
 			<div className="flex items-center justify-between mb-6">
@@ -49,7 +51,13 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 							(isSubmitting || (isEditing && !onCancel)) &&
 								"opacity-50 cursor-not-allowed",
 						)}
-						aria-label={isEditing ? "Exit edit mode" : `Edit ${title}`}
+						aria-label={
+							isEditing
+								? isLanguageSection
+									? "Done"
+									: "Exit edit mode"
+								: `Edit ${title}`
+						}
 						onClick={onEdit}
 						disabled={isSubmitting}
 					>
@@ -80,7 +88,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 						onClick={onCancel}
 						disabled={isSubmitting}
 					>
-						Cancel
+						{isLanguageSection ? "Done" : "Exit"}
 					</Button>
 					<Button
 						onClick={onSave}
@@ -102,7 +110,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 			{showCancelButton && (
 				<div className="flex justify-end mt-6 px-6">
 					<Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
-						Cancel
+						{isLanguageSection ? "Done" : "Exit"}
 					</Button>
 				</div>
 			)}

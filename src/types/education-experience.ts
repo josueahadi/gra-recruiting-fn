@@ -13,38 +13,36 @@ export type EmploymentType =
 
 export interface Education {
 	id?: string;
-	tempId?: string;
 	institutionName: string;
-	educationLevel: EducationLevel;
+	educationLevel: string;
 	program: string;
-	dateJoined: string;
-	dateGraduated: string;
+	dateJoined?: string | null;
+	dateGraduated?: string | null;
 }
 
 export interface Experience {
 	id?: string;
-	tempId?: string;
 	companyName: string;
 	jobTitle: string;
-	employmentType: EmploymentType;
-	country: string;
-	startDate: string;
-	endDate: string;
+	employmentType: string;
+	country?: string;
+	startDate?: string;
+	endDate?: string;
 }
 
 export interface AddEducationRequest {
 	institutionName: string;
-	educationLevel: EducationLevel;
+	educationLevel: string;
 	program: string;
-	dateJoined: string;
-	dateGraduated: string;
+	dateJoined?: string | null;
+	dateGraduated?: string | null;
 }
 
 export interface AddExperienceRequest {
 	companyName: string;
 	jobTitle: string;
-	employmentType: EmploymentType;
-	country: string;
-	startDate: string;
-	endDate: string;
+	employmentType: string;
+	country?: string;
+	startDate?: string;
+	endDate?: string;
 }

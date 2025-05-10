@@ -12,9 +12,22 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { showToast } from "@/services/toast";
-import { api } from "@/services/api";
 import { ApiQueueManager } from "@/lib/utils/api-queue-utils";
-import type { LanguageProficiency as LanguageProficiencyType } from "@/hooks/use-profile";
+import type { LanguageProficiency as LanguageProficiencyType } from "@/types/profile";
+import {
+	languagesService,
+	type LanguageProficiencyPayload,
+} from "@/services/languages";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface LanguageProficiencyProps {
 	languages: LanguageProficiencyType[];
@@ -29,7 +42,10 @@ const PROFICIENCY_LEVELS = [
 	{ value: "9", label: "Native", apiValue: "NATIVE" },
 ];
 
-const PROFICIENCY_MAP: Record<string, string> = {
+const PROFICIENCY_MAP: Record<
+	string,
+	LanguageProficiencyPayload["proficiencyLevel"]
+> = {
 	"1": "BEGINNER",
 	"5": "INTERMEDIATE",
 	"7": "FLUENT",
@@ -57,6 +73,11 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 	const [pendingLanguages, setPendingLanguages] = useState<Set<string>>(
 		new Set(),
 	);
+
+	// Delete confirmation dialog state
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [languageToDelete, setLanguageToDelete] =
+		useState<LanguageProficiencyType | null>(null);
 
 	const apiQueue = new ApiQueueManager({ delayBetweenRequests: 500 });
 
@@ -89,82 +110,73 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 		setPendingLanguages((prev) => new Set(prev).add(newLanguage));
 		setErrorMessage("");
 
+		// First add to UI with temporary state for a more responsive experience
+		const tempLanguageObj: LanguageProficiencyType = {
+			language: newLanguage.trim(),
+			level: Number.parseInt(selectedProficiency, 10),
+		};
+
+		// Update UI immediately
+		onLanguagesChange([...languages, tempLanguageObj]);
+
 		try {
-			const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+			// Make a direct API call to add the language
+			console.log(
+				"Adding language:",
+				newLanguage.trim(),
+				"with proficiency:",
+				PROFICIENCY_MAP[selectedProficiency],
+			);
 
-			const newLangObj: LanguageProficiencyType = {
-				language: newLanguage.trim(),
-				level: Number.parseInt(selectedProficiency, 10),
-				tempId,
-			};
+			const response = await languagesService.add({
+				languageName: newLanguage.trim(),
+				proficiencyLevel:
+					PROFICIENCY_MAP[selectedProficiency] || "INTERMEDIATE",
+			});
 
-			const updatedLanguages = [...languages, newLangObj];
-			onLanguagesChange(updatedLanguages);
+			console.log("Language add response:", response);
 
-			const apiCall = async () => {
-				console.log(
-					"Adding language:",
-					newLanguage.trim(),
-					"with proficiency:",
-					PROFICIENCY_MAP[selectedProficiency],
-				);
+			// If successful, update the languages array with the new language from API
+			if (response.data?.id) {
+				// Find the temporary language we just added and update it with the server ID
+				const updatedLanguages = languages.map((lang) => {
+					if (lang.language === tempLanguageObj.language && !lang.languageId) {
+						return {
+							...lang,
+							languageId: response.data.id,
+						};
+					}
+					return lang;
+				});
 
-				const response = await api.post(
-					"/api/v1/applicants/add-language-proficiency",
-					{
-						languageName: newLanguage.trim(),
-						proficiencyLevel:
-							PROFICIENCY_MAP[selectedProficiency] || "INTERMEDIATE",
-					},
-				);
-
-				console.log("Language add response:", response.data);
-
-				const serverLanguageId = response.data?.id || response.data?.languageId;
-
-				if (serverLanguageId) {
-					console.log(
-						`Language ${newLanguage} received server ID:`,
-						serverLanguageId,
-					);
-
-					const finalLanguages = updatedLanguages.map((lang) => {
-						if (lang.tempId === tempId) {
-							return {
-								language: lang.language,
-								level: lang.level,
-								languageId: serverLanguageId,
-								tempId: undefined,
-							};
-						}
-						return lang;
+				// Add language if it wasn't found in the map operation (shouldn't happen, but as a fallback)
+				if (
+					!updatedLanguages.some((lang) => lang.languageId === response.data.id)
+				) {
+					updatedLanguages.push({
+						language: newLanguage.trim(),
+						level: Number.parseInt(selectedProficiency, 10),
+						languageId: response.data.id,
 					});
-
-					onLanguagesChange(finalLanguages);
-				} else {
-					console.warn(
-						"Server did not return a language ID, using temporary ID for now",
-					);
 				}
 
-				return response.data;
-			};
+				onLanguagesChange(updatedLanguages);
 
-			await apiQueue.enqueue(apiCall);
-
-			setNewLanguage("");
-			setSelectedProficiency("5");
-
-			showToast({
-				title: "Language added successfully",
-				variant: "success",
-			});
+				showToast({
+					title: "Language added successfully",
+					variant: "success",
+				});
+			} else {
+				throw new Error("Failed to get language ID from server");
+			}
 		} catch (error: unknown) {
 			console.error("Error adding language:", error);
 
+			// Remove the temporary language on error
 			onLanguagesChange(
 				languages.filter(
-					(lang) => lang.language.toLowerCase() !== newLanguage.toLowerCase(),
+					(lang) =>
+						!(lang.language === tempLanguageObj.language && !lang.languageId),
 				),
 			);
 
@@ -182,95 +194,71 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 				newSet.delete(newLanguage);
 				return newSet;
 			});
+
+			setNewLanguage("");
+			setSelectedProficiency("5");
 		}
-	}, [
-		newLanguage,
-		selectedProficiency,
-		languages,
-		onLanguagesChange,
-		apiQueue,
-	]);
+	}, [newLanguage, selectedProficiency, languages, onLanguagesChange]);
 
-	const handleDeleteLanguage = useCallback(
-		async (languageToDelete: LanguageProficiencyType) => {
-			const isTemporary =
-				languageToDelete.tempId || !languageToDelete.languageId;
+	// Open the confirmation dialog before deleting
+	const confirmDeleteLanguage = useCallback(
+		(language: LanguageProficiencyType) => {
+			setLanguageToDelete(language);
+			setDeleteDialogOpen(true);
+		},
+		[],
+	);
 
-			console.log("Deleting language:", {
-				name: languageToDelete.language,
-				id: languageToDelete.languageId,
-				isTemporary,
-			});
+	// Handle actual deletion after confirmation
+	const handleDeleteLanguage = useCallback(async () => {
+		if (!languageToDelete) return;
+		setDeleteDialogOpen(false);
+		setPendingLanguages((prev) => new Set(prev).add(languageToDelete.language));
 
-			const originalLanguages = [...languages];
-			const updatedLanguages = languages.filter(
-				(lang) =>
-					(isTemporary && lang.tempId !== languageToDelete.tempId) ||
-					(!isTemporary &&
-						(lang.language !== languageToDelete.language ||
-							lang.languageId !== languageToDelete.languageId)),
-			);
-
-			onLanguagesChange(updatedLanguages);
-
-			setPendingLanguages((prev) =>
-				new Set(prev).add(languageToDelete.language),
-			);
-
-			try {
-				if (!isTemporary && languageToDelete.languageId) {
-					const apiCall = async () => {
-						try {
-							await api.delete(
-								`/api/v1/applicants/delete-language-proficiency/${languageToDelete.languageId}`,
-							);
-							console.log(
-								`Successfully deleted language with ID ${languageToDelete.languageId}`,
-							);
-							return true;
-						} catch (error: unknown) {
-							if (hasResponseStatus(error) && error.response.status === 404) {
-								console.warn(
-									`Language with ID ${languageToDelete.languageId} not found on server, may already be deleted`,
-								);
-								return true;
-							}
-							throw error;
-						}
-					};
-
-					await apiQueue.enqueue(apiCall);
-
-					showToast({
-						title: "Language removed successfully",
-						variant: "success",
-					});
-				} else {
-					console.log("Removed temporary language (no API call needed)");
-				}
-			} catch (error: unknown) {
-				console.error("Error deleting language:", error);
-
-				onLanguagesChange(originalLanguages);
-
+		try {
+			if (languageToDelete.languageId) {
+				// Always call the API if languageId exists
+				await languagesService.delete(languageToDelete.languageId);
+				const updatedLanguages = languages.filter(
+					(lang) => lang.languageId !== languageToDelete.languageId,
+				);
+				onLanguagesChange(updatedLanguages);
 				showToast({
-					title: "Failed to remove language",
-					description:
-						typeof error === "object" && error && "message" in error
-							? (error as { message?: string }).message || "Please try again"
-							: "Please try again",
-					variant: "error",
+					title: "Language removed successfully",
+					variant: "success",
 				});
-			} finally {
-				setPendingLanguages((prev) => {
-					const newSet = new Set(prev);
-					newSet.delete(languageToDelete.language);
-					return newSet;
+			} else {
+				// If no languageId, just remove from UI
+				const updatedLanguages = languages.filter(
+					(lang) => lang.language !== languageToDelete.language,
+				);
+				onLanguagesChange(updatedLanguages);
+				showToast({
+					title: "Language removed",
+					variant: "success",
 				});
 			}
-		},
-		[languages, onLanguagesChange, apiQueue],
-	);
+		} catch (error: unknown) {
+			console.error("Error deleting language:", error);
+			showToast({
+				title: "Failed to remove language",
+				description:
+					typeof error === "object" && error && "message" in error
+						? (error as { message?: string }).message || "Please try again"
+						: "Please try again",
+				variant: "error",
+			});
+		} finally {
+			setPendingLanguages((prev) => {
+				const newSet = new Set(prev);
+				if (languageToDelete) {
+					newSet.delete(languageToDelete.language);
+				}
+				return newSet;
+			});
+			setLanguageToDelete(null);
+		}
+	}, [languageToDelete, languages, onLanguagesChange]);
 
 	const handleUpdateLanguage = useCallback(
 		async (index: number) => {
@@ -297,11 +285,10 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 			setPendingLanguages((prev) => new Set(prev).add(originalLanguage));
 			setErrorMessage("");
 
-			const isTemporary =
-				languageToUpdate.tempId || !languageToUpdate.languageId;
-
+			// Create a copy of languages for optimistic updates and potential rollback
 			const originalLanguages = [...languages];
 
+			// Update locally first for immediate feedback
 			const updatedLanguages = [...languages];
 			updatedLanguages[index] = {
 				...updatedLanguages[index],
@@ -312,34 +299,32 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 			onLanguagesChange(updatedLanguages);
 
 			try {
-				if (!isTemporary && languageToUpdate.languageId) {
-					const apiCall = async () => {
-						console.log("Updating language:", {
-							id: languageToUpdate.languageId,
-							name: editLanguage.trim(),
-							level: PROFICIENCY_MAP[editProficiency],
-						});
+				// If language has an ID, update it on the server
+				if (languageToUpdate.languageId) {
+					console.log("Updating language:", {
+						id: languageToUpdate.languageId,
+						name: editLanguage.trim(),
+						level: PROFICIENCY_MAP[editProficiency],
+					});
 
-						await api.patch(
-							`/api/v1/applicants/update-language-proficiency/${languageToUpdate.languageId}`,
-							{
-								languageName: editLanguage.trim(),
-								proficiencyLevel:
-									PROFICIENCY_MAP[editProficiency] || "INTERMEDIATE",
-							},
-						);
-
-						return true;
-					};
-
-					await apiQueue.enqueue(apiCall);
+					await languagesService.update(languageToUpdate.languageId, {
+						languageName: editLanguage.trim(),
+						proficiencyLevel:
+							PROFICIENCY_MAP[editProficiency] || "INTERMEDIATE",
+					});
 
 					showToast({
 						title: "Language updated successfully",
 						variant: "success",
 					});
-				} else if (isTemporary) {
-					console.log("Updated temporary language (optimistic UI only)");
+				} else {
+					// If it's a new language that hasn't been saved yet, just update local state
+					console.log("Updating unsaved language in UI (no API call needed)");
+
+					showToast({
+						title: "Language updated",
+						variant: "success",
+					});
 				}
 
 				setEditIndex(null);
@@ -348,6 +333,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 			} catch (error: unknown) {
 				console.error("Error updating language:", error);
 
+				// Rollback optimistic update
 				onLanguagesChange(originalLanguages);
 
 				showToast({
@@ -366,7 +352,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 				});
 			}
 		},
-		[editLanguage, editProficiency, languages, onLanguagesChange, apiQueue],
+		[editLanguage, editProficiency, languages, onLanguagesChange],
 	);
 
 	const handleEditStart = useCallback(
@@ -387,6 +373,11 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 		setErrorMessage("");
 	}, []);
 
+	const handleCancelDelete = useCallback(() => {
+		setDeleteDialogOpen(false);
+		setLanguageToDelete(null);
+	}, []);
+
 	const getProficiencyLabel = useCallback((level: number) => {
 		if (level >= 9) return "Native";
 		if (level >= 7) return "Fluent";
@@ -397,7 +388,6 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 	const getLanguageKey = useCallback(
 		(lang: LanguageProficiencyType, index: number) => {
 			if (lang.languageId) return `lang-${lang.languageId}`;
-			if (lang.tempId) return lang.tempId;
 			return `lang-${index}-${lang.language.replace(/\s+/g, "-")}`;
 		},
 		[],
@@ -484,7 +474,6 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 						key={getLanguageKey(lang, index)}
 						className={cn(
 							"bg-blue-50 rounded-lg p-4 relative",
-							lang.tempId && "border-2 border-blue-200",
 							isPending(lang.language) && "opacity-70",
 						)}
 					>
@@ -534,12 +523,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 						) : (
 							<>
 								<div className="font-medium text-lg flex items-center justify-between">
-									<span>
-										{lang.language}
-										{lang.tempId && (
-											<span className="text-xs text-blue-500 ml-1">(New)</span>
-										)}
-									</span>
+									<span>{lang.language}</span>
 									{!isPending(lang.language) && (
 										<Button
 											size="icon"
@@ -571,7 +555,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 								{!isPending(lang.language) && (
 									<button
 										type="button"
-										onClick={() => handleDeleteLanguage(lang)}
+										onClick={() => confirmDeleteLanguage(lang)}
 										className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
 										aria-label={`Remove ${lang.language}`}
 										disabled={isPending(lang.language)}
@@ -590,6 +574,30 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 					</div>
 				))}
 			</div>
+
+			{/* Delete Confirmation Dialog */}
+			<AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+				<AlertDialogContent>
+					<AlertDialogHeader>
+						<AlertDialogTitle>Delete Language</AlertDialogTitle>
+						<AlertDialogDescription>
+							Are you sure you want to delete "{languageToDelete?.language}"?
+							This action cannot be undone.
+						</AlertDialogDescription>
+					</AlertDialogHeader>
+					<AlertDialogFooter>
+						<AlertDialogCancel onClick={handleCancelDelete}>
+							Cancel
+						</AlertDialogCancel>
+						<AlertDialogAction
+							onClick={handleDeleteLanguage}
+							className="bg-red-500 hover:bg-red-600"
+						>
+							Delete
+						</AlertDialogAction>
+					</AlertDialogFooter>
+				</AlertDialogContent>
+			</AlertDialog>
 		</div>
 	);
 };

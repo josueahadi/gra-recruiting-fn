@@ -8,13 +8,13 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import {
 	Bell,
+	Eye,
+	EyeOff,
 	Lock,
 	LogOut,
 	Save,
-	Shield,
 	Trash2,
 	UserCog,
-	Users,
 } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
@@ -30,6 +30,13 @@ const AdminSettingsSection = () => {
 		currentPassword: "",
 		newPassword: "",
 		confirmPassword: "",
+	});
+
+	// Add state for password visibility
+	const [showPasswords, setShowPasswords] = useState({
+		currentPassword: false,
+		newPassword: false,
+		confirmPassword: false,
 	});
 
 	const [adminSettings, setAdminSettings] = useState({
@@ -50,6 +57,14 @@ const AdminSettingsSection = () => {
 		setPasswordForm({
 			...passwordForm,
 			[name]: value,
+		});
+	};
+
+	// Add toggle function for password visibility
+	const togglePasswordVisibility = (field: keyof typeof showPasswords) => {
+		setShowPasswords({
+			...showPasswords,
+			[field]: !showPasswords[field],
 		});
 	};
 
@@ -119,28 +134,64 @@ const AdminSettingsSection = () => {
 						<form onSubmit={handlePasswordSubmit} className="space-y-4">
 							<div>
 								<Label htmlFor="currentPassword">Current Password</Label>
-								<Input
-									id="currentPassword"
-									name="currentPassword"
-									type="password"
-									value={passwordForm.currentPassword}
-									onChange={handlePasswordChange}
-									className="mt-1"
-									required
-								/>
+								<div className="relative">
+									<Input
+										id="currentPassword"
+										name="currentPassword"
+										type={showPasswords.currentPassword ? "text" : "password"}
+										value={passwordForm.currentPassword}
+										onChange={handlePasswordChange}
+										className="mt-1"
+										required
+									/>
+									<button
+										type="button"
+										onClick={() => togglePasswordVisibility("currentPassword")}
+										className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+										aria-label={
+											showPasswords.currentPassword
+												? "Hide password"
+												: "Show password"
+										}
+									>
+										{showPasswords.currentPassword ? (
+											<EyeOff size={20} />
+										) : (
+											<Eye size={20} />
+										)}
+									</button>
+								</div>
 							</div>
 
 							<div>
 								<Label htmlFor="newPassword">New Password</Label>
-								<Input
-									id="newPassword"
-									name="newPassword"
-									type="password"
-									value={passwordForm.newPassword}
-									onChange={handlePasswordChange}
-									className="mt-1"
-									required
-								/>
+								<div className="relative">
+									<Input
+										id="newPassword"
+										name="newPassword"
+										type={showPasswords.newPassword ? "text" : "password"}
+										value={passwordForm.newPassword}
+										onChange={handlePasswordChange}
+										className="mt-1"
+										required
+									/>
+									<button
+										type="button"
+										onClick={() => togglePasswordVisibility("newPassword")}
+										className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+										aria-label={
+											showPasswords.newPassword
+												? "Hide password"
+												: "Show password"
+										}
+									>
+										{showPasswords.newPassword ? (
+											<EyeOff size={20} />
+										) : (
+											<Eye size={20} />
+										)}
+									</button>
+								</div>
 								<p className="text-xs text-gray-500 mt-1">
 									Password must be at least 8 characters long with a mix of
 									letters, numbers, and symbols.
@@ -149,15 +200,33 @@ const AdminSettingsSection = () => {
 
 							<div>
 								<Label htmlFor="confirmPassword">Confirm New Password</Label>
-								<Input
-									id="confirmPassword"
-									name="confirmPassword"
-									type="password"
-									value={passwordForm.confirmPassword}
-									onChange={handlePasswordChange}
-									className="mt-1"
-									required
-								/>
+								<div className="relative">
+									<Input
+										id="confirmPassword"
+										name="confirmPassword"
+										type={showPasswords.confirmPassword ? "text" : "password"}
+										value={passwordForm.confirmPassword}
+										onChange={handlePasswordChange}
+										className="mt-1"
+										required
+									/>
+									<button
+										type="button"
+										onClick={() => togglePasswordVisibility("confirmPassword")}
+										className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+										aria-label={
+											showPasswords.confirmPassword
+												? "Hide password"
+												: "Show password"
+										}
+									>
+										{showPasswords.confirmPassword ? (
+											<EyeOff size={20} />
+										) : (
+											<Eye size={20} />
+										)}
+									</button>
+								</div>
 							</div>
 
 							<Button

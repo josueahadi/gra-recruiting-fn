@@ -215,7 +215,7 @@ export default function ResetPasswordPage() {
 									/>
 								</div>
 								<p className="text-xs text-gray-500">
-									The code is valid for 5 minutes. If you don't receive it,
+									The code is valid for 5 minutes. If you don&apos;t receive it,
 									check your spam folder.
 								</p>
 							</div>
@@ -335,7 +335,7 @@ export default function ResetPasswordPage() {
 									confirmPassword &&
 									password !== confirmPassword && (
 										<p className="text-red-500 text-sm mt-1">
-											Passwords don't match
+											Passwords don&apos;t match
 										</p>
 									)}
 							</div>

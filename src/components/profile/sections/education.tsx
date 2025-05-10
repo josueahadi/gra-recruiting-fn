@@ -86,7 +86,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({
 						{initialEducation.length > 0 ? (
 							initialEducation.map((edu) => (
 								<EducationCard
-									key={edu.id || edu.tempId}
+									key={edu.id}
 									education={edu}
 									onRemove={handleRemoveEducation}
 									canEdit={isEditing}

@@ -1,16 +1,37 @@
 import { api } from "@/services/api";
 import type {
-	AddEducationRequest,
-	AddExperienceRequest,
-} from "@/types/education-experience";
+	EducationResponse,
+	ExperienceResponse,
+	ApiResponse,
+} from "@/types/profile";
+
+// Education
+export interface AddEducationRequest {
+	institutionName: string;
+	educationLevel: string;
+	program: string;
+	dateJoined?: string | null;
+	dateGraduated?: string | null;
+}
 
 export const educationService = {
-	add: async (data: AddEducationRequest) => {
+	/**
+	 * Add an education record
+	 */
+	async add(
+		data: AddEducationRequest,
+	): Promise<ApiResponse<EducationResponse>> {
 		const response = await api.post("/api/v1/applicants/add-education", data);
 		return response.data;
 	},
 
-	update: async (id: string, data: AddEducationRequest) => {
+	/**
+	 * Update an education record
+	 */
+	async update(
+		id: number,
+		data: AddEducationRequest,
+	): Promise<ApiResponse<EducationResponse>> {
 		const response = await api.patch(
 			`/api/v1/applicants/update-education/${id}`,
 			data,
@@ -18,7 +39,10 @@ export const educationService = {
 		return response.data;
 	},
 
-	delete: async (id: string) => {
+	/**
+	 * Delete an education record
+	 */
+	async delete(id: number): Promise<{ message: string }> {
 		const response = await api.delete(
 			`/api/v1/applicants/delete-education/${id}`,
 		);
@@ -26,21 +50,45 @@ export const educationService = {
 	},
 };
 
+// Experience
+export interface AddExperienceRequest {
+	companyName: string;
+	jobTitle: string;
+	employmentType: string;
+	country?: string;
+	startDate?: string;
+	endDate?: string;
+}
+
 export const experienceService = {
-	add: async (data: AddExperienceRequest) => {
+	/**
+	 * Add a work experience record
+	 */
+	async add(
+		data: AddExperienceRequest,
+	): Promise<ApiResponse<ExperienceResponse>> {
 		const response = await api.post("/api/v1/applicants/add-experience", data);
 		return response.data;
 	},
 
-	update: async (id: string, data: AddExperienceRequest) => {
+	/**
+	 * Update a work experience record
+	 */
+	async update(
+		id: number,
+		data: AddExperienceRequest,
+	): Promise<ApiResponse<ExperienceResponse>> {
 		const response = await api.patch(
-			`/api/v1/applicants/updated-experience/${id}`,
+			`/api/v1/applicants/update-experience/${id}`,
 			data,
 		);
 		return response.data;
 	},
 
-	delete: async (id: string) => {
+	/**
+	 * Delete a work experience record
+	 */
+	async delete(id: number): Promise<{ message: string }> {
 		const response = await api.delete(
 			`/api/v1/applicants/delete-experience/${id}`,
 		);

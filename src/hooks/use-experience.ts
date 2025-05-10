@@ -5,7 +5,6 @@ import type {
 	AddExperienceRequest,
 } from "@/types/education-experience";
 import { showToast } from "@/services/toast";
-import { convertUIDateToApiDate } from "@/lib/utils/date-utils";
 
 export function useExperience() {
 	const queryClient = useQueryClient();
@@ -17,14 +16,14 @@ export function useExperience() {
 				jobTitle: experience.jobTitle,
 				employmentType: experience.employmentType,
 				country: experience.country,
-				startDate: convertUIDateToApiDate(experience.startDate),
-				endDate: convertUIDateToApiDate(experience.endDate),
+				startDate: experience.startDate,
+				endDate: experience.endDate,
 			};
 
 			return experienceService.add(apiData);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["profile"] });
+			queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 			showToast({
 				title: "Experience added successfully",
 				variant: "success",
@@ -43,20 +42,20 @@ export function useExperience() {
 		mutationFn: async ({
 			id,
 			data,
-		}: { id: string; data: Omit<Experience, "id"> }) => {
+		}: { id: number; data: Omit<Experience, "id"> }) => {
 			const apiData: AddExperienceRequest = {
 				companyName: data.companyName,
 				jobTitle: data.jobTitle,
 				employmentType: data.employmentType,
 				country: data.country,
-				startDate: convertUIDateToApiDate(data.startDate),
-				endDate: convertUIDateToApiDate(data.endDate),
+				startDate: data.startDate,
+				endDate: data.endDate,
 			};
 
 			return experienceService.update(id, apiData);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["profile"] });
+			queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 			showToast({
 				title: "Experience updated successfully",
 				variant: "success",
@@ -72,11 +71,11 @@ export function useExperience() {
 	});
 
 	const deleteExperience = useMutation({
-		mutationFn: async (id: string) => {
+		mutationFn: async (id: number) => {
 			return experienceService.delete(id);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["profile"] });
+			queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 			showToast({
 				title: "Experience removed successfully",
 				variant: "success",

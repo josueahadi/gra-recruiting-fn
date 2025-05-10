@@ -129,8 +129,8 @@ const EducationForm: React.FC<EducationFormProps> = ({
 				onFromDateChange={setDateJoined}
 				onToDateChange={setDateGraduated}
 				label="Education Period"
-				fromPlaceholder="Start date"
-				toPlaceholder="End date"
+				fromPlaceholder="Start date (DD/MM/YYYY)"
+				toPlaceholder="End date (DD/MM/YYYY)"
 			/>
 
 			<Button

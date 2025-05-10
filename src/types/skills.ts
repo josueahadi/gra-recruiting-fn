@@ -1,6 +1,7 @@
 export interface Skill {
-	id: string;
+	id?: number;
 	name: string;
+	experienceRating?: string;
 	tempId?: string; // Added for optimistic updates
 }
 
@@ -11,13 +12,13 @@ export interface SkillsState {
 
 export interface SkillPayload {
 	skillName: string;
-	experienceRating: "ONE" | "THREE" | "FIVE";
+	experienceRating: "ONE" | "TWO" | "THREE" | "FOUR" | "FIVE";
 }
 
 export interface AddSkillResponse {
-	id: string | number;
-	skillId?: string | number;
+	id: number;
 	skillName: string;
+	experienceRating: string;
 }
 
 export interface UpdateSkillsData {

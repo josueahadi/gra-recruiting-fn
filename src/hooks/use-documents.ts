@@ -1,12 +1,13 @@
 import { useCallback, useState } from "react";
-import { api } from "@/services/api";
 import { showToast } from "@/services/toast";
 import type { PortfolioLinks, ApplicantData } from "@/types/profile";
+import { documentsService } from "@/services/documents";
+import type { QueryClient } from "@tanstack/react-query";
 
 export function useDocuments(
 	profileData: ApplicantData | null,
-	setProfileData: (data: ApplicantData | null) => void,
-	queryClient: any,
+	setProfileData: React.Dispatch<React.SetStateAction<ApplicantData | null>>,
+	queryClient: QueryClient,
 ) {
 	const [documentsLoading, setDocumentsLoading] = useState(false);
 
@@ -17,7 +18,7 @@ export function useDocuments(
 
 			try {
 				// Update UI immediately
-				setProfileData((currentData) => {
+				setProfileData((currentData: ApplicantData | null) => {
 					if (!currentData) return null;
 
 					if (type === "avatar") {
@@ -25,7 +26,9 @@ export function useDocuments(
 							...currentData,
 							avatarSrc: URL.createObjectURL(file),
 						};
-					} else if (type === "resume") {
+					}
+
+					if (type === "resume") {
 						return {
 							...currentData,
 							documents: {
@@ -36,7 +39,9 @@ export function useDocuments(
 								},
 							},
 						};
-					} else if (type === "sample") {
+					}
+
+					if (type === "sample") {
 						return {
 							...currentData,
 							documents: {
@@ -52,51 +57,10 @@ export function useDocuments(
 					return currentData;
 				});
 
-				// Create form data
-				const formData = new FormData();
-				formData.append("file", file);
+				const apiType = type === "avatar" ? "profile-picture" : type;
 
-				let uploadUrl = "";
-				let responseData;
-
-				// Make API call based on file type
-				if (type === "avatar") {
-					const { data } = await api.post(
-						"/api/v1/users/upload-profile-picture",
-						formData,
-						{
-							headers: {
-								"Content-Type": "multipart/form-data",
-							},
-						},
-					);
-					responseData = data;
-					uploadUrl = data.fileUrl || URL.createObjectURL(file);
-				} else if (type === "resume") {
-					const { data } = await api.post(
-						"/api/v1/users/upload-resume",
-						formData,
-						{
-							headers: {
-								"Content-Type": "multipart/form-data",
-							},
-						},
-					);
-					responseData = data;
-					uploadUrl = data.fileUrl || URL.createObjectURL(file);
-				} else if (type === "sample") {
-					const { data } = await api.post(
-						"/api/v1/users/upload-sample",
-						formData,
-						{
-							headers: {
-								"Content-Type": "multipart/form-data",
-							},
-						},
-					);
-					responseData = data;
-					uploadUrl = data.fileUrl || URL.createObjectURL(file);
-				}
+				// Use the documents service
+				const responseData = await documentsService.uploadFile(file, apiType);
 
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
@@ -127,7 +91,7 @@ export function useDocuments(
 
 			try {
 				// Update UI optimistically
-				setProfileData((currentData) => {
+				setProfileData((currentData: ApplicantData | null) => {
 					if (!currentData) return null;
 
 					if (type === "resume") {
@@ -138,7 +102,9 @@ export function useDocuments(
 								resume: null,
 							},
 						};
-					} else if (type === "sample" && index !== undefined) {
+					}
+
+					if (type === "sample" && index !== undefined) {
 						return {
 							...currentData,
 							documents: {
@@ -155,7 +121,7 @@ export function useDocuments(
 
 				// Make API call
 				if (type === "resume") {
-					await api.delete("/api/v1/applicants/delete-resume");
+					await documentsService.deleteResume();
 				} else if (type === "sample" && index !== undefined) {
 					console.log("Delete sample at index", index);
 					// API for deleting sample would go here
@@ -191,7 +157,7 @@ export function useDocuments(
 
 			try {
 				// Update UI optimistically
-				setProfileData((currentData) => {
+				setProfileData((currentData: ApplicantData | null) => {
 					if (!currentData) return null;
 					return {
 						...currentData,
@@ -199,7 +165,7 @@ export function useDocuments(
 					};
 				});
 
-				// Make API call
+				// Make API call with the documents service
 				const documentsPayload = {
 					linkedinProfileUrl: links.linkedin || "",
 					githubProfileUrl: links.github || "",
@@ -208,10 +174,7 @@ export function useDocuments(
 					portfolioUrl: links.portfolio || "",
 				};
 
-				await api.patch(
-					"/api/v1/applicants/update-applicantion-documents",
-					documentsPayload,
-				);
+				await documentsService.update(documentsPayload);
 
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 

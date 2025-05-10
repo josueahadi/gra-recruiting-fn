@@ -38,6 +38,8 @@ export function useProfileCore(options: UseProfileOptions) {
 
 			try {
 				if (basicProfileData && detailedProfileData) {
+					// For the new API response structure, the userProfile is embedded
+					// in the detailedProfileData
 					const basicProfile = basicProfileData;
 					const detailedProfile = detailedProfileData;
 
@@ -62,27 +64,29 @@ export function useProfileCore(options: UseProfileOptions) {
 								detailedProfile.skillsAndExperienceRatings,
 							)
 								? detailedProfile.skillsAndExperienceRatings.map((skill) => ({
-										id: String(skill.skillId || Date.now()),
+										id: skill.id,
 										name: skill.skillName,
+										experienceRating: skill.experienceRating,
 									}))
 								: [],
 							soft: [],
 						},
 						languages: Array.isArray(detailedProfile.languagesProficiency)
 							? detailedProfile.languagesProficiency.map((lang) => ({
-									languageId: lang.languageId,
+									id: lang.id,
 									language: lang.languageName,
 									level: mapLanguageLevelFromApi(lang.proficiencyLevel),
+									proficiencyLevel: lang.proficiencyLevel,
 								}))
 							: [],
 						education: Array.isArray(detailedProfile.educations)
 							? detailedProfile.educations.map((edu) => ({
-									id: String(edu.id || Date.now()),
-									institution: edu.institutionName,
-									degree: mapEducationLevelFromApi(edu.educationLevel),
+									id: String(edu.id),
+									institutionName: edu.institutionName,
+									educationLevel: edu.educationLevel,
 									program: edu.program,
-									startYear: formatDateString(edu.dateJoined),
-									endYear: formatDateString(edu.dateGraduated),
+									dateJoined: edu.dateJoined,
+									dateGraduated: edu.dateGraduated,
 								}))
 							: [],
 						experience: Array.isArray(detailedProfile.experiences)
@@ -94,7 +98,7 @@ export function useProfileCore(options: UseProfileOptions) {
 									const duration = formatDateRange(startDate, endDate);
 
 									return {
-										id: String(exp.id || Date.now()),
+										id: String(exp.id),
 										company: exp.companyName,
 										role: exp.jobTitle,
 										duration: duration,
@@ -106,38 +110,19 @@ export function useProfileCore(options: UseProfileOptions) {
 								})
 							: [],
 						documents: {
-							resume:
-								Array.isArray(detailedProfile.documents) &&
-								detailedProfile.documents.length > 0 &&
-								detailedProfile.documents[0]?.resumeUrl
-									? {
-											name: "Resume",
-											url: detailedProfile.documents[0].resumeUrl,
-										}
-									: null,
+							resume: detailedProfile.documents?.resumeUrl
+								? {
+										name: "Resume",
+										url: detailedProfile.documents.resumeUrl,
+									}
+								: null,
 							samples: [],
 						},
 						portfolioLinks: {
-							portfolio:
-								Array.isArray(detailedProfile.documents) &&
-								detailedProfile.documents.length > 0
-									? detailedProfile.documents[0]?.portfolioUrl || ""
-									: "",
-							github:
-								Array.isArray(detailedProfile.documents) &&
-								detailedProfile.documents.length > 0
-									? detailedProfile.documents[0]?.githubProfileUrl || ""
-									: "",
-							behance:
-								Array.isArray(detailedProfile.documents) &&
-								detailedProfile.documents.length > 0
-									? detailedProfile.documents[0]?.behanceProfileUrl || ""
-									: "",
-							linkedin:
-								Array.isArray(detailedProfile.documents) &&
-								detailedProfile.documents.length > 0
-									? detailedProfile.documents[0]?.linkedinProfileUrl || ""
-									: "",
+							portfolio: detailedProfile.documents?.portfolioUrl || "",
+							github: detailedProfile.documents?.githubProfileUrl || "",
+							behance: detailedProfile.documents?.behanceProfileUrl || "",
+							linkedin: detailedProfile.documents?.linkedinProfileUrl || "",
 						},
 						avatarSrc: "/images/avatar.jpg", // Placeholder (API doesn't provide avatar)
 					};
@@ -165,26 +150,26 @@ export function useProfileCore(options: UseProfileOptions) {
 						department: "Software Development",
 						skills: {
 							technical: [
-								{ id: "1", name: "Software Engineering" },
-								{ id: "2", name: "Frontend Development" },
-								{ id: "3", name: "Backend Development" },
-								{ id: "4", name: "Data Analysis" },
+								{ id: 1, name: "Software Engineering" },
+								{ id: 2, name: "Frontend Development" },
+								{ id: 3, name: "Backend Development" },
+								{ id: 4, name: "Data Analysis" },
 							],
 							soft: [],
 						},
 						languages: [
-							{ language: "Kinyarwanda", level: 10 },
-							{ language: "French", level: 5 },
-							{ language: "English", level: 6 },
+							{ id: 1, language: "Kinyarwanda", level: 10 },
+							{ id: 2, language: "French", level: 5 },
+							{ id: 3, language: "English", level: 6 },
 						],
 						education: [
 							{
 								id: "1",
-								institution: "UR- Nyarugenge",
-								degree: "Bachelor's Degree",
+								institutionName: "UR- Nyarugenge",
+								educationLevel: "BACHELOR",
 								program: "Software Engineering",
-								startYear: "Sep 2016",
-								endYear: "Jul 2021",
+								dateJoined: "2016-09-01",
+								dateGraduated: "2021-07-01",
 							},
 						],
 						experience: [

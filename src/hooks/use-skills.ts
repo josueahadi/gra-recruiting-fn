@@ -2,6 +2,7 @@ import { useCallback, useState, useRef } from "react";
 import { api } from "@/services/api";
 import { showToast } from "@/services/toast";
 import { ApiQueueManager } from "@/lib/utils/api-queue-utils";
+import { skillsService } from "@/services/skills";
 import type { Skill, ApplicantData } from "@/types/profile";
 
 export function useSkills(
@@ -39,9 +40,26 @@ export function useSkills(
 
 				if (data.department !== profileData.department) {
 					try {
-						await api.patch("/api/v1/users/update-user-profile", {
-							careerName: data.department,
-						});
+						// Get the list of careers from the API
+						const careersResponse = await api.get(
+							"/api/v1/career/list-careers",
+						);
+
+						// Find the career ID that matches the department name
+						const career = careersResponse.data.careers.find(
+							(career) => career.name === data.department,
+						);
+
+						if (career && career.id) {
+							await api.patch("/api/v1/users/update-user-profile", {
+								careerId: career.id,
+							});
+						} else {
+							console.warn(
+								"Could not find careerId for department:",
+								data.department,
+							);
+						}
 					} catch (error) {
 						console.error("Error updating department:", error);
 					}
@@ -50,7 +68,7 @@ export function useSkills(
 				if (data.technical.length > 0) {
 					const skillsPayload = data.technical.map((skill) => ({
 						skillName: skill.name,
-						experienceRating: "FIVE", // Default rating
+						experienceRating: skill.experienceRating || "FIVE", // Default rating
 					}));
 
 					// Use update or add based on whether we have skills already
@@ -58,13 +76,9 @@ export function useSkills(
 
 					try {
 						if (hasSkills) {
-							await api.patch("/api/v1/applicants/update-skills", {
-								skillsAndExperienceRatings: skillsPayload,
-							});
+							await skillsService.update(skillsPayload);
 						} else {
-							await api.post("/api/v1/applicants/add-skills", {
-								skillsAndExperienceRatings: skillsPayload,
-							});
+							await skillsService.add(skillsPayload);
 						}
 					} catch (error) {
 						console.error("Error updating skills:", error);
@@ -114,7 +128,7 @@ export function useSkills(
 							technical: [
 								...current.skills.technical,
 								{
-									id: tempId,
+									tempId,
 									name: skillName,
 								},
 							],
@@ -123,28 +137,26 @@ export function useSkills(
 				});
 
 				// Make API call
-				const { data } = await api.post("/api/v1/applicants/add-skills", {
-					skillsAndExperienceRatings: [
-						{
-							skillName,
-							experienceRating: "FIVE", // Default rating
-						},
-					],
-				});
+				const result = await skillsService.add([
+					{
+						skillName,
+						experienceRating: "FIVE", // Default rating
+					},
+				]);
+
+				const skillResponse = result.data[0]; // First skill from response
 
 				// Update with server ID if available
-				const serverId =
-					data?.id || data?.skillId || (Array.isArray(data) && data[0]?.id);
-
-				if (serverId) {
+				if (skillResponse && skillResponse.id) {
 					setProfileData((current) => {
 						if (!current) return null;
 
 						const updatedSkills = current.skills.technical.map((skill) => {
-							if (skill.id === tempId) {
+							if (skill.tempId === tempId) {
 								return {
-									id: serverId.toString(),
-									name: skillName,
+									id: skillResponse.id,
+									name: skillResponse.skillName,
+									experienceRating: skillResponse.experienceRating,
 								};
 							}
 							return skill;
@@ -205,7 +217,7 @@ export function useSkills(
 	);
 
 	const deleteSkill = useCallback(
-		async (skillId: string) => {
+		async (skillId: number) => {
 			if (!profileData) return false;
 
 			const skillToDelete = profileData.skills.technical.find(
@@ -238,10 +250,8 @@ export function useSkills(
 					};
 				});
 
-				// Make the API call if it's not a temporary skill
-				if (!skillToDelete.tempId) {
-					await api.delete(`/api/v1/applicants/delete-skill/${skillId}`);
-				}
+				// Make the API call
+				await skillsService.delete(skillId);
 
 				// Invalidate queries to ensure data consistency
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });

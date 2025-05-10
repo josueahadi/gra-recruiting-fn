@@ -1,6 +1,6 @@
 import type { FC } from "react";
 import { cn } from "@/lib/utils";
-import type { LanguageProficiency } from "@/hooks/use-profile";
+import type { LanguageProficiency } from "@/types/profile";
 
 interface LanguageDisplayProps {
 	languages: LanguageProficiency[];
@@ -16,6 +16,12 @@ const LanguageDisplay: FC<LanguageDisplayProps> = ({
 		if (level >= 7) return "Fluent";
 		if (level >= 5) return "Intermediate";
 		return "Beginner";
+	};
+
+	// Helper function to get a unique key for each language
+	const getLanguageKey = (lang: LanguageProficiency, index: number): string => {
+		if (lang.languageId) return `lang-${lang.languageId}`;
+		return `lang-${index}-${lang.language.replace(/\s+/g, "-")}`;
 	};
 
 	if (!Array.isArray(languages)) {
@@ -39,11 +45,7 @@ const LanguageDisplay: FC<LanguageDisplayProps> = ({
 		<div className={className}>
 			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
 				{languages.map((lang, index) => {
-					const key = lang.languageId
-						? `lang-${lang.languageId}`
-						: lang.tempId
-							? lang.tempId
-							: `lang-${index}-${lang.language.replace(/\s+/g, "-")}`;
+					const key = getLanguageKey(lang, index);
 
 					return (
 						<div key={key} className="bg-blue-50 rounded-lg p-4">
@@ -55,7 +57,7 @@ const LanguageDisplay: FC<LanguageDisplayProps> = ({
 							<div className="flex items-center mt-2">
 								{Array.from({ length: 9 }).map((_, i) => (
 									<div
-										key={`level-${key}-${lang.language}-${i + 1}`}
+										key={`level-${key}-${i + 1}`}
 										className={cn(
 											"h-2 w-2 rounded-full mx-0.5",
 											i < lang.level ? "bg-blue-500" : "bg-gray-200",

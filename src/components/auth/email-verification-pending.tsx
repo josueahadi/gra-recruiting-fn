@@ -24,7 +24,9 @@ const EmailVerificationPending = ({
 					<Mail className="h-10 w-10 text-primary-base" />
 				</div>
 				<h1 className="text-2xl font-bold mt-4">Verify your email</h1>
-				<p className="mt-2 text-gray-600">We've sent a verification link to:</p>
+				<p className="mt-2 text-gray-600">
+					We&apos;ve sent a verification link to:
+				</p>
 				<p className="font-semibold text-blue-600 mt-1 break-all">
 					{email || "..."}
 				</p>
@@ -51,8 +53,8 @@ const EmailVerificationPending = ({
 							Verification link expires in 5 minutes
 						</p>
 						<p>
-							If you don't verify your email within 5 minutes, you'll need to
-							request a new verification link.
+							If you don&apos;t verify your email within 5 minutes, you&apos;ll
+							need to request a new verification link.
 						</p>
 					</div>
 				</div>
@@ -61,8 +63,8 @@ const EmailVerificationPending = ({
 			<div className="space-y-4">
 				<p className="text-sm text-gray-600">
 					Please check your inbox and spam folder, then click the verification
-					link to complete your account setup. Once verified, you'll be able to
-					continue with your profile setup.
+					link to complete your account setup. Once verified, you&apos;ll be
+					able to continue with your profile setup.
 				</p>
 
 				<div className="space-y-3 mt-6">

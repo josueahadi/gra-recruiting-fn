@@ -55,8 +55,7 @@ const VerificationPendingPage = () => {
 		} catch (error) {
 			showToast({
 				title: "Failed to resend",
-				description:
-					"We couldn't resend the verification email. Please try again later.",
+				description: `${error}: We couldn't resend the verification email. Please try again later.`,
 				variant: "error",
 			});
 		} finally {

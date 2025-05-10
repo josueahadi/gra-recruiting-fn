@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Loader2 } from "lucide-react";
-import type { WorkExperience } from "@/hooks/use-profile";
+import type { WorkExperience } from "@/types/profile";
 import { Label } from "@/components/ui/label";
 import {
 	Select,
@@ -12,6 +12,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import DateRangePicker from "@/components/common/date-range-picker";
 
 interface ExperienceFormProps {
 	onAddExperience: (experience: Omit<WorkExperience, "id">) => void;
@@ -50,8 +51,8 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
 	isSubmitting = false,
 }) => {
 	const [company, setCompany] = useState("");
-	const [startDate, setStartDate] = useState("");
-	const [endDate, setEndDate] = useState("");
+	const [startDate, setStartDate] = useState<Date | undefined>();
+	const [endDate, setEndDate] = useState<Date | undefined>();
 	const [role, setRole] = useState("");
 	const [employmentType, setEmploymentType] = useState("");
 	const [country, setCountry] = useState("Rwanda");
@@ -61,9 +62,8 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
 
 		if (company && role && startDate) {
 			// Format dates to "Month Year" format (e.g., "Jun 2021")
-			const formatDate = (dateStr: string) => {
-				if (!dateStr) return "";
-				const date = new Date(dateStr);
+			const formatDate = (date: Date | undefined) => {
+				if (!date) return "";
 				return date.toLocaleDateString("en-US", {
 					month: "short",
 					year: "numeric",
@@ -73,8 +73,10 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
 			// Calculate duration
 			const calculateDuration = () => {
 				try {
-					const start = new Date(startDate);
-					const end = endDate ? new Date(endDate) : new Date();
+					if (!startDate) return "";
+
+					const start = startDate;
+					const end = endDate || new Date();
 
 					// Get total months
 					const months =
@@ -112,6 +114,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
 			const formattedEndDate = endDate ? formatDate(endDate) : "Present";
 			const duration = calculateDuration();
 
+			// Prepare the experience object
 			onAddExperience({
 				company,
 				role,
@@ -122,8 +125,8 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
 
 			// Reset form
 			setCompany("");
-			setStartDate("");
-			setEndDate("");
+			setStartDate(undefined);
+			setEndDate(undefined);
 			setRole("");
 			setEmploymentType("");
 			setCountry("Rwanda");
@@ -143,32 +146,18 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
 				/>
 			</div>
 
-			<div className="grid grid-cols-2 gap-4">
-				<div>
-					<Label className="block text-sm font-medium mb-1">Start date</Label>
-					<Input
-						type="date"
-						placeholder="dd-mm-yyyy"
-						value={startDate}
-						onChange={(e) => setStartDate(e.target.value)}
-						required
-						disabled={isSubmitting}
-					/>
-				</div>
-				<div>
-					<Label className="block text-sm font-medium mb-1">End date</Label>
-					<Input
-						type="date"
-						placeholder="dd-mm-yyyy"
-						value={endDate}
-						onChange={(e) => setEndDate(e.target.value)}
-						disabled={isSubmitting}
-					/>
-					<p className="text-xs text-gray-500 mt-1">
-						Leave empty if this is your current position
-					</p>
-				</div>
-			</div>
+			<DateRangePicker
+				fromDate={startDate}
+				toDate={endDate}
+				onFromDateChange={setStartDate}
+				onToDateChange={setEndDate}
+				label="Employment Period"
+				fromPlaceholder="Start date (DD/MM/YYYY)"
+				toPlaceholder="End date (DD/MM/YYYY)"
+			/>
+			<p className="text-xs text-gray-500 -mt-2">
+				Leave end date empty if this is your current position
+			</p>
 
 			<div>
 				<Label className="block text-sm font-medium mb-1">Role</Label>

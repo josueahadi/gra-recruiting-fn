@@ -16,14 +16,14 @@ export function useEducation() {
 				institutionName: education.institutionName,
 				educationLevel: education.educationLevel,
 				program: education.program,
-				dateJoined: convertUIDateToApiDate(education.dateJoined),
-				dateGraduated: convertUIDateToApiDate(education.dateGraduated),
+				dateJoined: education.dateJoined,
+				dateGraduated: education.dateGraduated,
 			};
 
 			return educationService.add(apiData);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["profile"] });
+			queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 			showToast({
 				title: "Education added successfully",
 				variant: "success",
@@ -42,19 +42,19 @@ export function useEducation() {
 		mutationFn: async ({
 			id,
 			data,
-		}: { id: string; data: Omit<Education, "id"> }) => {
+		}: { id: number; data: Omit<Education, "id"> }) => {
 			const apiData: AddEducationRequest = {
 				institutionName: data.institutionName,
 				educationLevel: data.educationLevel,
 				program: data.program,
-				dateJoined: convertUIDateToApiDate(data.dateJoined),
-				dateGraduated: convertUIDateToApiDate(data.dateGraduated),
+				dateJoined: data.dateJoined,
+				dateGraduated: data.dateGraduated,
 			};
 
 			return educationService.update(id, apiData);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["profile"] });
+			queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 			showToast({
 				title: "Education updated successfully",
 				variant: "success",
@@ -70,11 +70,11 @@ export function useEducation() {
 	});
 
 	const deleteEducation = useMutation({
-		mutationFn: async (id: string) => {
+		mutationFn: async (id: number) => {
 			return educationService.delete(id);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["profile"] });
+			queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 			showToast({
 				title: "Education removed successfully",
 				variant: "success",

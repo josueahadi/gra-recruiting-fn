@@ -32,19 +32,20 @@ export interface PortfolioLinks {
 }
 
 export interface LanguageProficiency {
+	id?: number;
 	languageId?: number;
-	tempId?: string;
 	language: string;
 	level: number;
+	proficiencyLevel?: string;
 }
 
 export interface Education {
-	id: string;
-	institution: string;
-	degree: string;
+	id?: string;
+	institutionName: string;
+	educationLevel: string;
 	program: string;
-	startYear: string;
-	endYear: string;
+	dateJoined?: string | null;
+	dateGraduated?: string | null;
 }
 
 export interface WorkExperience {
@@ -54,6 +55,13 @@ export interface WorkExperience {
 	duration: string;
 	responsibilities: string;
 	country?: string;
+}
+
+export interface Skill {
+	id?: number;
+	name: string;
+	level?: string;
+	experienceRating?: string;
 }
 
 export interface ApplicantData {
@@ -87,16 +95,32 @@ export interface BasicProfileResponse {
 	postalCode?: string;
 	street?: string;
 	careerName?: string;
+	createdAt?: string;
+	updatedAt?: string;
 }
 
 export interface DetailedProfileResponse {
+	userProfile: {
+		id: number;
+		firstName: string;
+		lastName: string;
+		email: string;
+		phoneNumber?: string;
+		country?: string;
+		city?: string;
+		postalCode?: string;
+		street?: string;
+		careerName?: string;
+		createdAt?: string;
+		updatedAt?: string;
+	};
 	skillsAndExperienceRatings: Array<{
-		skillId: number;
+		id: number;
 		skillName: string;
 		experienceRating: string;
 	}>;
 	languagesProficiency: Array<{
-		languageId: number;
+		id: number;
 		languageName: string;
 		proficiencyLevel: string;
 	}>;
@@ -105,8 +129,8 @@ export interface DetailedProfileResponse {
 		institutionName: string;
 		educationLevel: string;
 		program: string;
-		dateJoined: string;
-		dateGraduated: string;
+		dateJoined: string | null;
+		dateGraduated: string | null;
 	}>;
 	experiences: Array<{
 		id: number;
@@ -117,17 +141,80 @@ export interface DetailedProfileResponse {
 		startDate: string;
 		endDate?: string;
 	}>;
-	documents?: Array<{
-		resumeUrl?: string;
-		portfolioUrl?: string;
-		githubProfileUrl?: string;
-		behanceProfileUrl?: string;
+	documents?: {
 		linkedinProfileUrl?: string;
-	}>;
+		githubProfileUrl?: string;
+		resumeUrl?: string;
+		behanceProfileUrl?: string;
+		portfolioUrl?: string;
+	};
 }
 
 export interface PasswordUpdateData {
 	currentPassword: string;
 	newPassword: string;
 	confirmPassword: string;
+}
+
+// Career types
+export interface CareerResponse {
+	id: number;
+	name: string;
+	status: "ACTIVE" | "INACTIVE";
+	createdAt?: string;
+}
+
+export interface ListCareersResponse {
+	careers: CareerResponse[];
+	page: number;
+	take: number;
+	totalUsers: number;
+	pageCount: number;
+	hasNextPage: boolean;
+}
+
+// API response types
+export interface ApiResponse<T> {
+	message: string;
+	data: T;
+}
+
+export interface SkillResponse {
+	id: number;
+	skillName: string;
+	experienceRating: string;
+}
+
+export interface LanguageResponse {
+	id: number;
+	languageName: string;
+	proficiencyLevel: string;
+}
+
+export interface DocumentsResponse {
+	id: number;
+	linkedinProfileUrl?: string;
+	githubProfileUrl?: string;
+	resumeUrl?: string;
+	behanceProfileUrl?: string;
+	portfolioUrl?: string;
+}
+
+export interface EducationResponse {
+	id: number;
+	institutionName: string;
+	educationLevel: string;
+	program: string;
+	dateJoined: string | null;
+	dateGraduated: string | null;
+}
+
+export interface ExperienceResponse {
+	id: number;
+	companyName: string;
+	jobTitle: string;
+	employmentType: string;
+	country?: string;
+	startDate: string;
+	endDate?: string;
 }
