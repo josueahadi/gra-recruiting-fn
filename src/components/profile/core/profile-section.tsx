@@ -16,6 +16,7 @@ interface ProfileSectionProps {
 	className?: string;
 	contentClassName?: string;
 	saveButtonText?: string;
+	customActions?: React.ReactNode;
 }
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({
@@ -30,9 +31,10 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 	className,
 	contentClassName,
 	saveButtonText = "Save Changes",
+	customActions,
 }) => {
-	const showSaveButtons = isEditing && onCancel && onSave;
-	const showCancelButton = isEditing && onCancel && !onSave;
+	const showSaveButtons = isEditing && onCancel && onSave && !customActions;
+	const showCancelButton = isEditing && onCancel && !onSave && !customActions;
 
 	return (
 		<div className={cn("mb-8 md:px-10", className)}>
@@ -65,6 +67,10 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 			</div>
 
 			<div className={cn("px-6", contentClassName)}>{children}</div>
+
+			{customActions && (
+				<div className="flex justify-end mt-6 px-6">{customActions}</div>
+			)}
 
 			{showSaveButtons && (
 				<div className="flex justify-end mt-6 px-6">

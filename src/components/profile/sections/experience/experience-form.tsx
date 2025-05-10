@@ -2,15 +2,53 @@ import type React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus } from "lucide-react";
+import { Plus, Loader2 } from "lucide-react";
 import type { WorkExperience } from "@/hooks/use-profile";
 import { Label } from "@/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
 interface ExperienceFormProps {
 	onAddExperience: (experience: Omit<WorkExperience, "id">) => void;
+	isSubmitting?: boolean;
 }
 
-const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
+const EMPLOYMENT_TYPES = [
+	"FULL_TIME",
+	"PART_TIME",
+	"CONTRACT",
+	"INTERNSHIP",
+	"FREELANCE",
+];
+
+// Format the employment type for display
+const formatEmploymentType = (type: string) => {
+	const employmentTypeMap: Record<string, string> = {
+		FULL_TIME: "Full-time",
+		PART_TIME: "Part-time",
+		CONTRACT: "Contract",
+		INTERNSHIP: "Internship",
+		FREELANCE: "Freelance",
+	};
+
+	return (
+		employmentTypeMap[type] ||
+		type
+			.split("_")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(" ")
+	);
+};
+
+const ExperienceForm: React.FC<ExperienceFormProps> = ({
+	onAddExperience,
+	isSubmitting = false,
+}) => {
 	const [company, setCompany] = useState("");
 	const [startDate, setStartDate] = useState("");
 	const [endDate, setEndDate] = useState("");
@@ -78,7 +116,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 				company,
 				role,
 				duration: `${formattedStartDate} - ${formattedEndDate}${duration ? ` (${duration})` : ""}`,
-				responsibilities: employmentType || "Full-time",
+				responsibilities: employmentType || "FULL_TIME",
 				country,
 			});
 
@@ -101,6 +139,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 					value={company}
 					onChange={(e) => setCompany(e.target.value)}
 					required
+					disabled={isSubmitting}
 				/>
 			</div>
 
@@ -113,6 +152,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 						value={startDate}
 						onChange={(e) => setStartDate(e.target.value)}
 						required
+						disabled={isSubmitting}
 					/>
 				</div>
 				<div>
@@ -122,6 +162,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 						placeholder="dd-mm-yyyy"
 						value={endDate}
 						onChange={(e) => setEndDate(e.target.value)}
+						disabled={isSubmitting}
 					/>
 					<p className="text-xs text-gray-500 mt-1">
 						Leave empty if this is your current position
@@ -136,6 +177,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 					value={role}
 					onChange={(e) => setRole(e.target.value)}
 					required
+					disabled={isSubmitting}
 				/>
 			</div>
 
@@ -144,18 +186,22 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 					<Label className="block text-sm font-medium mb-1">
 						Employment Type
 					</Label>
-					<select
-						className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+					<Select
 						value={employmentType}
-						onChange={(e) => setEmploymentType(e.target.value)}
+						onValueChange={setEmploymentType}
+						disabled={isSubmitting}
 					>
-						<option value="">Select Employment Type</option>
-						<option value="Full-time">Full-time</option>
-						<option value="Part-time">Part-time</option>
-						<option value="Contract">Contract</option>
-						<option value="Internship">Internship</option>
-						<option value="Freelance">Freelance</option>
-					</select>
+						<SelectTrigger>
+							<SelectValue placeholder="Select Employment Type" />
+						</SelectTrigger>
+						<SelectContent>
+							{EMPLOYMENT_TYPES.map((type) => (
+								<SelectItem key={type} value={type}>
+									{formatEmploymentType(type)}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
 				</div>
 				<div>
 					<Label className="block text-sm font-medium mb-1">Country</Label>
@@ -164,6 +210,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 						value={country}
 						onChange={(e) => setCountry(e.target.value)}
 						required
+						disabled={isSubmitting}
 					/>
 				</div>
 			</div>
@@ -171,9 +218,19 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({ onAddExperience }) => {
 			<Button
 				type="submit"
 				className="w-full bg-primary-base hover:bg-custom-skyBlue text-white"
+				disabled={isSubmitting}
 			>
-				<Plus className="h-4 w-4 mr-2" />
-				Add Work Experience
+				{isSubmitting ? (
+					<>
+						<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+						Adding Experience...
+					</>
+				) : (
+					<>
+						<Plus className="h-4 w-4 mr-2" />
+						Add Work Experience
+					</>
+				)}
 			</Button>
 		</form>
 	);

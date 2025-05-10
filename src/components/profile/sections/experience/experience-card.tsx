@@ -13,6 +13,29 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 	onRemove,
 	canEdit,
 }) => {
+	// Format the employment type
+	const formatEmploymentType = (type?: string) => {
+		if (!type) return "";
+
+		const employmentTypeMap: Record<string, string> = {
+			FULL_TIME: "Full-time",
+			PART_TIME: "Part-time",
+			CONTRACT: "Contract",
+			INTERNSHIP: "Internship",
+			FREELANCE: "Freelance",
+		};
+
+		return (
+			employmentTypeMap[type] ||
+			type
+				.split("_")
+				.map(
+					(word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+				)
+				.join(" ")
+		);
+	};
+
 	// Format the display of duration
 	const formatDuration = (duration: string) => {
 		// Check if duration already has the LinkedIn format with parentheses
@@ -40,7 +63,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 				<div>
 					<h3 className="font-semibold text-lg">{experience.role}</h3>
 					<p className="text-gray-600">
-						{experience.company} · {experience.responsibilities}
+						{experience.company} ·{" "}
+						{formatEmploymentType(experience.responsibilities)}
 					</p>
 					<p className="text-sm text-gray-500">
 						{formatDuration(experience.duration)}

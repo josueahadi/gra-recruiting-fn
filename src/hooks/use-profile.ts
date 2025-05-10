@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { toast } from "react-hot-toast";
 import { api } from "@/services/api";
 import { formatDateRange, formatDateString } from "@/lib/utils/date-utils";
 import { useOptimisticUpdate } from "@/hooks/use-optimistic-update";
@@ -521,12 +520,21 @@ export function useProfile(options: UseProfileOptions) {
 
 					queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 
-					toast.success("Personal information updated");
+					showToast({
+						title: "Personal information updated",
+						description:
+							"Your personal information has been updated successfully",
+						variant: "success",
+					});
 					return true;
 				},
 			).catch((err) => {
 				console.error("Error updating personal info:", err);
-				toast.error("Failed to update personal information");
+				showToast({
+					title: "Failed to update personal information",
+					description: "Please try again",
+					variant: "error",
+				});
 				return false;
 			});
 		},
@@ -557,12 +565,21 @@ export function useProfile(options: UseProfileOptions) {
 
 					queryClient.invalidateQueries({ queryKey: ["user-profile"] });
 
-					toast.success("Address information updated");
+					showToast({
+						title: "Address information updated",
+						description:
+							"Your address information has been updated successfully",
+						variant: "success",
+					});
 					return true;
 				},
 			).catch((err) => {
 				console.error("Error updating address:", err);
-				toast.error("Failed to update address information");
+				showToast({
+					title: "Failed to update address information",
+					description: "Please try again",
+					variant: "error",
+				});
 				return false;
 			});
 		},
@@ -638,7 +655,11 @@ export function useProfile(options: UseProfileOptions) {
 
 				setProfileData(profileData);
 
-				toast.error("Failed to update skills");
+				showToast({
+					title: "Failed to update skills",
+					description: "Please try again",
+					variant: "error",
+				});
 				return false;
 			} finally {
 				pendingOperationsRef.current -= 1;
@@ -763,12 +784,21 @@ export function useProfile(options: UseProfileOptions) {
 
 					queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
-					toast.success("Work and education information updated");
+					showToast({
+						title: "Work and education information updated",
+						description:
+							"Your work and education information has been updated successfully",
+						variant: "success",
+					});
 					return true;
 				},
 			).catch((err) => {
 				console.error("Error updating work/education:", err);
-				toast.error("Failed to update work and education information");
+				showToast({
+					title: "Failed to update work and education information",
+					description: "Please try again",
+					variant: "error",
+				});
 				return false;
 			});
 		},
@@ -863,12 +893,19 @@ export function useProfile(options: UseProfileOptions) {
 
 					queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
-					toast.success(`${file.name} uploaded successfully`);
+					showToast({
+						title: `${file.name} uploaded successfully`,
+						variant: "success",
+					});
 					return responseData;
 				},
 			).catch((err) => {
 				console.error("Error uploading file:", err);
-				toast.error("Failed to upload file");
+				showToast({
+					title: "Failed to upload file",
+					description: "Please try again",
+					variant: "error",
+				});
 				return null;
 			});
 		},
@@ -916,14 +953,19 @@ export function useProfile(options: UseProfileOptions) {
 
 					queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
-					toast.success(
-						`${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`,
-					);
+					showToast({
+						title: `${type.charAt(0).toUpperCase() + type.slice(1)} removed successfully`,
+						variant: "success",
+					});
 					return true;
 				},
 			).catch((err) => {
 				console.error(`Error removing ${type}:`, err);
-				toast.error(`Failed to remove ${type}`);
+				showToast({
+					title: `Failed to remove ${type}`,
+					description: "Please try again",
+					variant: "error",
+				});
 				return false;
 			});
 		},
@@ -960,12 +1002,19 @@ export function useProfile(options: UseProfileOptions) {
 
 					queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
-					toast.success("Portfolio links updated");
+					showToast({
+						title: "Portfolio links updated",
+						variant: "success",
+					});
 					return true;
 				},
 			).catch((err) => {
 				console.error("Error updating portfolio links:", err);
-				toast.error("Failed to update portfolio links");
+				showToast({
+					title: "Failed to update portfolio links",
+					description: "Please try again",
+					variant: "error",
+				});
 				return false;
 			});
 		},
@@ -1025,13 +1074,19 @@ export function useProfile(options: UseProfileOptions) {
 			});
 		},
 		onSuccess: () => {
-			toast.success("Password updated successfully!");
+			showToast({
+				title: "Password updated successfully!",
+				variant: "success",
+			});
 		},
 		onError: (error: unknown) => {
 			const apiError = error as { response?: { data?: { message?: string } } };
 			const errorMessage =
 				apiError.response?.data?.message || "Failed to update password";
-			toast.error(`${errorMessage}. Please try again!`);
+			showToast({
+				title: `${errorMessage}. Please try again!`,
+				variant: "error",
+			});
 		},
 	});
 
