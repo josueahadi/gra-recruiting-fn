@@ -49,7 +49,7 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 				},
 			);
 
-			const { accessToken: token, message } = response.data;
+			const { accessToken: token } = response.data;
 			setRequestToken(token);
 			setStep("verify");
 
@@ -62,6 +62,7 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 			if (options?.onSuccess) {
 				options.onSuccess();
 			}
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		} catch (error: any) {
 			console.error("Error requesting password reset:", error);
 			const errorMessage =
@@ -110,6 +111,7 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 			if (options?.onSuccess) {
 				options.onSuccess();
 			}
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		} catch (error: any) {
 			console.error("Error verifying code:", error);
 			const errorMessage =
@@ -160,6 +162,7 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 			if (options?.onSuccess) {
 				options.onSuccess();
 			}
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		} catch (error: any) {
 			console.error("Error resetting password:", error);
 			const errorMessage =
@@ -195,6 +198,7 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 				description: "Please check your email for the new verification code",
 				variant: "success",
 			});
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		} catch (error: any) {
 			console.error("Error resending code:", error);
 			const errorMessage =

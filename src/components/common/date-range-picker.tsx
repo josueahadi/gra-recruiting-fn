@@ -32,8 +32,6 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 	onFromDateChange,
 	onToDateChange,
 	label,
-	fromPlaceholder = "From date",
-	toPlaceholder = "To date",
 	className,
 }) => {
 	const [isFromOpen, setIsFromOpen] = useState(false);
@@ -99,6 +97,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 				} else {
 					setFromInputError(true);
 				}
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			} catch (error) {
 				setFromInputError(true);
 			}
@@ -126,6 +125,7 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 				} else {
 					setToInputError(true);
 				}
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			} catch (error) {
 				setToInputError(true);
 			}

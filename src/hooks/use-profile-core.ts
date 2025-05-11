@@ -269,18 +269,6 @@ export function useProfileCore(options: UseProfileOptions) {
 		return REVERSE_LANGUAGE_LEVEL_MAP[level] || 5;
 	}
 
-	function mapEducationLevelFromApi(level: string): string {
-		const REVERSE_EDUCATION_LEVEL_MAP: Record<string, string> = {
-			HIGH_SCHOOL: "High School",
-			ASSOCIATE: "Associate Degree",
-			BACHELOR: "Bachelor's Degree",
-			MASTER: "Master's Degree",
-			DOCTORATE: "Doctorate",
-			OTHER: "Other",
-		};
-		return REVERSE_EDUCATION_LEVEL_MAP[level] || level;
-	}
-
 	function mapEmploymentTypeFromApi(type: string): string {
 		const REVERSE_EMPLOYMENT_TYPE_MAP: Record<string, string> = {
 			FULL_TIME: "Full-time",

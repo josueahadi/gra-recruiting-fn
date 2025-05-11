@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, Loader2 } from "lucide-react";
 import SkillPill from "./skill-pill";
-import type { Skill } from "@/hooks/use-profile";
+import type { Skill } from "@/types/skills";
 import { showToast } from "@/services/toast";
 import { api } from "@/services/api";
 import { ApiQueueManager } from "@/lib/utils/api-queue-utils";
@@ -54,12 +54,13 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 		setPendingSkills((prev) => new Set(prev).add(newSkill));
 
 		try {
+			// Generate a unique temporary ID
 			const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
 			const skillToAdd: Skill = {
 				id: tempId,
 				name: newSkill.trim(),
-				tempId,
+				isTemporary: true,
 			};
 
 			const updatedSkills = [...skills, skillToAdd];
@@ -92,11 +93,12 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 					console.log(`Skill ${newSkill} received server ID:`, serverId);
 
 					const finalSkills = updatedSkills.map((skill) => {
-						if (skill.tempId === tempId) {
+						// Find the temporary skill we just added using its ID
+						if (skill.id === tempId) {
 							return {
 								...skill,
 								id: serverId.toString(),
-								tempId: undefined,
+								isTemporary: false,
 							};
 						}
 						return skill;
@@ -143,8 +145,10 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 
 	const handleRemoveSkill = useCallback(
 		async (skillToRemove: Skill) => {
-			const isTemporarySkill =
-				skillToRemove.tempId || skillToRemove.id.startsWith("temp-");
+			// Use the isTemporary flag or check if ID is a string that starts with "temp-"
+			const isTemporarySkill = 
+				skillToRemove.isTemporary || 
+				(typeof skillToRemove.id === 'string' && skillToRemove.id.startsWith("temp-"));
 
 			console.log("Removing skill:", {
 				name: skillToRemove.name,
@@ -172,7 +176,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 								`Successfully removed skill with ID ${skillToRemove.id}`,
 							);
 							return true;
-						} catch (error: any) {
+						} catch (error: { response?: { status?: number } }) {
 							if (error.response?.status === 404) {
 								console.warn(
 									`Skill with ID ${skillToRemove.id} not found on server, may already be deleted`,
@@ -277,7 +281,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 						isEditing={true}
 						onRemove={() => handleRemoveSkill(skill)}
 						disabled={isSkillPending(skill.name)}
-						className={skill.tempId ? "bg-slate-400" : ""}
+						className={skill.isTemporary ? "bg-slate-400" : ""}
 					/>
 				))}
 			</div>

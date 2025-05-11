@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { showToast } from "@/services/toast";
 import { ApiQueueManager } from "@/lib/utils/api-queue-utils";
-import type { LanguageProficiency, ApplicantData } from "@/types/profile";
+import type { ApplicantData } from "@/types/profile";
 import { languagesService } from "@/services/languages";
 import type { QueryClient } from "@tanstack/react-query";
 

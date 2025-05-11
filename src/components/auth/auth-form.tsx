@@ -47,7 +47,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 	const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 	const [currentStep, setCurrentStep] = useState(1);
 	const [serverError, setServerError] = useState<string | null>(null);
-	const [isAuthInProgress, setIsAuthInProgress] = useState(false);
 
 	const {
 		isLoading,
@@ -64,12 +63,9 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			console.log(
 				"[AuthForm] Authentication successful, middleware will handle redirection",
 			);
-			// Just set the state to indicate success and prevent additional form submissions
-			setIsAuthInProgress(false);
 			if (onSuccess) onSuccess();
 		},
 		onError: (error) => {
-			setIsAuthInProgress(false);
 			const errorMessage =
 				error.message || "Please check your information and try again.";
 			setServerError(errorMessage);
@@ -307,13 +303,11 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 
 	const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setIsAuthInProgress(true);
 
 		try {
 			if (mode === "login") {
 				const isValid = validateLoginForm();
 				if (!isValid) {
-					setIsAuthInProgress(false);
 					return;
 				}
 
@@ -325,7 +319,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 				if (currentStep === 1) {
 					const isValid = validateSignupStep1();
 					if (!isValid) {
-						setIsAuthInProgress(false);
 						return;
 					}
 
@@ -362,7 +355,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 				} else {
 					const isValid = validateSignupStep2();
 					if (!isValid) {
-						setIsAuthInProgress(false);
 						return;
 					}
 
@@ -392,7 +384,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			}
 		} catch (error) {
 			console.error("[AuthForm] Form submission error:", error);
-			setIsAuthInProgress(false);
 			showToast("An error occurred. Please try again.", { type: "error" });
 		}
 	};

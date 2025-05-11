@@ -226,6 +226,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 			let response;
 			try {
 				response = await api.post("/api/v1/auth/signin", credentials);
+				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			} catch (error: any) {
 				console.error("[Auth] API signin error:", error.message);
 				const errorMessage =
@@ -290,6 +291,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 				console.error("[Auth] Error after signin:", error);
 				throw error;
 			}
+			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		} catch (error: any) {
 			console.error("[Auth] Signin error:", error);
 			const errorMessage =
@@ -392,6 +394,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 				}
 			}
 		},
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
 			setError(error.response?.data?.message || "Registration failed");
 
@@ -426,6 +429,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			fetchUserProfile();
 		},
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
 			setError(error.response?.data?.message || "Verification failed");
 
@@ -458,6 +462,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 				{ type: "success" },
 			);
 		},
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		onError: (error: any) => {
 			setError(
 				error.response?.data?.message || "Failed to resend verification email",

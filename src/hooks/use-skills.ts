@@ -1,7 +1,6 @@
-import { useCallback, useState, useRef } from "react";
+import { useCallback, useState } from "react";
 import { api } from "@/services/api";
 import { showToast } from "@/services/toast";
-import { ApiQueueManager } from "@/lib/utils/api-queue-utils";
 import { skillsService } from "@/services/skills";
 import type { Skill, ApplicantData } from "@/types/profile";
 
@@ -12,7 +11,6 @@ export function useSkills(
 ) {
 	const [pendingSkills, setPendingSkills] = useState<Set<string>>(new Set());
 	const [skillsLoading, setSkillsLoading] = useState(false);
-	const apiQueue = useRef(new ApiQueueManager({ delayBetweenRequests: 300 }));
 
 	const updateSkills = useCallback(
 		async (data: {
@@ -232,9 +230,6 @@ export function useSkills(
 			try {
 				setSkillsLoading(true);
 				setPendingSkills((prev) => new Set(prev).add(skillToDelete.name));
-
-				// Store original state for rollback
-				const originalSkills = [...profileData.skills.technical];
 
 				// Update UI immediately (optimistic update)
 				setProfileData((current) => {

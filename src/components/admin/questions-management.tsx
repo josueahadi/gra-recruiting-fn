@@ -17,6 +17,7 @@ import type {
 	Question,
 	MultipleChoiceQuestion,
 	Choice as SourceChoice,
+	EssayQuestion,
 } from "@/types";
 
 // Define the shape that QuestionDetail expects
@@ -72,7 +73,7 @@ const adaptQuestionForDetail = (question: Question): DetailQuestion => {
 		}
 	} else if (question.section === "Essay") {
 		// For essay questions, you might need to add the maxScore property
-		baseQuestion.maxScore = (question as any).maxScore;
+		baseQuestion.maxScore = (question as EssayQuestion).maxScore;
 	}
 
 	return baseQuestion;

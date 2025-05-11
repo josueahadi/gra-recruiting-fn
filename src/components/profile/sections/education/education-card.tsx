@@ -9,9 +9,9 @@ interface EducationCardProps {
 }
 
 const EducationCard: React.FC<EducationCardProps> = ({
-	education,
-	onRemove,
-	canEdit,
+education,
+onRemove,
+canEdit,
 }) => {
 	// Format the education level
 	const formatEducationLevel = (level?: string) => {
@@ -28,11 +28,11 @@ const EducationCard: React.FC<EducationCardProps> = ({
 		};
 
 		return (
-			educationLevelMap[level] ||
-			level
-				.split("_")
-				.map(
-					(word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+educationLevelMap[level] ||
+level
+.split("_")
+.map(
+(word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
 				)
 				.join(" ")
 		);
@@ -43,13 +43,14 @@ const EducationCard: React.FC<EducationCardProps> = ({
 		if (!dateStr) return "N/A";
 		try {
 			return new Date(dateStr).getFullYear().toString();
-		} catch (e) {
+		} catch {
+			// No need to use the error parameter
 			return "N/A";
 		}
 	};
 
 	return (
-		<div className="p-4 bg-blue-50 rounded-md mb-4 relative">
+<div className="p-4 bg-blue-50 rounded-md mb-4 relative">
 			<div className="flex justify-between items-start">
 				<div>
 					<h3 className="font-semibold text-lg">

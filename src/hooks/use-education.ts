@@ -5,7 +5,6 @@ import type {
 	AddEducationRequest,
 } from "@/types/education-experience";
 import { showToast } from "@/services/toast";
-import { convertUIDateToApiDate } from "@/lib/utils/date-utils";
 
 export function useEducation() {
 	const queryClient = useQueryClient();

@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { showToast } from "@/services/toast";
-import { ApiQueueManager } from "@/lib/utils/api-queue-utils";
 import type { LanguageProficiency as LanguageProficiencyType } from "@/types/profile";
 import {
 	languagesService,
@@ -52,13 +51,6 @@ const PROFICIENCY_MAP: Record<
 	"9": "NATIVE",
 };
 
-const REVERSE_PROFICIENCY_MAP: Record<string, string> = {
-	BEGINNER: "1",
-	INTERMEDIATE: "5",
-	FLUENT: "7",
-	NATIVE: "9",
-};
-
 const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 	languages,
 	onLanguagesChange,
@@ -78,8 +70,6 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [languageToDelete, setLanguageToDelete] =
 		useState<LanguageProficiencyType | null>(null);
-
-	const apiQueue = new ApiQueueManager({ delayBetweenRequests: 500 });
 
 	const MAX_LANGUAGES = 10;
 
@@ -581,8 +571,8 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 					<AlertDialogHeader>
 						<AlertDialogTitle>Delete Language</AlertDialogTitle>
 						<AlertDialogDescription>
-							Are you sure you want to delete "{languageToDelete?.language}"?
-							This action cannot be undone.
+							Are you sure you want to delete &#34;{languageToDelete?.language}
+							&#34;? This action cannot be undone.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
@@ -603,16 +593,3 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 };
 
 export default LanguageProficiency;
-
-// Type guard for error with response
-function hasResponseStatus(
-	error: unknown,
-): error is { response: { status: number } } {
-	return (
-		typeof error === "object" &&
-		error !== null &&
-		"response" in error &&
-		typeof (error as { response?: unknown }).response === "object" &&
-		(error as { response: { status?: unknown } }).response?.status !== undefined
-	);
-}

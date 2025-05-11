@@ -1,13 +1,12 @@
 export interface Skill {
-	id?: number;
+	id: string | number;
 	name: string;
 	experienceRating?: string;
-	tempId?: string; // Added for optimistic updates
+	isTemporary?: boolean; // Flag to identify temporary skills
 }
 
 export interface SkillsState {
-	technical: Skill[];
-	soft: Skill[];
+	skills: Skill[];
 }
 
 export interface SkillPayload {
