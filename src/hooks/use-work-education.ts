@@ -3,15 +3,15 @@ import { api } from "@/services/api";
 import { showToast } from "@/services/toast";
 import { convertUIDateToApiDate } from "@/lib/utils/date-utils";
 import type { Education, WorkExperience, ApplicantData } from "@/types/profile";
+import type { QueryClient } from "@tanstack/react-query";
 
 export function useWorkEducation(
 	profileData: ApplicantData | null,
 	setProfileData: (data: ApplicantData | null) => void,
-	queryClient: any,
+	queryClient: QueryClient,
 ) {
 	const [workEducationLoading, setWorkEducationLoading] = useState(false);
 
-	// Education level and employment type mapping
 	const EDUCATION_LEVEL_MAP: Record<string, string> = {
 		"High School": "HIGH_SCHOOL",
 		"Associate Degree": "ASSOCIATE",
@@ -35,14 +35,12 @@ export function useWorkEducation(
 			setWorkEducationLoading(true);
 
 			try {
-				// Update UI optimistically
 				setProfileData({
 					...profileData,
 					education: data.education,
 					experience: data.experience,
 				});
 
-				// Process education updates
 				const existingEducation = profileData.education || [];
 
 				for (const edu of data.education) {
@@ -50,15 +48,12 @@ export function useWorkEducation(
 
 					if (!existingEntry) {
 						await api.post("/api/v1/applicants/add-education", {
-							institutionName: edu.institution,
-							educationLevel: EDUCATION_LEVEL_MAP[edu.degree] || "BACHELOR",
+							institutionName: edu.institutionName,
+							educationLevel:
+								EDUCATION_LEVEL_MAP[edu.educationLevel] || "BACHELOR",
 							program: edu.program,
-							dateJoined: convertUIDateToApiDate(edu.startYear),
-							dateGraduated: convertUIDateToApiDate(
-								edu.endYear === "Present"
-									? new Date().toLocaleDateString()
-									: edu.endYear,
-							),
+							dateJoined: convertUIDateToApiDate(edu.dateJoined || ""),
+							dateGraduated: convertUIDateToApiDate(edu.dateGraduated || ""),
 						});
 					} else {
 						if (edu.id) {
@@ -73,14 +68,13 @@ export function useWorkEducation(
 							await api.patch(
 								`/api/v1/applicants/update-education/${educationId}`,
 								{
-									institutionName: edu.institution,
-									educationLevel: EDUCATION_LEVEL_MAP[edu.degree] || "BACHELOR",
+									institutionName: edu.institutionName,
+									educationLevel:
+										EDUCATION_LEVEL_MAP[edu.educationLevel] || "BACHELOR",
 									program: edu.program,
-									dateJoined: convertUIDateToApiDate(edu.startYear),
+									dateJoined: convertUIDateToApiDate(edu.dateJoined || ""),
 									dateGraduated: convertUIDateToApiDate(
-										edu.endYear === "Present"
-											? new Date().toLocaleDateString()
-											: edu.endYear,
+										edu.dateGraduated || "",
 									),
 								},
 							);
@@ -88,7 +82,6 @@ export function useWorkEducation(
 					}
 				}
 
-				// Process work experience updates
 				const existingExperience = profileData.experience || [];
 
 				for (const exp of data.experience) {
@@ -141,7 +134,6 @@ export function useWorkEducation(
 				return true;
 			} catch (err) {
 				console.error("Error updating work/education:", err);
-				// Revert to original data
 				setProfileData(profileData);
 				showToast({
 					title: "Failed to update work and education information",
