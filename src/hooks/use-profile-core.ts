@@ -59,18 +59,13 @@ export function useProfileCore(options: UseProfileOptions) {
 							address: basicProfile.street || "",
 						},
 						department: basicProfile.careerName || undefined,
-						skills: {
-							technical: Array.isArray(
-								detailedProfile.skillsAndExperienceRatings,
-							)
-								? detailedProfile.skillsAndExperienceRatings.map((skill) => ({
-										id: skill.id,
-										name: skill.skillName,
-										experienceRating: skill.experienceRating,
-									}))
-								: [],
-							soft: [],
-						},
+						skills: Array.isArray(detailedProfile.skillsAndExperienceRatings)
+							? detailedProfile.skillsAndExperienceRatings.map((skill) => ({
+									id: skill.id,
+									name: skill.skillName,
+									experienceRating: skill.experienceRating,
+								}))
+							: [],
 						languages: Array.isArray(detailedProfile.languagesProficiency)
 							? detailedProfile.languagesProficiency.map((lang) => ({
 									id: lang.id,
@@ -148,19 +143,31 @@ export function useProfileCore(options: UseProfileOptions) {
 							address: "KN 21 Ave",
 						},
 						department: "Software Development",
-						skills: {
-							technical: [
-								{ id: 1, name: "Software Engineering" },
-								{ id: 2, name: "Frontend Development" },
-								{ id: 3, name: "Backend Development" },
-								{ id: 4, name: "Data Analysis" },
-							],
-							soft: [],
-						},
+						skills: [
+							{ id: 1, name: "Software Engineering", experienceRating: "FIVE" },
+							{ id: 2, name: "Frontend Development", experienceRating: "FIVE" },
+							{ id: 3, name: "Backend Development", experienceRating: "FIVE" },
+							{ id: 4, name: "Data Analysis", experienceRating: "FIVE" },
+						],
 						languages: [
-							{ id: 1, language: "Kinyarwanda", level: 10 },
-							{ id: 2, language: "French", level: 5 },
-							{ id: 3, language: "English", level: 6 },
+							{
+								id: 1,
+								language: "Kinyarwanda",
+								level: 10,
+								proficiencyLevel: "NATIVE",
+							},
+							{
+								id: 2,
+								language: "French",
+								level: 5,
+								proficiencyLevel: "BEGINNER",
+							},
+							{
+								id: 3,
+								language: "English",
+								level: 6,
+								proficiencyLevel: "INTERMEDIATE",
+							},
 						],
 						education: [
 							{
@@ -220,7 +227,7 @@ export function useProfileCore(options: UseProfileOptions) {
 							address: basicProfile.street || "",
 						},
 						department: basicProfile.careerName || undefined,
-						skills: { technical: [], soft: [] },
+						skills: [],
 						languages: [],
 						education: [],
 						experience: [],

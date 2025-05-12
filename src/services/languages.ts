@@ -7,9 +7,6 @@ export interface LanguageProficiencyPayload {
 }
 
 export const languagesService = {
-	/**
-	 * Add a language with proficiency level
-	 */
 	async add(
 		data: LanguageProficiencyPayload,
 	): Promise<ApiResponse<LanguageResponse>> {
@@ -21,9 +18,6 @@ export const languagesService = {
 		return response.data;
 	},
 
-	/**
-	 * Update a language proficiency
-	 */
 	async update(
 		languageId: number,
 		data: LanguageProficiencyPayload,
@@ -36,9 +30,6 @@ export const languagesService = {
 		return response.data;
 	},
 
-	/**
-	 * Delete a language by ID
-	 */
 	async delete(languageId: number): Promise<{ message: string }> {
 		const response = await api.delete(
 			`/api/v1/applicants/delete-language-proficiency/${languageId}`,

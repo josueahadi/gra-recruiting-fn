@@ -28,9 +28,8 @@ export function useProfileCompletion(profileData: ApplicantData | null) {
 
 		// Skills
 		if (profileData.skills) {
-			total += 1; // Technical and soft skills
-			if (profileData.skills.technical.length > 0) completed++;
-			if (profileData.skills.soft.length > 0) completed++;
+			total += 1;
+			if (profileData.skills.length > 0) completed++;
 		}
 
 		// Languages

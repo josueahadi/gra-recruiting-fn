@@ -33,6 +33,7 @@ export function useProfile(options: UseProfileOptions) {
 		addLanguage,
 		updateLanguage,
 		deleteLanguage,
+		deleteLanguageById,
 		pendingLanguages,
 		languagesLoading,
 	} = useLanguages(profileData, setProfileData, queryClient);
@@ -81,6 +82,7 @@ export function useProfile(options: UseProfileOptions) {
 		addLanguage,
 		updateLanguage,
 		deleteLanguage,
+		deleteLanguageById,
 		addSkill,
 		deleteSkill,
 	};

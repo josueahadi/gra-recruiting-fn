@@ -28,6 +28,9 @@ export default function ProfileContent() {
 		uploadFile,
 		removeDocument,
 		updatePortfolioLinks,
+		updateLanguage,
+		deleteLanguage,
+		deleteLanguageById,
 	} = useProfile({
 		userType: "applicant",
 	});
@@ -69,7 +72,7 @@ export default function ProfileContent() {
 			!profileData.addressInfo.country && !profileData.addressInfo.city;
 		const noEducation = profileData.education.length === 0;
 		const noExperience = profileData.experience.length === 0;
-		const noSkills = profileData.skills.technical.length === 0;
+		const noSkills = profileData.skills.length === 0;
 
 		return emptyAddress && noEducation && noExperience && noSkills;
 	};
@@ -86,7 +89,7 @@ export default function ProfileContent() {
 		return (
 			<div className="flex flex-col items-center justify-center h-96">
 				<h2 className="text-xl font-semibold mb-2">
-					{error || "Profile Not Found"}
+					{error ? String(error) : "Profile Not Found"}
 				</h2>
 			</div>
 		);
@@ -158,13 +161,47 @@ export default function ProfileContent() {
 
 			{activeSection === "skills" && (
 				<SkillsTab
-					technicalSkills={profileData.skills.technical}
-					softSkills={profileData.skills.soft}
+					skills={profileData.skills}
 					languages={profileData.languages}
 					department={profileData.department}
-					onUpdate={({ technical, soft, languages, department }) =>
-						updateSkills({ technical, soft, languages, department })
-					}
+					onUpdate={async (skills, languages) => {
+						// Only update skills if they changed
+						if (skills !== profileData.skills) {
+							await updateSkills(skills);
+						}
+						// Only update languages if they changed
+						if (languages !== profileData.languages) {
+							const prevLangs = profileData.languages;
+							const newLangs = languages;
+							for (const prevLang of prevLangs) {
+								if (
+									!newLangs.some((l) => l.languageId === prevLang.languageId)
+								) {
+									if (prevLang.languageId)
+										await deleteLanguageById(prevLang.languageId);
+								}
+							}
+							for (const newLang of newLangs) {
+								const prevLang = prevLangs.find(
+									(l) => l.languageId === newLang.languageId,
+								);
+								if (
+									prevLang &&
+									(prevLang.language !== newLang.language ||
+										prevLang.level !== newLang.level)
+								) {
+									if (newLang.languageId)
+										await updateLanguage(
+											newLang.languageId,
+											newLang.language,
+											newLang.level,
+										);
+								}
+							}
+						}
+					}}
+					onUpdateLanguage={updateLanguage}
+					onDeleteLanguage={deleteLanguageById}
 				/>
 			)}
 

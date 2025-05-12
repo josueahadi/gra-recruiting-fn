@@ -8,42 +8,42 @@ import { Separator } from "@/components/ui/separator";
 import { useCallback, useEffect, useState } from "react";
 
 interface SkillsTabProps {
-	technicalSkills: Skill[];
-	softSkills: Skill[];
+	skills: Skill[];
 	languages: LanguageProficiency[];
 	department?: string;
-	onUpdate: (data: {
-		technical: Skill[];
-		soft: Skill[];
-		languages: LanguageProficiency[];
-		department?: string;
-	}) => void;
+	onUpdate: (
+		skills: Skill[],
+		languages: LanguageProficiency[],
+		department?: string,
+	) => void;
+	onUpdateLanguage?: (
+		languageId: number,
+		language: string,
+		proficiencyLevel: number,
+	) => Promise<boolean>;
+	onDeleteLanguage?: (languageId: number) => Promise<boolean>;
 }
 
 const SkillsTab: React.FC<SkillsTabProps> = ({
-	technicalSkills,
-	softSkills,
+	skills,
 	languages: initialLanguages,
 	department,
 	onUpdate,
+	onUpdateLanguage,
+	onDeleteLanguage,
 }) => {
-	// Keep a local copy of languages that will be updated by direct API calls
 	const [languages, setLanguages] =
 		useState<LanguageProficiency[]>(initialLanguages);
 
-	// Sync languages with prop changes
 	useEffect(() => {
 		setLanguages(initialLanguages);
 	}, [initialLanguages]);
 
-	const handleUpdateSkills = async (skills: Skill[]): Promise<boolean> => {
+	const handleUpdateSkills = async (
+		updatedSkills: Skill[],
+	): Promise<boolean> => {
 		try {
-			onUpdate({
-				technical: skills,
-				soft: softSkills,
-				languages,
-				department,
-			});
+			onUpdate(updatedSkills, languages, department);
 			return true;
 		} catch (error) {
 			console.error("Error updating skills:", error);
@@ -52,21 +52,16 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 	};
 
 	const handleDepartmentChange = (newDepartment: string | undefined) => {
-		onUpdate({
-			technical: technicalSkills,
-			soft: softSkills,
-			languages,
-			department: newDepartment,
-		});
+		onUpdate(skills, languages, newDepartment);
 	};
 
-	// This is now just for syncing the local state - API calls happen in the language component
 	const handleLanguagesUpdate = useCallback(
 		(updatedLanguages: LanguageProficiency[]): Promise<boolean> => {
 			setLanguages(updatedLanguages);
+			onUpdate(skills, updatedLanguages, department);
 			return Promise.resolve(true);
 		},
-		[],
+		[onUpdate, skills, department],
 	);
 
 	return (
@@ -84,7 +79,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 			</div>
 
 			<SkillsSection
-				skills={technicalSkills}
+				skills={skills}
 				canEdit={true}
 				onUpdate={handleUpdateSkills}
 			/>
@@ -97,6 +92,8 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 				languages={languages}
 				canEdit={true}
 				onUpdate={handleLanguagesUpdate}
+				onUpdateLanguage={onUpdateLanguage}
+				onDeleteLanguage={onDeleteLanguage}
 			/>
 
 			<ProfileNavigationButtons />

@@ -229,10 +229,54 @@ export function useLanguages(
 		[profileData, setProfileData, queryClient],
 	);
 
+	const deleteLanguageById = useCallback(
+		async (languageId: number) => {
+			if (!profileData) return false;
+			// Store original languages for rollback
+			const originalLanguages = profileData ? [...profileData.languages] : [];
+			try {
+				setLanguagesLoading(true);
+				// Optimistically remove from UI
+				setProfileData((current) => {
+					if (!current) return null;
+					return {
+						...current,
+						languages: current.languages.filter(
+							(lang) => lang.languageId !== languageId,
+						),
+					};
+				});
+				await languagesService.delete(languageId);
+				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
+				showToast({
+					title: "Language removed successfully",
+					variant: "success",
+				});
+				return true;
+			} catch (error) {
+				console.error("Error deleting language by ID:", error);
+				// Rollback
+				setProfileData((current) => {
+					if (!current) return null;
+					return {
+						...current,
+						languages: originalLanguages,
+					};
+				});
+				showToast({ title: "Failed to remove language", variant: "error" });
+				return false;
+			} finally {
+				setLanguagesLoading(false);
+			}
+		},
+		[profileData, setProfileData, queryClient],
+	);
+
 	return {
 		addLanguage,
 		updateLanguage,
 		deleteLanguage,
+		deleteLanguageById,
 		pendingLanguages,
 		languagesLoading,
 	};

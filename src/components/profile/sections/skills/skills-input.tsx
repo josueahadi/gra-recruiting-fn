@@ -8,10 +8,11 @@ import type { Skill } from "@/types/skills";
 import { showToast } from "@/services/toast";
 import { api } from "@/services/api";
 import { ApiQueueManager } from "@/lib/utils/api-queue-utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface SkillsInputProps {
 	skills: Skill[];
-	onSkillsChange: (skills: Skill[]) => void;
+	onChange: (skills: Skill[]) => void;
 	title?: string;
 	placeholder?: string;
 	className?: string;
@@ -19,14 +20,15 @@ interface SkillsInputProps {
 
 const SkillsInput: React.FC<SkillsInputProps> = ({
 	skills,
-	onSkillsChange,
+	onChange,
 	title = "Skills",
 	placeholder = "Enter Skill",
 	className,
 }) => {
 	const [newSkill, setNewSkill] = useState("");
 	const [pendingSkills, setPendingSkills] = useState<Set<string>>(new Set());
-	const apiQueue = useRef(new ApiQueueManager({ delayBetweenRequests: 300 }));
+	const [newRating, setNewRating] = useState("FIVE");
+	const apiQueue = useRef<{ enqueue: (fn: () => Promise<any>) => Promise<any> }>(new ApiQueueManager({ delayBetweenRequests: 300 }));
 
 	const MAX_SKILLS = 20;
 
@@ -60,18 +62,19 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 			const skillToAdd: Skill = {
 				id: tempId,
 				name: newSkill.trim(),
+				experienceRating: newRating,
 				isTemporary: true,
 			};
 
 			const updatedSkills = [...skills, skillToAdd];
-			onSkillsChange(updatedSkills);
+			onChange(updatedSkills);
 
 			const apiCall = async () => {
 				const response = await api.post("/api/v1/applicants/add-skills", {
 					skillsAndExperienceRatings: [
 						{
 							skillName: newSkill.trim(),
-							experienceRating: "FIVE",
+							experienceRating: newRating,
 						},
 					],
 				});
@@ -104,7 +107,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 						return skill;
 					});
 
-					onSkillsChange(finalSkills);
+					onChange(finalSkills);
 				} else {
 					console.warn(
 						"Server did not return a skill ID, using temporary ID for now",
@@ -117,21 +120,22 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 			await apiQueue.current.enqueue(apiCall);
 
 			setNewSkill("");
+			setNewRating("FIVE");
 
 			showToast({
 				title: "Skill added successfully",
 				variant: "success",
 			});
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error("Error adding skill:", error);
 
-			onSkillsChange(
+			onChange(
 				skills.filter((s) => s.name.toLowerCase() !== newSkill.toLowerCase()),
 			);
 
 			showToast({
 				title: "Failed to add skill",
-				description: error.message || "Please try again",
+				description: error instanceof Error ? error.message : "Please try again",
 				variant: "error",
 			});
 		} finally {
@@ -141,7 +145,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 				return newSet;
 			});
 		}
-	}, [newSkill, skills, onSkillsChange]);
+	}, [newSkill, newRating, skills, onChange]);
 
 	const handleRemoveSkill = useCallback(
 		async (skillToRemove: Skill) => {
@@ -161,7 +165,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 				(skill) => skill.id !== skillToRemove.id,
 			);
 
-			onSkillsChange(updatedSkills);
+			onChange(updatedSkills);
 
 			setPendingSkills((prev) => new Set(prev).add(skillToRemove.name));
 
@@ -197,14 +201,14 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 				} else {
 					console.log("Removed temporary skill (no API call needed)");
 				}
-			} catch (error: any) {
+			} catch (error: unknown) {
 				console.error("Error removing skill:", error);
 
-				onSkillsChange(originalSkills);
+				onChange(originalSkills);
 
 				showToast({
 					title: "Failed to remove skill",
-					description: error.message || "Please try again",
+					description: error instanceof Error ? error.message : "Please try again",
 					variant: "error",
 				});
 			} finally {
@@ -215,7 +219,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 				});
 			}
 		},
-		[skills, onSkillsChange],
+		[skills, onChange],
 	);
 
 	const handleInputKeyPress = useCallback(
@@ -237,7 +241,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 
 	return (
 		<div className={className}>
-			{title && <h3 className="text-lg font-medium mb-4">{title}</h3>}
+			{title && <h2 className="text-xl font-semibold mb-4">{title}</h2>}
 
 			<div className="flex gap-2 mb-4">
 				<Input
@@ -248,6 +252,21 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 					className="flex-grow"
 					disabled={pendingSkills.size > 0}
 				/>
+				<div className="flex flex-row justify-end">
+					<label htmlFor="skill-rating" className="text-xs text-gray-800 font-medium mb-1 ml-1">Skill Rating:</label>
+					<Select id="skill-rating" value={newRating} onValueChange={setNewRating} disabled={pendingSkills.size > 0}>
+						<SelectTrigger className="w-[120px]">
+							<SelectValue placeholder="Rating" />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="ONE">1</SelectItem>
+							<SelectItem value="TWO">2</SelectItem>
+							<SelectItem value="THREE">3</SelectItem>
+							<SelectItem value="FOUR">4</SelectItem>
+							<SelectItem value="FIVE">5</SelectItem>
+						</SelectContent>
+					</Select>
+				</div>
 				<Button
 					onClick={handleAddSkill}
 					size="sm"
@@ -278,6 +297,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 					<SkillPill
 						key={skill.id}
 						skill={skill.name}
+						experienceRating={skill.experienceRating}
 						isEditing={true}
 						onRemove={() => handleRemoveSkill(skill)}
 						disabled={isSkillPending(skill.name)}

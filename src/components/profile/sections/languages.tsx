@@ -9,12 +9,20 @@ interface LanguagesSectionProps {
 	languages: LanguageProficiencyType[];
 	canEdit: boolean;
 	onUpdate?: (languages: LanguageProficiencyType[]) => void;
+	onUpdateLanguage?: (
+		languageId: number,
+		language: string,
+		proficiencyLevel: number,
+	) => Promise<boolean>;
+	onDeleteLanguage?: (languageId: number) => Promise<boolean>;
 }
 
 const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 	languages: initialLanguages,
 	canEdit,
 	onUpdate,
+	onUpdateLanguage,
+	onDeleteLanguage,
 }) => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [languages, setLanguages] = useState<LanguageProficiencyType[]>(
@@ -59,6 +67,8 @@ const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 					<LanguageProficiency
 						languages={languages}
 						onLanguagesChange={handleLanguagesChange}
+						onUpdateLanguage={onUpdateLanguage}
+						onDeleteLanguage={onDeleteLanguage}
 					/>
 				) : (
 					<LanguageDisplay languages={languages} />

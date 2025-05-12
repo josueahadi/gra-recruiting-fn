@@ -1,7 +1,7 @@
 import type React from "react";
 import { memo } from "react";
 import SkillPill from "./skill-pill";
-import type { Skill } from "@/hooks/use-profile";
+import type { Skill } from "@/types/profile";
 
 interface SkillsDisplayProps {
 	skills: Skill[];
@@ -44,6 +44,7 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = memo(
 						<SkillPill
 							key={skill.id}
 							skill={skill.name}
+							experienceRating={skill.experienceRating}
 							className="bg-slate-500"
 						/>
 					))}

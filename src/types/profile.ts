@@ -60,7 +60,6 @@ export interface WorkExperience {
 export interface Skill {
 	id: string | number;
 	name: string;
-	level?: string;
 	experienceRating?: string;
 	isTemporary?: boolean; // Flag to identify temporary skills
 }
@@ -71,7 +70,7 @@ export interface ApplicantData {
 	personalInfo: ProfileInfo;
 	addressInfo: AddressInfo;
 	department?: string;
-	skills: SkillsState;
+	skills: Skill[];
 	languages: LanguageProficiency[];
 	education: Education[];
 	experience: WorkExperience[];

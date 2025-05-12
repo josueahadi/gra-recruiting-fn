@@ -31,6 +31,12 @@ import {
 interface LanguageProficiencyProps {
 	languages: LanguageProficiencyType[];
 	onLanguagesChange: (languages: LanguageProficiencyType[]) => void;
+	onUpdateLanguage?: (
+		languageId: number,
+		language: string,
+		proficiencyLevel: number,
+	) => Promise<boolean>;
+	onDeleteLanguage?: (languageId: number) => Promise<boolean>;
 	className?: string;
 }
 
@@ -54,6 +60,8 @@ const PROFICIENCY_MAP: Record<
 const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 	languages,
 	onLanguagesChange,
+	onUpdateLanguage,
+	onDeleteLanguage,
 	className,
 }) => {
 	const [newLanguage, setNewLanguage] = useState("");
@@ -206,27 +214,20 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 		setPendingLanguages((prev) => new Set(prev).add(languageToDelete.language));
 
 		try {
-			if (languageToDelete.languageId) {
-				// Always call the API if languageId exists
-				await languagesService.delete(languageToDelete.languageId);
-				const updatedLanguages = languages.filter(
-					(lang) => lang.languageId !== languageToDelete.languageId,
-				);
-				onLanguagesChange(updatedLanguages);
-				showToast({
-					title: "Language removed successfully",
-					variant: "success",
-				});
+			if (languageToDelete.languageId && onDeleteLanguage) {
+				const success = await onDeleteLanguage(languageToDelete.languageId);
+				if (success) {
+					const updatedLanguages = languages.filter(
+						(lang) => lang.languageId !== languageToDelete.languageId,
+					);
+					onLanguagesChange(updatedLanguages);
+				}
 			} else {
 				// If no languageId, just remove from UI
 				const updatedLanguages = languages.filter(
 					(lang) => lang.language !== languageToDelete.language,
 				);
 				onLanguagesChange(updatedLanguages);
-				showToast({
-					title: "Language removed",
-					variant: "success",
-				});
 			}
 		} catch (error: unknown) {
 			console.error("Error deleting language:", error);
@@ -248,7 +249,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 			});
 			setLanguageToDelete(null);
 		}
-	}, [languageToDelete, languages, onLanguagesChange]);
+	}, [languageToDelete, languages, onLanguagesChange, onDeleteLanguage]);
 
 	const handleUpdateLanguage = useCallback(
 		async (index: number) => {
@@ -256,10 +257,8 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 				setErrorMessage("Language name cannot be empty");
 				return;
 			}
-
 			const languageToUpdate = languages[index];
 			if (!languageToUpdate) return;
-
 			if (
 				languages.some(
 					(lang, idx) =>
@@ -270,62 +269,44 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 				setErrorMessage("This language already exists.");
 				return;
 			}
-
 			const originalLanguage = languages[index].language;
 			setPendingLanguages((prev) => new Set(prev).add(originalLanguage));
 			setErrorMessage("");
-
-			// Create a copy of languages for optimistic updates and potential rollback
 			const originalLanguages = [...languages];
-
-			// Update locally first for immediate feedback
 			const updatedLanguages = [...languages];
 			updatedLanguages[index] = {
 				...updatedLanguages[index],
 				language: editLanguage.trim(),
 				level: Number.parseInt(editProficiency, 10),
 			};
-
 			onLanguagesChange(updatedLanguages);
-
 			try {
-				// If language has an ID, update it on the server
 				if (languageToUpdate.languageId) {
-					console.log("Updating language:", {
-						id: languageToUpdate.languageId,
-						name: editLanguage.trim(),
-						level: PROFICIENCY_MAP[editProficiency],
-					});
-
-					await languagesService.update(languageToUpdate.languageId, {
-						languageName: editLanguage.trim(),
-						proficiencyLevel:
-							PROFICIENCY_MAP[editProficiency] || "INTERMEDIATE",
-					});
-
+					// Use the onUpdateLanguage prop if provided, otherwise use direct API call
+					if (onUpdateLanguage) {
+						await onUpdateLanguage(
+							languageToUpdate.languageId,
+							editLanguage.trim(),
+							Number.parseInt(editProficiency, 10)
+						);
+					} else {
+						await languagesService.update(languageToUpdate.languageId, {
+							languageName: editLanguage.trim(),
+							proficiencyLevel:
+								PROFICIENCY_MAP[editProficiency] || "INTERMEDIATE",
+						});
+					}
 					showToast({
 						title: "Language updated successfully",
 						variant: "success",
 					});
-				} else {
-					// If it's a new language that hasn't been saved yet, just update local state
-					console.log("Updating unsaved language in UI (no API call needed)");
-
-					showToast({
-						title: "Language updated",
-						variant: "success",
-					});
 				}
-
 				setEditIndex(null);
 				setEditLanguage("");
 				setEditProficiency("5");
-			} catch (error: unknown) {
+			} catch (error) {
 				console.error("Error updating language:", error);
-
-				// Rollback optimistic update
 				onLanguagesChange(originalLanguages);
-
 				showToast({
 					title: "Failed to update language",
 					description:
@@ -342,7 +323,43 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 				});
 			}
 		},
-		[editLanguage, editProficiency, languages, onLanguagesChange],
+		[editLanguage, editProficiency, languages, onLanguagesChange, onUpdateLanguage],
+	);
+
+	const handleDeleteLanguageDirect = useCallback(
+		async (languageId: number, language: string) => {
+			setPendingLanguages((prev) => new Set(prev).add(language));
+			const originalLanguages = [...languages];
+			try {
+				await languagesService.delete(languageId);
+				const updatedLanguages = languages.filter(
+					(lang) => lang.languageId !== languageId,
+				);
+				onLanguagesChange(updatedLanguages);
+				showToast({
+					title: "Language deleted successfully",
+					variant: "success",
+				});
+			} catch (error) {
+				console.error("Error deleting language:", error);
+				onLanguagesChange(originalLanguages);
+				showToast({
+					title: "Failed to delete language",
+					description:
+						typeof error === "object" && error && "message" in error
+							? (error as { message?: string }).message || "Please try again"
+							: "Please try again",
+					variant: "error",
+				});
+			} finally {
+				setPendingLanguages((prev) => {
+					const newSet = new Set(prev);
+					newSet.delete(language);
+					return newSet;
+				});
+			}
+		},
+		[languages, onLanguagesChange],
 	);
 
 	const handleEditStart = useCallback(
@@ -494,7 +511,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 								<div className="flex gap-2 mt-2">
 									<Button
 										size="sm"
-										className="bg-green-500 hover:bg-green-600 text-white"
+										className="bg-primary-base hover:bg-primary-dark text-white"
 										onClick={() => handleUpdateLanguage(index)}
 										disabled={isPending(lang.language)}
 									>
@@ -514,22 +531,52 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 							<>
 								<div className="font-medium text-lg flex items-center justify-between">
 									<span>{lang.language}</span>
-									{!isPending(lang.language) && (
-										<Button
-											size="icon"
-											variant="ghost"
-											className="ml-2"
-											onClick={() => handleEditStart(index)}
-											disabled={isPending(lang.language)}
-										>
-											<Pencil className="h-4 w-4 text-gray-500" />
-										</Button>
-									)}
+									<div className="flex items-center gap-1 ml-2">
+										{!isPending(lang.language) && (
+											<>
+												<Button
+													size="icon"
+													variant="ghost"
+													className="mr-1"
+													onClick={() => handleEditStart(index)}
+													disabled={isPending(lang.language)}
+												>
+													<Pencil className="h-4 w-4 text-gray-500" />
+												</Button>
+												<Button
+													size="icon"
+													variant="ghost"
+													onClick={() => {
+														if (lang.languageId) {
+															// Use the onDeleteLanguage prop if provided, otherwise use direct method
+															if (onDeleteLanguage) {
+																onDeleteLanguage(lang.languageId);
+															} else {
+																handleDeleteLanguageDirect(
+																	lang.languageId,
+																	lang.language,
+																);
+															}
+														} else {
+															// If no languageId, just remove from UI
+															confirmDeleteLanguage(lang);
+														}
+													}}
+													disabled={isPending(lang.language)}
+												>
+													{isPending(lang.language) ? (
+														<Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+													) : (
+														<Trash2 className="h-4 w-4 text-gray-500" />
+													)}
+												</Button>
+											</>
+										)}
+									</div>
 								</div>
 								<div className="text-gray-600">
 									{getProficiencyLabel(lang.level)}
 								</div>
-
 								<div className="flex items-center mt-2">
 									{Array.from({ length: 9 }).map((_, i) => (
 										<div
@@ -541,24 +588,6 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 										/>
 									))}
 								</div>
-
-								{!isPending(lang.language) && (
-									<button
-										type="button"
-										onClick={() => confirmDeleteLanguage(lang)}
-										className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
-										aria-label={`Remove ${lang.language}`}
-										disabled={isPending(lang.language)}
-									>
-										<Trash2 className="h-4 w-4" />
-									</button>
-								)}
-
-								{isPending(lang.language) && (
-									<div className="absolute top-2 right-2">
-										<Loader2 className="h-4 w-4 animate-spin text-blue-500" />
-									</div>
-								)}
 							</>
 						)}
 					</div>
