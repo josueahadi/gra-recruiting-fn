@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/services/api";
 import { showToast } from "@/services/toast";
+import type { ErrorWithResponse } from "@/types/errors";
 
 export type ResetPasswordStep = "request" | "verify" | "reset" | "success";
 
@@ -62,12 +63,19 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 			if (options?.onSuccess) {
 				options.onSuccess();
 			}
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		} catch (error: any) {
+		} catch (error: unknown) {
+			let errorMessage = "Some default message";
+			if (
+				typeof error === "object" &&
+				error !== null &&
+				"response" in error &&
+				typeof (error as ErrorWithResponse).response?.data?.message === "string"
+			) {
+				errorMessage =
+					(error as ErrorWithResponse).response?.data?.message ??
+					"Some default message";
+			}
 			console.error("Error requesting password reset:", error);
-			const errorMessage =
-				error.response?.data?.message ||
-				"Failed to send verification code. Please try again.";
 			setError(errorMessage);
 
 			if (options?.onError) {
@@ -111,12 +119,19 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 			if (options?.onSuccess) {
 				options.onSuccess();
 			}
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		} catch (error: any) {
+		} catch (error: unknown) {
+			let errorMessage = "Some default message";
+			if (
+				typeof error === "object" &&
+				error !== null &&
+				"response" in error &&
+				typeof (error as ErrorWithResponse).response?.data?.message === "string"
+			) {
+				errorMessage =
+					(error as ErrorWithResponse).response?.data?.message ??
+					"Some default message";
+			}
 			console.error("Error verifying code:", error);
-			const errorMessage =
-				error.response?.data?.message ||
-				"Invalid or expired code. Please try again.";
 			setError(errorMessage);
 
 			if (options?.onError) {
@@ -162,12 +177,19 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 			if (options?.onSuccess) {
 				options.onSuccess();
 			}
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		} catch (error: any) {
+		} catch (error: unknown) {
+			let errorMessage = "Some default message";
+			if (
+				typeof error === "object" &&
+				error !== null &&
+				"response" in error &&
+				typeof (error as ErrorWithResponse).response?.data?.message === "string"
+			) {
+				errorMessage =
+					(error as ErrorWithResponse).response?.data?.message ??
+					"Some default message";
+			}
 			console.error("Error resetting password:", error);
-			const errorMessage =
-				error.response?.data?.message ||
-				"Failed to reset password. Please try again.";
 			setError(errorMessage);
 
 			if (options?.onError) {
@@ -198,12 +220,19 @@ export const useResetPassword = (options?: UseResetPasswordOptions) => {
 				description: "Please check your email for the new verification code",
 				variant: "success",
 			});
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		} catch (error: any) {
+		} catch (error: unknown) {
+			let errorMessage = "Some default message";
+			if (
+				typeof error === "object" &&
+				error !== null &&
+				"response" in error &&
+				typeof (error as ErrorWithResponse).response?.data?.message === "string"
+			) {
+				errorMessage =
+					(error as ErrorWithResponse).response?.data?.message ??
+					"Some default message";
+			}
 			console.error("Error resending code:", error);
-			const errorMessage =
-				error.response?.data?.message ||
-				"Failed to resend code. Please try again.";
 			setError(errorMessage);
 
 			if (options?.onError) {

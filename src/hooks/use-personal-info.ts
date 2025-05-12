@@ -2,11 +2,12 @@ import { useCallback, useState } from "react";
 import { api } from "@/services/api";
 import { showToast } from "@/services/toast";
 import type { ProfileInfo, AddressInfo, ApplicantData } from "@/types/profile";
+import type { QueryClient } from "@tanstack/react-query";
 
 export function usePersonalInfo(
 	profileData: ApplicantData | null,
 	setProfileData: (data: ApplicantData | null) => void,
-	queryClient: any,
+	queryClient: QueryClient,
 ) {
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -16,14 +17,12 @@ export function usePersonalInfo(
 			setIsLoading(true);
 
 			try {
-				// Update UI immediately (optimistic update)
 				setProfileData({
 					...profileData,
 					personalInfo: info,
 					name: `${info.firstName} ${info.lastName}`,
 				});
 
-				// Make API call
 				await api.patch("/api/v1/users/update-user-profile", {
 					firstName: info.firstName,
 					lastName: info.lastName,
@@ -59,13 +58,11 @@ export function usePersonalInfo(
 			setIsLoading(true);
 
 			try {
-				// Update UI immediately (optimistic update)
 				setProfileData({
 					...profileData,
 					addressInfo: info,
 				});
 
-				// Make API call
 				await api.patch("/api/v1/users/update-user-profile", {
 					country: info.country,
 					city: info.city,
@@ -82,7 +79,6 @@ export function usePersonalInfo(
 				return true;
 			} catch (err) {
 				console.error("Error updating address:", err);
-				// Revert to original data
 				setProfileData(profileData);
 				showToast({
 					title: "Failed to update address information",

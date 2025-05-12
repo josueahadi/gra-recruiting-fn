@@ -1,5 +1,4 @@
 import { useCallback, useState } from "react";
-import { api } from "@/services/api";
 import { showToast } from "@/services/toast";
 import { skillsService } from "@/services/skills";
 import type { Skill, ApplicantData } from "@/types/profile";
@@ -19,10 +18,8 @@ export function useSkills(
 			setSkillsLoading(true);
 
 			try {
-				// Optimistic update
 				setProfileData({ ...profileData, skills });
 
-				// Prepare payload for API
 				const skillsPayload = skills.map((skill) => ({
 					skillName: skill.name,
 					experienceRating: skill.experienceRating || "FIVE",
@@ -59,10 +56,8 @@ export function useSkills(
 				setSkillsLoading(true);
 				setPendingSkills((prev) => new Set(prev).add(skillName));
 
-				// Create a temporary ID for optimistic UI update
 				const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-				// Update UI immediately (optimistic update)
 				setProfileData({
 					...profileData,
 					skills: [
@@ -75,7 +70,6 @@ export function useSkills(
 					],
 				});
 
-				// Make API call
 				const result = await skillsService.add([
 					{
 						skillName,
@@ -85,7 +79,6 @@ export function useSkills(
 
 				const skillResponse = result.data[0]; // First skill from response
 
-				// Update with server ID if available
 				if (skillResponse?.id) {
 					setProfileData({
 						...profileData,
@@ -157,13 +150,11 @@ export function useSkills(
 				setSkillsLoading(true);
 				setPendingSkills((prev) => new Set(prev).add(skillToDelete.name));
 
-				// Update UI immediately (optimistic update)
 				setProfileData({
 					...profileData,
 					skills: profileData.skills.filter((skill) => skill.id !== skillId),
 				});
 
-				// Make the API call
 				await skillsService.delete(skillId);
 
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
