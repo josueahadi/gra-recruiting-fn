@@ -17,6 +17,8 @@ import {
 	syncTokenToCookie,
 } from "@/lib/utils/auth-utils";
 import { showToast } from "@/services/toast";
+import type { ErrorWithResponse } from "@/types/errors";
+import type { SignInResponse } from "@/types/auth";
 
 interface UseAuthOptions {
 	onSuccess?: () => void;
@@ -139,82 +141,88 @@ export const useAuth = (options?: UseAuthOptions) => {
 		[router, options],
 	);
 
-	const fetchUserProfile = async (
-		retryCount = 0,
-	): Promise<UserProfileResponse | null> => {
-		const currentToken = useAuthStore.getState().token;
+	const fetchUserProfile = useCallback(
+		async (retryCount = 0): Promise<UserProfileResponse | null> => {
+			const currentToken = useAuthStore.getState().token;
 
-		if (!currentToken) {
-			console.error("[useAuth] fetchUserProfile called but no token in store");
-			return null;
-		}
-
-		const MAX_RETRIES = 2;
-
-		try {
-			console.log(
-				"[useAuth] Making API request to fetch user profile with token:",
-				`${currentToken.substring(0, 10)}...`,
-			);
-
-			const { data } = await api.get<UserProfileResponse>(
-				"/api/v1/users/view-profile",
-				{
-					headers: {
-						Authorization: `Bearer ${cleanToken(currentToken)}`,
-					},
-				},
-			);
-
-			console.log("[useAuth] Successfully fetched user profile:", {
-				id: data.id,
-				firstName: data.firstName,
-				lastName: data.lastName,
-				email: data.email,
-			});
-
-			const userData = {
-				id: data.id.toString(),
-				firstName: data.firstName,
-				lastName: data.lastName,
-				email: data.email,
-				role: getRoleFromToken(currentToken) || "USER",
-				phoneNumber: data.phoneNumber,
-				isEmailVerified: true,
-				isTemporary: false,
-			};
-
-			console.log("[useAuth] Setting user data in store");
-			setUser(userData);
-			return data;
-		} catch (error: unknown) {
-			const apiError = error as ApiError;
-			console.error(
-				`[useAuth] Error fetching user profile (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`,
-				apiError.response?.status,
-				apiError.response?.data,
-			);
-
-			if (apiError.response?.status === 401) {
+			if (!currentToken) {
 				console.error(
-					"[useAuth] Unauthorized error fetching profile, token may be invalid",
+					"[useAuth] fetchUserProfile called but no token in store",
 				);
 				return null;
 			}
 
-			if (retryCount < MAX_RETRIES) {
-				const delay = 2 ** retryCount * 500;
-				console.log(`[useAuth] Retrying profile fetch in ${delay}ms...`);
-				await new Promise((resolve) => setTimeout(resolve, delay));
-				return fetchUserProfile(retryCount + 1);
-			}
+			const MAX_RETRIES = 2;
 
-			showToast("Could not load your profile. Some features may be limited.", {
-				type: "error",
-			});
-			throw error;
-		}
-	};
+			try {
+				console.log(
+					"[useAuth] Making API request to fetch user profile with token:",
+					`${currentToken.substring(0, 10)}...`,
+				);
+
+				const { data } = await api.get<UserProfileResponse>(
+					"/api/v1/users/view-profile",
+					{
+						headers: {
+							Authorization: `Bearer ${cleanToken(currentToken)}`,
+						},
+					},
+				);
+
+				console.log("[useAuth] Successfully fetched user profile:", {
+					id: data.id,
+					firstName: data.firstName,
+					lastName: data.lastName,
+					email: data.email,
+				});
+
+				const userData = {
+					id: data.id.toString(),
+					firstName: data.firstName,
+					lastName: data.lastName,
+					email: data.email,
+					role: getRoleFromToken(currentToken) || "USER",
+					phoneNumber: data.phoneNumber,
+					isEmailVerified: true,
+					isTemporary: false,
+				};
+
+				console.log("[useAuth] Setting user data in store");
+				setUser(userData);
+				return data;
+			} catch (error: unknown) {
+				const apiError = error as ApiError;
+				console.error(
+					`[useAuth] Error fetching user profile (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`,
+					apiError.response?.data?.statusCode,
+					apiError.response?.data,
+				);
+
+				if (apiError.response?.data?.statusCode === 401) {
+					console.error(
+						"[useAuth] Unauthorized error fetching profile, token may be invalid",
+					);
+					return null;
+				}
+
+				if (retryCount < MAX_RETRIES) {
+					const delay = 2 ** retryCount * 500;
+					console.log(`[useAuth] Retrying profile fetch in ${delay}ms...`);
+					await new Promise((resolve) => setTimeout(resolve, delay));
+					return fetchUserProfile(retryCount + 1);
+				}
+
+				showToast(
+					"Could not load your profile. Some features may be limited.",
+					{
+						type: "error",
+					},
+				);
+				throw error;
+			}
+		},
+		[setUser],
+	);
 
 	const signIn = async (credentials: SignInCredentials) => {
 		try {
@@ -223,16 +231,28 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			console.log("[Auth] Signing in with:", credentials.email);
 
-			let response;
+			let response: { data: SignInResponse };
 			try {
 				response = await api.post("/api/v1/auth/signin", credentials);
-				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-			} catch (error: any) {
-				console.error("[Auth] API signin error:", error.message);
-				const errorMessage =
-					error.response?.data?.message ||
-					error.message ||
-					"Invalid email or password";
+			} catch (error: unknown) {
+				let errorMessage = "Invalid email or password";
+				if (typeof error === "object" && error !== null) {
+					if (
+						"response" in error &&
+						typeof (error as ErrorWithResponse).response?.data?.message ===
+							"string"
+					) {
+						errorMessage =
+							(error as ErrorWithResponse).response?.data?.message ??
+							errorMessage;
+					} else if (
+						"message" in error &&
+						typeof (error as ErrorWithResponse).message === "string"
+					) {
+						errorMessage = (error as ErrorWithResponse).message ?? errorMessage;
+					}
+				}
+				console.error("[Auth] API signin error:", error);
 				throw new Error(errorMessage);
 			}
 
@@ -291,13 +311,12 @@ export const useAuth = (options?: UseAuthOptions) => {
 				console.error("[Auth] Error after signin:", error);
 				throw error;
 			}
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error("[Auth] Signin error:", error);
 			const errorMessage =
-				error.response?.data?.message ||
-				error.message ||
-				"Login failed. Please try again.";
+				error instanceof Error
+					? error.message
+					: "Login failed. Please try again.";
 			setError(errorMessage);
 			showToast(errorMessage, { type: "error" });
 
@@ -306,7 +325,9 @@ export const useAuth = (options?: UseAuthOptions) => {
 			syncTokenToCookie(null);
 
 			if (options?.onError) {
-				options.onError(new Error(errorMessage));
+				options.onError(
+					error instanceof Error ? error : new Error(errorMessage),
+				);
 			}
 		} finally {
 			setLoading(false);
@@ -394,17 +415,30 @@ export const useAuth = (options?: UseAuthOptions) => {
 				}
 			}
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		onError: (error: any) => {
-			setError(error.response?.data?.message || "Registration failed");
+		onError: (error: unknown) => {
+			let errorMessage = "Registration failed";
+			if (typeof error === "object" && error !== null) {
+				if (
+					"response" in error &&
+					typeof (error as ErrorWithResponse).response?.data?.message ===
+						"string"
+				) {
+					errorMessage =
+						(error as ErrorWithResponse).response?.data?.message ??
+						errorMessage;
+				} else if (
+					"message" in error &&
+					typeof (error as ErrorWithResponse).message === "string"
+				) {
+					errorMessage = (error as ErrorWithResponse).message ?? errorMessage;
+				}
+			}
+			setError(errorMessage);
+			showToast(errorMessage, { type: "error" });
 
-			showToast(
-				error.response?.data?.message ||
-					"Something went wrong. Please try again.",
-				{ type: "error" },
+			options?.onError?.(
+				error instanceof Error ? error : new Error(errorMessage),
 			);
-
-			options?.onError?.(error);
 		},
 		onSettled: () => {
 			setLoading(false);
@@ -429,15 +463,26 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 			fetchUserProfile();
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		onError: (error: any) => {
-			setError(error.response?.data?.message || "Verification failed");
-
-			showToast(
-				error.response?.data?.message ||
-					"Failed to verify email. Please try again.",
-				{ type: "error" },
-			);
+		onError: (error: unknown) => {
+			let errorMessage = "Verification failed";
+			if (typeof error === "object" && error !== null) {
+				if (
+					"response" in error &&
+					typeof (error as ErrorWithResponse).response?.data?.message ===
+						"string"
+				) {
+					errorMessage =
+						(error as ErrorWithResponse).response?.data?.message ??
+						errorMessage;
+				} else if (
+					"message" in error &&
+					typeof (error as ErrorWithResponse).message === "string"
+				) {
+					errorMessage = (error as ErrorWithResponse).message ?? errorMessage;
+				}
+			}
+			setError(errorMessage);
+			showToast(errorMessage, { type: "error" });
 		},
 		onSettled: () => {
 			setLoading(false);
@@ -462,16 +507,26 @@ export const useAuth = (options?: UseAuthOptions) => {
 				{ type: "success" },
 			);
 		},
-		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-		onError: (error: any) => {
-			setError(
-				error.response?.data?.message || "Failed to resend verification email",
-			);
-			showToast(
-				error.response?.data?.message ||
-					"Failed to resend verification email. Please try again.",
-				{ type: "error" },
-			);
+		onError: (error: unknown) => {
+			let errorMessage = "Failed to resend verification email";
+			if (typeof error === "object" && error !== null) {
+				if (
+					"response" in error &&
+					typeof (error as ErrorWithResponse).response?.data?.message ===
+						"string"
+				) {
+					errorMessage =
+						(error as ErrorWithResponse).response?.data?.message ??
+						errorMessage;
+				} else if (
+					"message" in error &&
+					typeof (error as ErrorWithResponse).message === "string"
+				) {
+					errorMessage = (error as ErrorWithResponse).message ?? errorMessage;
+				}
+			}
+			setError(errorMessage);
+			showToast(errorMessage, { type: "error" });
 		},
 		onSettled: () => {
 			setLoading(false);
@@ -502,7 +557,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 				);
 			});
 		}
-	}, [token, user]);
+	}, [token, user, fetchUserProfile]);
 
 	useEffect(() => {
 		if (!userQuery.isPending && !userQuery.isError && userQuery.data) {
@@ -516,7 +571,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 		userQuery.isError,
 		userQuery.data,
 		user,
-		setUserType,
+		userQuery.error,
 	]);
 
 	useEffect(() => {
@@ -539,7 +594,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 
 		showToast("You have been logged out", {
 			duration: 3000,
-			position: "top-center",
+			type: "success",
 		});
 
 		window.location.href = "/auth?mode=login";
@@ -548,7 +603,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 	const handleGoogleAuth = async () => {
 		try {
 			window.location.href = `${api.defaults.baseURL}/api/v1/auth/google`;
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error("[useAuth] Google auth error:", error);
 			setError("Google authentication failed");
 
@@ -556,7 +611,11 @@ export const useAuth = (options?: UseAuthOptions) => {
 				type: "error",
 			});
 
-			options?.onError?.(error);
+			options?.onError?.(
+				error instanceof Error
+					? error
+					: new Error("Google authentication failed"),
+			);
 		}
 	};
 
@@ -632,7 +691,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 		isTokenExpired: () => (token ? isTokenExpired(token) : true),
 		getUserDisplayName,
 
-		// New methods
+		// Signup methods
 		completeSignupAfterVerification,
 		resendVerification: resendVerificationMutation.mutate,
 	};

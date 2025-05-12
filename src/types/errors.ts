@@ -1,3 +1,4 @@
 export interface ErrorWithResponse {
-	response?: { status?: number };
+	response?: { data?: { message?: string }; status?: number };
+	message?: string;
 }

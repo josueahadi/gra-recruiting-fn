@@ -164,6 +164,8 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 			} catch (error) {
 				showToast({
 					title: `Failed to remove ${language.language}`,
+					description:
+						error instanceof Error ? error.message : "Please try again",
 					variant: "error",
 				});
 			} finally {
@@ -226,6 +228,8 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 			} catch (error) {
 				showToast({
 					title: "Failed to update language",
+					description:
+						error instanceof Error ? error.message : "Please try again",
 					variant: "error",
 				});
 			} finally {

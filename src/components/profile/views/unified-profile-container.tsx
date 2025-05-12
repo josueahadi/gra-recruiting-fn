@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type React from "react";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -83,6 +82,7 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 		// If you want to update department, do it via a separate API call or handler.
 		// updateSkills should only update skills.
 		// For now, do nothing or implement department update logic if needed.
+		console.log("Department updated:", department);
 	};
 
 	const handleSkillsUpdate = async (skills: Skill[]): Promise<boolean> => {

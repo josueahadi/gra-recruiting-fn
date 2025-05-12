@@ -54,3 +54,8 @@ export interface DecodedToken extends JwtPayload {
 	iat: number;
 	exp: number;
 }
+
+export interface SignInResponse {
+	message: string;
+	accessToken: string;
+}

@@ -41,7 +41,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 	const [skills, setSkills] = useState<Skill[]>(initialSkills);
 	const [languages, setLanguages] =
 		useState<LanguageProficiency[]>(initialLanguages);
-	const [isProcessing, setIsProcessing] = useState(false);
+	const [, setIsProcessing] = useState(false);
 
 	useEffect(() => {
 		setSkills(initialSkills);
