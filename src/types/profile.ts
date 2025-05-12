@@ -1,5 +1,3 @@
-import type { SkillsState } from "./skills";
-
 export interface ProfileInfo {
 	firstName: string;
 	lastName: string;
@@ -61,7 +59,7 @@ export interface Skill {
 	id: string | number;
 	name: string;
 	experienceRating?: string;
-	isTemporary?: boolean; // Flag to identify temporary skills
+	isTemporary?: boolean;
 }
 
 export interface ApplicantData {
@@ -156,7 +154,6 @@ export interface PasswordUpdateData {
 	confirmPassword: string;
 }
 
-// Career types
 export interface CareerResponse {
 	id: number;
 	name: string;
@@ -173,7 +170,6 @@ export interface ListCareersResponse {
 	hasNextPage: boolean;
 }
 
-// API response types
 export interface ApiResponse<T> {
 	message: string;
 	data: T;

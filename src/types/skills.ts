@@ -2,7 +2,7 @@ export interface Skill {
 	id: string | number;
 	name: string;
 	experienceRating?: string;
-	isTemporary?: boolean; // Flag to identify temporary skills
+	isTemporary?: boolean;
 }
 
 export interface SkillPayload {

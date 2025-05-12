@@ -60,7 +60,7 @@ export function useProfile(options: UseProfileOptions) {
 		pendingSkills.size > 0 || pendingLanguages.size > 0;
 
 	const clearError = () => {
-		// This would be implemented if there's state to clear
+		// implementation
 	};
 
 	return {
@@ -82,8 +82,8 @@ export function useProfile(options: UseProfileOptions) {
 		addLanguage,
 		updateLanguage,
 		deleteLanguage,
-		deleteLanguageById,
 		addSkill,
 		deleteSkill,
+		deleteLanguageById,
 	};
 }

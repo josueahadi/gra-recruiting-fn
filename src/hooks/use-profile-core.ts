@@ -13,24 +13,20 @@ export function useProfileCore(options: UseProfileOptions) {
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 
-	// Fetch basic profile data (personal info, etc.)
 	const {
 		data: basicProfileData,
 		isLoading: isBasicProfileLoading,
 		error: basicProfileError,
 	} = useBasicProfile(id);
 
-	// Fetch detailed profile data (skills, education, etc.)
 	const {
 		data: detailedProfileData,
 		isLoading: isDetailedProfileLoading,
 		error: detailedProfileError,
 	} = useDetailedProfile(basicProfileData);
 
-	// Calculate profile completion percentage
 	const { getProfileCompletion } = useProfileCompletion(profileData);
 
-	// Transform and combine profile data
 	useEffect(() => {
 		const fetchAndTransformData = async () => {
 			setIsLoading(true);
@@ -38,8 +34,6 @@ export function useProfileCore(options: UseProfileOptions) {
 
 			try {
 				if (basicProfileData && detailedProfileData) {
-					// For the new API response structure, the userProfile is embedded
-					// in the detailedProfileData
 					const basicProfile = basicProfileData;
 					const detailedProfile = detailedProfileData;
 
@@ -69,6 +63,7 @@ export function useProfileCore(options: UseProfileOptions) {
 						languages: Array.isArray(detailedProfile.languagesProficiency)
 							? detailedProfile.languagesProficiency.map((lang) => ({
 									id: lang.id,
+									languageId: lang.id,
 									language: lang.languageName,
 									level: mapLanguageLevelFromApi(lang.proficiencyLevel),
 									proficiencyLevel: lang.proficiencyLevel,
@@ -152,18 +147,21 @@ export function useProfileCore(options: UseProfileOptions) {
 						languages: [
 							{
 								id: 1,
+								languageId: 1,
 								language: "Kinyarwanda",
 								level: 10,
 								proficiencyLevel: "NATIVE",
 							},
 							{
 								id: 2,
+								languageId: 2,
 								language: "French",
 								level: 5,
 								proficiencyLevel: "BEGINNER",
 							},
 							{
 								id: 3,
+								languageId: 3,
 								language: "English",
 								level: 6,
 								proficiencyLevel: "INTERMEDIATE",
@@ -251,7 +249,6 @@ export function useProfileCore(options: UseProfileOptions) {
 		fetchAndTransformData();
 	}, [basicProfileData, detailedProfileData, id]);
 
-	// Update URL and localStorage when profile completion changes
 	useEffect(() => {
 		if (!profileData) return;
 
@@ -265,7 +262,6 @@ export function useProfileCore(options: UseProfileOptions) {
 		}
 	}, [profileData, getProfileCompletion]);
 
-	// Helper functions for mapping API values to display values
 	function mapLanguageLevelFromApi(level: string): number {
 		const REVERSE_LANGUAGE_LEVEL_MAP: Record<string, number> = {
 			BEGINNER: 1,

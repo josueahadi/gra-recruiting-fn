@@ -5,13 +5,15 @@ import { usePathname } from "next/navigation";
 import { useProfile } from "@/hooks/use-profile";
 import {
 	PersonalInfoTab,
-	SkillsTab,
 	WorkEducationTab,
 	DocumentsTab,
 } from "@/components/profile/navigation";
+import SkillsTab from "@/components/profile/navigation/skills-tab";
 import { ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { showToast } from "@/services/toast";
+import type { Skill } from "@/types/profile";
 
 export default function ProfileContent() {
 	const pathname = usePathname();
@@ -29,8 +31,8 @@ export default function ProfileContent() {
 		removeDocument,
 		updatePortfolioLinks,
 		updateLanguage,
-		deleteLanguage,
 		deleteLanguageById,
+		addLanguage,
 	} = useProfile({
 		userType: "applicant",
 	});
@@ -66,8 +68,6 @@ export default function ProfileContent() {
 
 	const isNewUser = () => {
 		if (!profileData) return false;
-
-		// Check if profile is mostly empty (new user after registration)
 		const emptyAddress =
 			!profileData.addressInfo.country && !profileData.addressInfo.city;
 		const noEducation = profileData.education.length === 0;
@@ -77,6 +77,25 @@ export default function ProfileContent() {
 		return emptyAddress && noEducation && noExperience && noSkills;
 	};
 
+	const handleSkillsAndLanguagesUpdate = async (skills: Skill[]) => {
+		try {
+			await updateSkills(skills);
+
+			showToast({
+				title: "Skills updated successfully",
+				variant: "success",
+			});
+
+			return true;
+		} catch (error) {
+			console.error("Error updating skills:", error);
+			showToast({
+				title: "Failed to update skills",
+				variant: "error",
+			});
+			return false;
+		}
+	};
 	if (isLoading) {
 		return (
 			<div className="flex items-center justify-center h-96">
@@ -164,44 +183,10 @@ export default function ProfileContent() {
 					skills={profileData.skills}
 					languages={profileData.languages}
 					department={profileData.department}
-					onUpdate={async (skills, languages) => {
-						// Only update skills if they changed
-						if (skills !== profileData.skills) {
-							await updateSkills(skills);
-						}
-						// Only update languages if they changed
-						if (languages !== profileData.languages) {
-							const prevLangs = profileData.languages;
-							const newLangs = languages;
-							for (const prevLang of prevLangs) {
-								if (
-									!newLangs.some((l) => l.languageId === prevLang.languageId)
-								) {
-									if (prevLang.languageId)
-										await deleteLanguageById(prevLang.languageId);
-								}
-							}
-							for (const newLang of newLangs) {
-								const prevLang = prevLangs.find(
-									(l) => l.languageId === newLang.languageId,
-								);
-								if (
-									prevLang &&
-									(prevLang.language !== newLang.language ||
-										prevLang.level !== newLang.level)
-								) {
-									if (newLang.languageId)
-										await updateLanguage(
-											newLang.languageId,
-											newLang.language,
-											newLang.level,
-										);
-								}
-							}
-						}
-					}}
+					onUpdate={handleSkillsAndLanguagesUpdate}
 					onUpdateLanguage={updateLanguage}
 					onDeleteLanguage={deleteLanguageById}
+					onAddLanguage={addLanguage}
 				/>
 			)}
 

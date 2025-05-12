@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import { showToast } from "@/services/toast";
-import { ApiQueueManager } from "@/lib/utils/api-queue-utils";
-import type { ApplicantData } from "@/types/profile";
+import type { ApplicantData, LanguageProficiency } from "@/types/profile";
 import { languagesService } from "@/services/languages";
 import type { QueryClient } from "@tanstack/react-query";
 
@@ -14,7 +13,6 @@ export function useLanguages(
 		new Set(),
 	);
 	const [languagesLoading, setLanguagesLoading] = useState(false);
-	const languageApiQueue = new ApiQueueManager({ delayBetweenRequests: 500 });
 
 	const PROFICIENCY_LEVEL_MAP: Record<
 		number,
@@ -34,22 +32,32 @@ export function useLanguages(
 				setLanguagesLoading(true);
 				setPendingLanguages((prev) => new Set(prev).add(language));
 
-				// Default to INTERMEDIATE if the level is not in our map
 				const apiProficiencyLevel =
 					PROFICIENCY_LEVEL_MAP[proficiencyLevel] || "INTERMEDIATE";
 
-				// Make the API call using the service
+				const tempLanguageObj: LanguageProficiency = {
+					language: language,
+					level: proficiencyLevel,
+				};
+
+				setProfileData((current) => {
+					if (!current) return null;
+					return {
+						...current,
+						languages: [...current.languages, tempLanguageObj],
+					};
+				});
+
 				const result = await languagesService.add({
 					languageName: language,
 					proficiencyLevel: apiProficiencyLevel,
 				});
 
-				// Update the language with the real ID from the server
 				setProfileData((current) => {
 					if (!current) return null;
 
 					const updatedLanguages = current.languages.map((lang) => {
-						if (lang.language === language) {
+						if (lang.language === language && !lang.languageId) {
 							return {
 								...lang,
 								languageId: result.data.id,
@@ -64,7 +72,6 @@ export function useLanguages(
 					};
 				});
 
-				// Invalidate queries to ensure data consistency
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
 				showToast({
@@ -75,6 +82,16 @@ export function useLanguages(
 				return true;
 			} catch (error) {
 				console.error("Error adding language:", error);
+
+				setProfileData((current) => {
+					if (!current) return null;
+					return {
+						...current,
+						languages: current.languages.filter(
+							(lang) => lang.language !== language || lang.languageId,
+						),
+					};
+				});
 
 				showToast({
 					title: `Failed to add ${language}`,
@@ -98,21 +115,51 @@ export function useLanguages(
 		async (languageId: number, language: string, proficiencyLevel: number) => {
 			if (!profileData) return false;
 
-			// Store original languages outside of the try block to access it in catch
-			const originalLanguages = profileData ? [...profileData.languages] : [];
+			const originalLanguages = profileData.languages
+				? [...profileData.languages]
+				: [];
+
+			const languageToUpdate = originalLanguages.find(
+				(lang) => lang.languageId === languageId,
+			);
+
+			if (!languageToUpdate) {
+				console.error(`Language with ID ${languageId} not found`);
+				return false;
+			}
+
+			const originalLanguageName = languageToUpdate.language;
 
 			try {
 				setLanguagesLoading(true);
-				setPendingLanguages((prev) => new Set(prev).add(language));
+				setPendingLanguages((prev) => new Set(prev).add(originalLanguageName));
 
-				// Make the API call using the service
+				setProfileData((current) => {
+					if (!current) return null;
+
+					const updatedLanguages = current.languages.map((lang) => {
+						if (lang.languageId === languageId) {
+							return {
+								...lang,
+								language: language,
+								level: proficiencyLevel,
+							};
+						}
+						return lang;
+					});
+
+					return {
+						...current,
+						languages: updatedLanguages,
+					};
+				});
+
 				await languagesService.update(languageId, {
 					languageName: language,
 					proficiencyLevel:
 						PROFICIENCY_LEVEL_MAP[proficiencyLevel] || "INTERMEDIATE",
 				});
 
-				// Invalidate queries to ensure data consistency
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
 				showToast({
@@ -124,7 +171,6 @@ export function useLanguages(
 			} catch (error) {
 				console.error("Error updating language:", error);
 
-				// Rollback to original state
 				setProfileData((current) => {
 					if (!current) return null;
 					return {
@@ -142,7 +188,7 @@ export function useLanguages(
 			} finally {
 				setPendingLanguages((prev) => {
 					const newSet = new Set(prev);
-					newSet.delete(language);
+					newSet.delete(originalLanguageName);
 					return newSet;
 				});
 				setLanguagesLoading(false);
@@ -159,24 +205,16 @@ export function useLanguages(
 				(lang) => lang.language === languageName,
 			);
 
-			if (!languageToDelete || !languageToDelete.languageId) {
-				console.error(
-					"Cannot delete language - no valid ID found for:",
-					languageName,
-				);
+			if (!languageToDelete) {
+				console.error(`Language "${languageName}" not found`);
 				return false;
 			}
 
-			const languageId = languageToDelete.languageId;
+			if (!languageToDelete.languageId) {
+				console.error(
+					`Cannot delete language - no valid ID found for: ${languageName}`,
+				);
 
-			// Store original languages outside of the try block to access it in catch
-			const originalLanguages = profileData ? [...profileData.languages] : [];
-
-			try {
-				setLanguagesLoading(true);
-				setPendingLanguages((prev) => new Set(prev).add(languageName));
-
-				// Update UI immediately (optimistic update)
 				setProfileData((current) => {
 					if (!current) return null;
 					return {
@@ -186,15 +224,33 @@ export function useLanguages(
 						),
 					};
 				});
+				return true;
+			}
 
-				// Make the API call using the service
+			const languageId = languageToDelete.languageId;
+
+			const originalLanguages = [...profileData.languages];
+
+			try {
+				setLanguagesLoading(true);
+				setPendingLanguages((prev) => new Set(prev).add(languageName));
+
+				setProfileData((current) => {
+					if (!current) return null;
+					return {
+						...current,
+						languages: current.languages.filter(
+							(lang) => lang.languageId !== languageId,
+						),
+					};
+				});
+
 				await languagesService.delete(languageId);
 
-				// Invalidate queries to ensure data consistency
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
 				showToast({
-					title: `${languageToDelete.language} removed successfully`,
+					title: `${languageName} removed successfully`,
 					variant: "success",
 				});
 
@@ -202,7 +258,6 @@ export function useLanguages(
 			} catch (error) {
 				console.error("Error deleting language:", error);
 
-				// Rollback to original state
 				setProfileData((current) => {
 					if (!current) return null;
 					return {
@@ -212,7 +267,7 @@ export function useLanguages(
 				});
 
 				showToast({
-					title: `Failed to remove ${languageToDelete.language}`,
+					title: `Failed to remove ${languageName}`,
 					variant: "error",
 				});
 
@@ -232,11 +287,24 @@ export function useLanguages(
 	const deleteLanguageById = useCallback(
 		async (languageId: number) => {
 			if (!profileData) return false;
-			// Store original languages for rollback
-			const originalLanguages = profileData ? [...profileData.languages] : [];
+
+			const languageToDelete = profileData.languages.find(
+				(lang) => lang.languageId === languageId,
+			);
+
+			if (!languageToDelete) {
+				console.error(`Language with ID ${languageId} not found`);
+				return false;
+			}
+
+			const languageName = languageToDelete.language;
+
+			const originalLanguages = [...profileData.languages];
+
 			try {
 				setLanguagesLoading(true);
-				// Optimistically remove from UI
+				setPendingLanguages((prev) => new Set(prev).add(languageName));
+
 				setProfileData((current) => {
 					if (!current) return null;
 					return {
@@ -246,16 +314,20 @@ export function useLanguages(
 						),
 					};
 				});
+
 				await languagesService.delete(languageId);
+
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
+
 				showToast({
-					title: "Language removed successfully",
+					title: `${languageName} removed successfully`,
 					variant: "success",
 				});
+
 				return true;
 			} catch (error) {
 				console.error("Error deleting language by ID:", error);
-				// Rollback
+
 				setProfileData((current) => {
 					if (!current) return null;
 					return {
@@ -263,9 +335,19 @@ export function useLanguages(
 						languages: originalLanguages,
 					};
 				});
-				showToast({ title: "Failed to remove language", variant: "error" });
+
+				showToast({
+					title: "Failed to remove language",
+					variant: "error",
+				});
+
 				return false;
 			} finally {
+				setPendingLanguages((prev) => {
+					const newSet = new Set(prev);
+					newSet.delete(languageName);
+					return newSet;
+				});
 				setLanguagesLoading(false);
 			}
 		},

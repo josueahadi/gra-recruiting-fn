@@ -8,7 +8,14 @@ import type { Skill } from "@/types/skills";
 import { showToast } from "@/services/toast";
 import { api } from "@/services/api";
 import { ApiQueueManager } from "@/lib/utils/api-queue-utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import type { ErrorWithResponse } from "@/types/errors";
 
 interface SkillsInputProps {
 	skills: Skill[];
@@ -27,8 +34,10 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 }) => {
 	const [newSkill, setNewSkill] = useState("");
 	const [pendingSkills, setPendingSkills] = useState<Set<string>>(new Set());
-	const [newRating, setNewRating] = useState("FIVE");
-	const apiQueue = useRef<{ enqueue: (fn: () => Promise<any>) => Promise<any> }>(new ApiQueueManager({ delayBetweenRequests: 300 }));
+	const [newRating, setNewRating] = useState("");
+	const apiQueue = useRef<ApiQueueManager>(
+		new ApiQueueManager({ delayBetweenRequests: 300 }),
+	);
 
 	const MAX_SKILLS = 20;
 
@@ -56,7 +65,6 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 		setPendingSkills((prev) => new Set(prev).add(newSkill));
 
 		try {
-			// Generate a unique temporary ID
 			const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
 			const skillToAdd: Skill = {
@@ -81,7 +89,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 
 				console.log("Skill added response:", response.data);
 
-				let serverId;
+				let serverId: string | number | undefined;
 				if (response.data?.id) {
 					serverId = response.data.id;
 				} else if (response.data?.skillId) {
@@ -96,7 +104,6 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 					console.log(`Skill ${newSkill} received server ID:`, serverId);
 
 					const finalSkills = updatedSkills.map((skill) => {
-						// Find the temporary skill we just added using its ID
 						if (skill.id === tempId) {
 							return {
 								...skill,
@@ -120,7 +127,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 			await apiQueue.current.enqueue(apiCall);
 
 			setNewSkill("");
-			setNewRating("FIVE");
+			setNewRating("");
 
 			showToast({
 				title: "Skill added successfully",
@@ -135,7 +142,8 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 
 			showToast({
 				title: "Failed to add skill",
-				description: error instanceof Error ? error.message : "Please try again",
+				description:
+					error instanceof Error ? error.message : "Please try again",
 				variant: "error",
 			});
 		} finally {
@@ -149,10 +157,10 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 
 	const handleRemoveSkill = useCallback(
 		async (skillToRemove: Skill) => {
-			// Use the isTemporary flag or check if ID is a string that starts with "temp-"
-			const isTemporarySkill = 
-				skillToRemove.isTemporary || 
-				(typeof skillToRemove.id === 'string' && skillToRemove.id.startsWith("temp-"));
+			const isTemporarySkill =
+				skillToRemove.isTemporary ||
+				(typeof skillToRemove.id === "string" &&
+					skillToRemove.id.startsWith("temp-"));
 
 			console.log("Removing skill:", {
 				name: skillToRemove.name,
@@ -180,12 +188,16 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 								`Successfully removed skill with ID ${skillToRemove.id}`,
 							);
 							return true;
-						} catch (error: { response?: { status?: number } }) {
-							if (error.response?.status === 404) {
+						} catch (error: unknown) {
+							if (
+								typeof error === "object" &&
+								error !== null &&
+								"response" in error &&
+								(error as ErrorWithResponse).response?.status === 404
+							) {
 								console.warn(
 									`Skill with ID ${skillToRemove.id} not found on server, may already be deleted`,
 								);
-								// Don't count this as a failure, just consider it already deleted
 								return true;
 							}
 							throw error;
@@ -208,7 +220,8 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 
 				showToast({
 					title: "Failed to remove skill",
-					description: error instanceof Error ? error.message : "Please try again",
+					description:
+						error instanceof Error ? error.message : "Please try again",
 					variant: "error",
 				});
 			} finally {
@@ -243,7 +256,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 		<div className={className}>
 			{title && <h2 className="text-xl font-semibold mb-4">{title}</h2>}
 
-			<div className="flex gap-2 mb-4">
+			<div className="flex gap-2 mb-4 md:px-10">
 				<Input
 					value={newSkill}
 					onChange={(e) => setNewSkill(e.target.value)}
@@ -253,10 +266,13 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 					disabled={pendingSkills.size > 0}
 				/>
 				<div className="flex flex-row justify-end">
-					<label htmlFor="skill-rating" className="text-xs text-gray-800 font-medium mb-1 ml-1">Skill Rating:</label>
-					<Select id="skill-rating" value={newRating} onValueChange={setNewRating} disabled={pendingSkills.size > 0}>
-						<SelectTrigger className="w-[120px]">
-							<SelectValue placeholder="Rating" />
+					<Select
+						value={newRating}
+						onValueChange={setNewRating}
+						disabled={pendingSkills.size > 0}
+					>
+						<SelectTrigger className="w-full sm:w-[200px]">
+							<SelectValue placeholder="Select Rating" />
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value="ONE">1</SelectItem>
@@ -274,7 +290,8 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 					disabled={
 						pendingSkills.size > 0 ||
 						!newSkill.trim() ||
-						skills.length >= MAX_SKILLS
+						skills.length >= MAX_SKILLS ||
+						!newRating
 					}
 				>
 					{pendingSkills.has(newSkill) ? (
@@ -292,7 +309,7 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 				</div>
 			)}
 
-			<div className="flex flex-wrap gap-2 mt-4">
+			<div className="flex flex-wrap gap-2 mt-4 md:px-10">
 				{skills.map((skill) => (
 					<SkillPill
 						key={skill.id}

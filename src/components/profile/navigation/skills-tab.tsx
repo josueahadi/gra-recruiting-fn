@@ -1,11 +1,12 @@
 import type React from "react";
+import { useCallback, useEffect, useState } from "react";
 import DepartmentSection from "@/components/profile/sections/department";
 import SkillsSection from "@/components/profile/sections/skills";
 import LanguagesSection from "@/components/profile/sections/languages";
 import type { Skill, LanguageProficiency } from "@/types/profile";
 import ProfileNavigationButtons from "@/components/profile/navigation/profile-nav-buttons";
 import { Separator } from "@/components/ui/separator";
-import { useCallback, useEffect, useState } from "react";
+import { showToast } from "@/services/toast";
 
 interface SkillsTabProps {
 	skills: Skill[];
@@ -22,46 +23,57 @@ interface SkillsTabProps {
 		proficiencyLevel: number,
 	) => Promise<boolean>;
 	onDeleteLanguage?: (languageId: number) => Promise<boolean>;
+	onAddLanguage?: (
+		language: string,
+		proficiencyLevel: number,
+	) => Promise<boolean>;
 }
 
 const SkillsTab: React.FC<SkillsTabProps> = ({
-	skills,
+	skills: initialSkills,
 	languages: initialLanguages,
 	department,
 	onUpdate,
 	onUpdateLanguage,
 	onDeleteLanguage,
+	onAddLanguage,
 }) => {
+	const [skills, setSkills] = useState<Skill[]>(initialSkills);
 	const [languages, setLanguages] =
 		useState<LanguageProficiency[]>(initialLanguages);
+	const [isProcessing, setIsProcessing] = useState(false);
 
 	useEffect(() => {
+		setSkills(initialSkills);
 		setLanguages(initialLanguages);
-	}, [initialLanguages]);
+	}, [initialSkills, initialLanguages]);
 
-	const handleUpdateSkills = async (
-		updatedSkills: Skill[],
-	): Promise<boolean> => {
-		try {
-			onUpdate(updatedSkills, languages, department);
-			return true;
-		} catch (error) {
-			console.error("Error updating skills:", error);
-			return false;
-		}
-	};
-
-	const handleDepartmentChange = (newDepartment: string | undefined) => {
-		onUpdate(skills, languages, newDepartment);
-	};
-
-	const handleLanguagesUpdate = useCallback(
-		(updatedLanguages: LanguageProficiency[]): Promise<boolean> => {
-			setLanguages(updatedLanguages);
-			onUpdate(skills, updatedLanguages, department);
-			return Promise.resolve(true);
+	const handleDepartmentChange = useCallback(
+		(newDepartment?: string) => {
+			onUpdate(skills, languages, newDepartment);
 		},
-		[onUpdate, skills, department],
+		[skills, languages, onUpdate],
+	);
+
+	const handleSkillsUpdate = useCallback(
+		async (updatedSkills: Skill[]): Promise<boolean> => {
+			try {
+				setIsProcessing(true);
+				setSkills(updatedSkills);
+				onUpdate(updatedSkills, languages, department);
+				return true;
+			} catch (error) {
+				console.error("Error updating skills:", error);
+				showToast({
+					title: "Failed to update skills",
+					variant: "error",
+				});
+				return false;
+			} finally {
+				setIsProcessing(false);
+			}
+		},
+		[languages, department, onUpdate],
 	);
 
 	return (
@@ -81,7 +93,7 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 			<SkillsSection
 				skills={skills}
 				canEdit={true}
-				onUpdate={handleUpdateSkills}
+				onUpdate={handleSkillsUpdate}
 			/>
 
 			<div className="md:px-10">
@@ -91,9 +103,9 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 			<LanguagesSection
 				languages={languages}
 				canEdit={true}
-				onUpdate={handleLanguagesUpdate}
 				onUpdateLanguage={onUpdateLanguage}
 				onDeleteLanguage={onDeleteLanguage}
+				onAddLanguage={onAddLanguage}
 			/>
 
 			<ProfileNavigationButtons />

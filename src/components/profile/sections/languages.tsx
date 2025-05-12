@@ -2,27 +2,30 @@ import type React from "react";
 import { useState, useCallback, useEffect } from "react";
 import ProfileSection from "@/components/profile/core/profile-section";
 import type { LanguageProficiency as LanguageProficiencyType } from "@/types/profile";
-import LanguageProficiency from "./skills/language-proficiency";
-import LanguageDisplay from "./skills/language-display";
+import LanguageProficiency from "@/components/profile/sections/skills/language-proficiency";
+import LanguageDisplay from "@/components/profile/sections/skills/language-display";
 
 interface LanguagesSectionProps {
 	languages: LanguageProficiencyType[];
 	canEdit: boolean;
-	onUpdate?: (languages: LanguageProficiencyType[]) => void;
 	onUpdateLanguage?: (
 		languageId: number,
 		language: string,
 		proficiencyLevel: number,
 	) => Promise<boolean>;
 	onDeleteLanguage?: (languageId: number) => Promise<boolean>;
+	onAddLanguage?: (
+		language: string,
+		proficiencyLevel: number,
+	) => Promise<boolean>;
 }
 
 const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 	languages: initialLanguages,
 	canEdit,
-	onUpdate,
 	onUpdateLanguage,
 	onDeleteLanguage,
+	onAddLanguage,
 }) => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [languages, setLanguages] = useState<LanguageProficiencyType[]>(
@@ -46,12 +49,8 @@ const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 	const handleLanguagesChange = useCallback(
 		(updatedLanguages: LanguageProficiencyType[]) => {
 			setLanguages(updatedLanguages);
-			// Notify parent component of the change
-			if (onUpdate) {
-				onUpdate(updatedLanguages);
-			}
 		},
-		[onUpdate],
+		[],
 	);
 
 	return (
@@ -69,6 +68,7 @@ const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 						onLanguagesChange={handleLanguagesChange}
 						onUpdateLanguage={onUpdateLanguage}
 						onDeleteLanguage={onDeleteLanguage}
+						onAddLanguage={onAddLanguage}
 					/>
 				) : (
 					<LanguageDisplay languages={languages} />
