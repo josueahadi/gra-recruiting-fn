@@ -4,6 +4,16 @@ import type { ApplicantData, LanguageProficiency } from "@/types/profile";
 import { languagesService } from "@/services/languages";
 import type { QueryClient } from "@tanstack/react-query";
 
+const PROFICIENCY_LEVEL_MAP: Record<
+	number,
+	"BEGINNER" | "INTERMEDIATE" | "FLUENT" | "NATIVE"
+> = {
+	1: "BEGINNER",
+	5: "INTERMEDIATE",
+	7: "FLUENT",
+	9: "NATIVE",
+};
+
 export function useLanguages(
 	profileData: ApplicantData | null,
 	setProfileData: React.Dispatch<React.SetStateAction<ApplicantData | null>>,
@@ -13,16 +23,6 @@ export function useLanguages(
 		new Set(),
 	);
 	const [languagesLoading, setLanguagesLoading] = useState(false);
-
-	const PROFICIENCY_LEVEL_MAP: Record<
-		number,
-		"BEGINNER" | "INTERMEDIATE" | "FLUENT" | "NATIVE"
-	> = {
-		1: "BEGINNER",
-		5: "INTERMEDIATE",
-		7: "FLUENT",
-		9: "NATIVE",
-	};
 
 	const addLanguage = useCallback(
 		async (language: string, proficiencyLevel: number) => {

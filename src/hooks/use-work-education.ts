@@ -5,29 +5,29 @@ import { convertUIDateToApiDate } from "@/lib/utils/date-utils";
 import type { Education, WorkExperience, ApplicantData } from "@/types/profile";
 import type { QueryClient } from "@tanstack/react-query";
 
+const EDUCATION_LEVEL_MAP: Record<string, string> = {
+	"High School": "HIGH_SCHOOL",
+	"Associate Degree": "ASSOCIATE",
+	"Bachelor's Degree": "BACHELOR",
+	"Master's Degree": "MASTER",
+	Doctorate: "DOCTORATE",
+	Other: "OTHER",
+};
+
+const EMPLOYMENT_TYPE_MAP: Record<string, string> = {
+	"Full-time": "FULL_TIME",
+	"Part-time": "PART_TIME",
+	Contract: "CONTRACT",
+	Internship: "INTERNSHIP",
+	Freelance: "FREELANCE",
+};
+
 export function useWorkEducation(
 	profileData: ApplicantData | null,
 	setProfileData: (data: ApplicantData | null) => void,
 	queryClient: QueryClient,
 ) {
 	const [workEducationLoading, setWorkEducationLoading] = useState(false);
-
-	const EDUCATION_LEVEL_MAP: Record<string, string> = {
-		"High School": "HIGH_SCHOOL",
-		"Associate Degree": "ASSOCIATE",
-		"Bachelor's Degree": "BACHELOR",
-		"Master's Degree": "MASTER",
-		Doctorate: "DOCTORATE",
-		Other: "OTHER",
-	};
-
-	const EMPLOYMENT_TYPE_MAP: Record<string, string> = {
-		"Full-time": "FULL_TIME",
-		"Part-time": "PART_TIME",
-		Contract: "CONTRACT",
-		Internship: "INTERNSHIP",
-		Freelance: "FREELANCE",
-	};
 
 	const updateWorkEducation = useCallback(
 		async (data: { education: Education[]; experience: WorkExperience[] }) => {
