@@ -5,7 +5,7 @@ import { useState } from "react";
 import { PersonalInfoSection, AddressSection } from "@/components/profile";
 // import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import type { ProfileInfo, AddressInfo } from "@/hooks/use-profile";
+import type { ProfileInfo, AddressInfo } from "@/types/profile";
 import ProfileNavigationButtons from "./profile-nav-buttons";
 
 interface PersonalInfoTabProps {

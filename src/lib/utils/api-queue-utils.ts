@@ -2,12 +2,12 @@ type QueuedOperation<T> = {
 	id: string;
 	operation: () => Promise<T>;
 	resolve: (value: T | PromiseLike<T>) => void;
-	reject: (reason?: any) => void;
+	reject: (reason?: unknown) => void;
 	retries?: number;
 };
 
-export class ApiQueueManager {
-	private queue: QueuedOperation<any>[] = [];
+export class ApiQueueManager<T = unknown> {
+	private queue: QueuedOperation<T>[] = [];
 	private processing = false;
 	private delayBetweenRequests: number;
 	private maxRetries: number;
@@ -25,9 +25,9 @@ export class ApiQueueManager {
 		this.retryDelay = options.retryDelay || this.delayBetweenRequests;
 	}
 
-	enqueue<T>(
+	enqueue(
 		operation: () => Promise<T>,
-		id: string = `op-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+		id = `op-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
 	): Promise<T> {
 		return new Promise<T>((resolve, reject) => {
 			this.queue.push({
@@ -71,7 +71,7 @@ export class ApiQueueManager {
 					retries++;
 
 					if (retries <= this.maxRetries) {
-						const delay = this.retryDelay * Math.pow(2, retries - 1);
+						const delay = this.retryDelay * 2 ** (retries - 1);
 						console.log(
 							`[ApiQueueManager] Retry ${retries}/${this.maxRetries} after ${delay}ms for operation ${item.id}`,
 						);
@@ -151,10 +151,10 @@ export const skillApiQueue = new ApiQueueManager({
 export async function batchOperations<T>(
 	operations: Array<() => Promise<T>>,
 	queueManager: ApiQueueManager = languageApiQueue,
-	batchSize: number = 3,
+	batchSize = 3,
 ): Promise<T[]> {
 	const results: T[] = [];
-	const errors: any[] = [];
+	const errors: unknown[] = [];
 
 	for (let i = 0; i < operations.length; i += batchSize) {
 		const batch = operations.slice(i, i + batchSize);
@@ -166,7 +166,7 @@ export async function batchOperations<T>(
 
 		batchResults.forEach((result, index) => {
 			if (result.status === "fulfilled") {
-				results.push(result.value);
+				results.push(result.value as T);
 			} else {
 				console.error(
 					`[batchOperations] Operation in batch ${i}, index ${index} failed:`,
@@ -186,14 +186,14 @@ export async function batchOperations<T>(
 
 export async function batchLanguageOperations<T>(
 	operations: Array<() => Promise<T>>,
-	batchSize: number = 3,
+	batchSize = 3,
 ): Promise<T[]> {
 	return batchOperations(operations, languageApiQueue, batchSize);
 }
 
 export async function batchSkillOperations<T>(
 	operations: Array<() => Promise<T>>,
-	batchSize: number = 3,
+	batchSize = 3,
 ): Promise<T[]> {
 	return batchOperations(operations, skillApiQueue, batchSize);
 }
@@ -202,7 +202,7 @@ export function delay(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export default {
+const apiQueueUtils = {
 	ApiQueueManager,
 	languageApiQueue,
 	skillApiQueue,
@@ -211,3 +211,5 @@ export default {
 	batchSkillOperations,
 	delay,
 };
+
+export default apiQueueUtils;

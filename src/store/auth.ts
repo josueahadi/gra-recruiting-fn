@@ -117,7 +117,7 @@ export const useAuthStore = create<AuthState>()(
 						typeof window !== "undefined" ? getTokenFromCookie() : null;
 
 					// Prefer cookie token over store token, but validate both
-					let token = null;
+					// let token = null;
 					let validToken = null;
 
 					// Try cookie token first
@@ -126,7 +126,7 @@ export const useAuthStore = create<AuthState>()(
 							const cleaned = cleanToken(cookieToken);
 							if (!isTokenExpired(cleaned)) {
 								validToken = cleaned;
-								token = cookieToken;
+								// token = cookieToken;
 							}
 						} catch (e) {
 							console.warn("[Auth Store] Cookie token invalid:", e);
@@ -139,7 +139,7 @@ export const useAuthStore = create<AuthState>()(
 							const cleaned = cleanToken(storeToken);
 							if (!isTokenExpired(cleaned)) {
 								validToken = cleaned;
-								token = storeToken;
+								// token = storeToken;
 							}
 						} catch (e) {
 							console.warn("[Auth Store] Store token invalid:", e);

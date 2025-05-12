@@ -73,3 +73,9 @@ export function convertUIDateToApiDate(uiDate: string): string {
 		return uiDate;
 	}
 }
+
+export function formatDateToMonthYear(dateStr?: string | null): string {
+	if (!dateStr) return "N/A";
+	const date = new Date(dateStr);
+	return date.toLocaleString("default", { month: "short", year: "numeric" });
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import type { Education, WorkExperience } from "@/hooks/use-profile";
+import type { Education, WorkExperience } from "@/types/profile";
 import WorkEducationSection from "@/components/profile/sections/work-education";
 import ProfileNavigationButtons from "@/components/profile/navigation/profile-nav-buttons";
 

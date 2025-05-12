@@ -1,5 +1,5 @@
 import type React from "react";
-import type { Document, PortfolioLinks } from "@/hooks/use-profile";
+import type { Document, PortfolioLinks } from "@/types/profile";
 import ProfileNavigationButtons from "@/components/profile/navigation/profile-nav-buttons";
 import DocumentsSection from "@/components/profile/sections/documents";
 

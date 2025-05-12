@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 
 export default function ResetPasswordLayout({
 	children,
@@ -21,7 +22,7 @@ export default function ResetPasswordLayout({
 			</div>
 
 			<div className="w-full lg:w-1/2 lg:ml-[50%] flex items-center justify-center p-8 bg-white">
-				{children}
+				<Suspense fallback={null}>{children}</Suspense>
 			</div>
 		</div>
 	);

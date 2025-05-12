@@ -17,6 +17,9 @@ import DateRangePicker from "@/components/common/date-range-picker";
 interface ExperienceFormProps {
 	onAddExperience: (experience: Omit<WorkExperience, "id">) => void;
 	isSubmitting?: boolean;
+	initialData?: WorkExperience;
+	isEdit?: boolean;
+	onCancel?: () => void;
 }
 
 const EMPLOYMENT_TYPES = [
@@ -49,13 +52,33 @@ const formatEmploymentType = (type: string) => {
 const ExperienceForm: React.FC<ExperienceFormProps> = ({
 	onAddExperience,
 	isSubmitting = false,
+	initialData,
+	isEdit = false,
+	onCancel,
 }) => {
-	const [company, setCompany] = useState("");
-	const [startDate, setStartDate] = useState<Date | undefined>();
-	const [endDate, setEndDate] = useState<Date | undefined>();
-	const [role, setRole] = useState("");
-	const [employmentType, setEmploymentType] = useState("");
-	const [country, setCountry] = useState("Rwanda");
+	const [company, setCompany] = useState(initialData?.company || "");
+	const [startDate, setStartDate] = useState<Date | undefined>(
+		initialData?.duration
+			? (() => {
+					// Try to parse the start date from the duration string
+					const match = initialData.duration.match(/^(\w{3} \d{4})/);
+					return match ? new Date(`${match[1]} 01`) : undefined;
+				})()
+			: undefined,
+	);
+	const [endDate, setEndDate] = useState<Date | undefined>(
+		initialData?.duration && !initialData.duration.includes("Present")
+			? (() => {
+					const match = initialData.duration.match(/- (\w{3} \d{4})/);
+					return match ? new Date(`${match[1]} 01`) : undefined;
+				})()
+			: undefined,
+	);
+	const [role, setRole] = useState(initialData?.role || "");
+	const [employmentType, setEmploymentType] = useState(
+		initialData?.responsibilities || "",
+	);
+	const [country, setCountry] = useState(initialData?.country || "Rwanda");
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -123,13 +146,15 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
 				country,
 			});
 
-			// Reset form
-			setCompany("");
-			setStartDate(undefined);
-			setEndDate(undefined);
-			setRole("");
-			setEmploymentType("");
-			setCountry("Rwanda");
+			if (!isEdit) {
+				// Reset form only if not editing
+				setCompany("");
+				setStartDate(undefined);
+				setEndDate(undefined);
+				setRole("");
+				setEmploymentType("");
+				setCountry("Rwanda");
+			}
 		}
 	};
 
@@ -156,7 +181,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
 				toPlaceholder="End date (DD/MM/YYYY)"
 			/>
 			<p className="text-xs text-gray-500 -mt-2">
-				Leave end date empty if this is your current position
+				If you are currently in this role, leave the end date field empty.
 			</p>
 
 			<div>
@@ -204,23 +229,32 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
 				</div>
 			</div>
 
-			<Button
-				type="submit"
-				className="w-full bg-primary-base hover:bg-custom-skyBlue text-white"
-				disabled={isSubmitting}
-			>
-				{isSubmitting ? (
-					<>
-						<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-						Adding Experience...
-					</>
-				) : (
-					<>
-						<Plus className="h-4 w-4 mr-2" />
-						Add Work Experience
-					</>
+			<div className="flex gap-2">
+				<Button
+					type="submit"
+					className="bg-primary-base hover:bg-custom-skyBlue text-white"
+					disabled={isSubmitting}
+				>
+					{isEdit ? (
+						"Save Changes"
+					) : isSubmitting ? (
+						<>
+							<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+							Adding Experience...
+						</>
+					) : (
+						<>
+							<Plus className="h-4 w-4 mr-2" />
+							Add Work Experience
+						</>
+					)}
+				</Button>
+				{isEdit && onCancel && (
+					<Button type="button" variant="outline" onClick={onCancel}>
+						Cancel
+					</Button>
 				)}
-			</Button>
+			</div>
 		</form>
 	);
 };

@@ -7,6 +7,7 @@ import type { Education } from "@/types/education-experience";
 import { useEducation } from "@/hooks/use-education";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
+import Modal from "@/components/common/modal";
 
 interface EducationSectionProps {
 	education: Education[];
@@ -18,7 +19,8 @@ const EducationSection: React.FC<EducationSectionProps> = ({
 	canEdit,
 }) => {
 	const [isEditing, setIsEditing] = useState(false);
-	const { addEducation, deleteEducation } = useEducation();
+	const [editEducation, setEditEducation] = useState<Education | null>(null);
+	const { addEducation, updateEducation, deleteEducation } = useEducation();
 
 	const handleEdit = () => {
 		setIsEditing(true);
@@ -42,13 +44,36 @@ const EducationSection: React.FC<EducationSectionProps> = ({
 
 	const handleRemoveEducation = async (id: string) => {
 		try {
-			await deleteEducation.mutateAsync(id);
+			const numId = Number(id);
+			if (!Number.isNaN(numId)) {
+				await deleteEducation.mutateAsync(numId);
+			}
 		} catch (error) {
 			console.error("Error removing education:", error);
 		}
 	};
 
-	const isLoading = addEducation.isPending || deleteEducation.isPending;
+	const handleEditEducation = (education: Education) => {
+		setEditEducation(education);
+	};
+
+	const handleUpdateEducation = async (updated: Omit<Education, "id">) => {
+		if (!editEducation?.id) return;
+		try {
+			await updateEducation.mutateAsync({
+				id: Number(editEducation.id),
+				data: updated,
+			});
+			setEditEducation(null);
+		} catch (error) {
+			console.error("Error updating education:", error);
+		}
+	};
+
+	const isLoading =
+		addEducation.isPending ||
+		deleteEducation.isPending ||
+		updateEducation.isPending;
 
 	return (
 		<>
@@ -90,6 +115,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({
 									education={edu}
 									onRemove={handleRemoveEducation}
 									canEdit={isEditing}
+									onEdit={handleEditEducation}
 								/>
 							))
 						) : (
@@ -118,6 +144,22 @@ const EducationSection: React.FC<EducationSectionProps> = ({
 					</Button>
 				)}
 			</div>
+
+			<Modal
+				open={!!editEducation}
+				onClose={() => setEditEducation(null)}
+				title="Edit Education"
+			>
+				{editEducation && (
+					<EducationForm
+						initialData={editEducation}
+						onAddEducation={handleUpdateEducation}
+						isSubmitting={updateEducation.isPending}
+						isEdit
+						onCancel={() => setEditEducation(null)}
+					/>
+				)}
+			</Modal>
 		</>
 	);
 };

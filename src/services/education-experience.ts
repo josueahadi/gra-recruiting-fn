@@ -5,7 +5,6 @@ import type {
 	ApiResponse,
 } from "@/types/profile";
 
-// Education
 export interface AddEducationRequest {
 	institutionName: string;
 	educationLevel: string;
@@ -15,9 +14,6 @@ export interface AddEducationRequest {
 }
 
 export const educationService = {
-	/**
-	 * Add an education record
-	 */
 	async add(
 		data: AddEducationRequest,
 	): Promise<ApiResponse<EducationResponse>> {
@@ -25,9 +21,6 @@ export const educationService = {
 		return response.data;
 	},
 
-	/**
-	 * Update an education record
-	 */
 	async update(
 		id: number,
 		data: AddEducationRequest,
@@ -39,9 +32,6 @@ export const educationService = {
 		return response.data;
 	},
 
-	/**
-	 * Delete an education record
-	 */
 	async delete(id: number): Promise<{ message: string }> {
 		const response = await api.delete(
 			`/api/v1/applicants/delete-education/${id}`,
@@ -50,7 +40,6 @@ export const educationService = {
 	},
 };
 
-// Experience
 export interface AddExperienceRequest {
 	companyName: string;
 	jobTitle: string;
@@ -61,9 +50,6 @@ export interface AddExperienceRequest {
 }
 
 export const experienceService = {
-	/**
-	 * Add a work experience record
-	 */
 	async add(
 		data: AddExperienceRequest,
 	): Promise<ApiResponse<ExperienceResponse>> {
@@ -71,23 +57,17 @@ export const experienceService = {
 		return response.data;
 	},
 
-	/**
-	 * Update a work experience record
-	 */
 	async update(
 		id: number,
 		data: AddExperienceRequest,
 	): Promise<ApiResponse<ExperienceResponse>> {
 		const response = await api.patch(
-			`/api/v1/applicants/update-experience/${id}`,
+			`/api/v1/applicants/updated-experience/${id}`,
 			data,
 		);
 		return response.data;
 	},
 
-	/**
-	 * Delete a work experience record
-	 */
 	async delete(id: number): Promise<{ message: string }> {
 		const response = await api.delete(
 			`/api/v1/applicants/delete-experience/${id}`,

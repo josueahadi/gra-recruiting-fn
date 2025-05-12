@@ -1,6 +1,6 @@
 import type React from "react";
 import { Separator } from "@/components/ui/separator";
-import type { Education, WorkExperience } from "@/hooks/use-profile";
+import type { Education, WorkExperience } from "@/types/profile";
 import EducationSection from "./education";
 import ExperienceSection from "./experience";
 
@@ -20,13 +20,6 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 	canEdit,
 	onUpdate,
 }) => {
-	const handleEducationUpdate = (updatedEducation: Education[]) => {
-		onUpdate({
-			education: updatedEducation,
-			experience,
-		});
-	};
-
 	const handleExperienceUpdate = (updatedExperience: WorkExperience[]) => {
 		onUpdate({
 			education,
@@ -36,11 +29,7 @@ const WorkEducationSection: React.FC<WorkEducationSectionProps> = ({
 
 	return (
 		<div className="space-y-8">
-			<EducationSection
-				education={education}
-				canEdit={canEdit}
-				onUpdate={handleEducationUpdate}
-			/>
+			<EducationSection education={education} canEdit={canEdit} />
 
 			<div className="md:px-10">
 				<Separator className="my-8" />

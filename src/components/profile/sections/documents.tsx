@@ -4,7 +4,7 @@ import ProfileSection from "@/components/profile/core/profile-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Download, Upload, ExternalLink } from "lucide-react";
-import type { Document, PortfolioLinks } from "@/hooks/use-profile";
+import type { Document, PortfolioLinks } from "@/types/profile";
 import { FaBehance, FaGithub } from "react-icons/fa";
 import { BiWorld } from "react-icons/bi";
 import { Separator } from "@/components/ui/separator";

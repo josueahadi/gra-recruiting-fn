@@ -6,7 +6,6 @@ import type {
 } from "@/types/profile";
 
 export function useDataTransformer() {
-	// Maps API language proficiency levels to UI values
 	function mapLanguageLevelFromApi(level: string): number {
 		const REVERSE_LANGUAGE_LEVEL_MAP: Record<string, number> = {
 			BEGINNER: 1,
@@ -17,7 +16,6 @@ export function useDataTransformer() {
 		return REVERSE_LANGUAGE_LEVEL_MAP[level] || 5;
 	}
 
-	// Maps API education levels to UI values
 	function mapEducationLevelFromApi(level: string): string {
 		const REVERSE_EDUCATION_LEVEL_MAP: Record<string, string> = {
 			HIGH_SCHOOL: "High School",
@@ -30,7 +28,6 @@ export function useDataTransformer() {
 		return REVERSE_EDUCATION_LEVEL_MAP[level] || level;
 	}
 
-	// Maps API employment types to UI values
 	function mapEmploymentTypeFromApi(type: string): string {
 		const REVERSE_EMPLOYMENT_TYPE_MAP: Record<string, string> = {
 			FULL_TIME: "Full-time",
@@ -42,7 +39,6 @@ export function useDataTransformer() {
 		return REVERSE_EMPLOYMENT_TYPE_MAP[type] || type;
 	}
 
-	// Maps UI language proficiency levels to API values
 	function mapLanguageLevelToApi(level: number): string {
 		const LANGUAGE_LEVEL_MAP: Record<number, string> = {
 			1: "BEGINNER",
@@ -53,7 +49,6 @@ export function useDataTransformer() {
 		return LANGUAGE_LEVEL_MAP[level] || "INTERMEDIATE";
 	}
 
-	// Maps UI education levels to API values
 	function mapEducationLevelToApi(level: string): string {
 		const EDUCATION_LEVEL_MAP: Record<string, string> = {
 			"High School": "HIGH_SCHOOL",
@@ -66,7 +61,6 @@ export function useDataTransformer() {
 		return EDUCATION_LEVEL_MAP[level] || "BACHELOR";
 	}
 
-	// Maps UI employment types to API values
 	function mapEmploymentTypeToApi(type: string): string {
 		const EMPLOYMENT_TYPE_MAP: Record<string, string> = {
 			"Full-time": "FULL_TIME",
@@ -78,7 +72,6 @@ export function useDataTransformer() {
 		return EMPLOYMENT_TYPE_MAP[type] || "FULL_TIME";
 	}
 
-	// Transform API responses to ApplicantData
 	function transformProfileData(
 		basicProfile: BasicProfileResponse,
 		detailedProfile: DetailedProfileResponse,
@@ -99,18 +92,16 @@ export function useDataTransformer() {
 				address: basicProfile.street || "",
 			},
 			department: basicProfile.careerName || undefined,
-			skills: {
-				technical: Array.isArray(detailedProfile.skillsAndExperienceRatings)
-					? detailedProfile.skillsAndExperienceRatings.map((skill) => ({
-							id: String(skill.skillId || Date.now()),
-							name: skill.skillName,
-						}))
-					: [],
-				soft: [],
-			},
+			skills: Array.isArray(detailedProfile.skillsAndExperienceRatings)
+				? detailedProfile.skillsAndExperienceRatings.map((skill) => ({
+						id: String(skill.id || Date.now()),
+						name: skill.skillName,
+						experienceRating: skill.experienceRating,
+					}))
+				: [],
 			languages: Array.isArray(detailedProfile.languagesProficiency)
 				? detailedProfile.languagesProficiency.map((lang) => ({
-						languageId: lang.languageId,
+						languageId: lang.id,
 						language: lang.languageName,
 						level: mapLanguageLevelFromApi(lang.proficiencyLevel),
 					}))
@@ -118,11 +109,11 @@ export function useDataTransformer() {
 			education: Array.isArray(detailedProfile.educations)
 				? detailedProfile.educations.map((edu) => ({
 						id: String(edu.id || Date.now()),
-						institution: edu.institutionName,
-						degree: mapEducationLevelFromApi(edu.educationLevel),
+						institutionName: edu.institutionName,
+						educationLevel: edu.educationLevel,
 						program: edu.program,
-						startYear: formatDateString(edu.dateJoined),
-						endYear: formatDateString(edu.dateGraduated),
+						dateJoined: edu.dateJoined ?? undefined,
+						dateGraduated: edu.dateGraduated ?? undefined,
 					}))
 				: [],
 			experience: Array.isArray(detailedProfile.experiences)
@@ -181,7 +172,6 @@ export function useDataTransformer() {
 		};
 	}
 
-	// Create fallback data from basic profile
 	function createFallbackData(
 		basicProfile: BasicProfileResponse,
 	): ApplicantData {
@@ -201,7 +191,7 @@ export function useDataTransformer() {
 				address: basicProfile.street || "",
 			},
 			department: basicProfile.careerName || undefined,
-			skills: { technical: [], soft: [] },
+			skills: [],
 			languages: [],
 			education: [],
 			experience: [],

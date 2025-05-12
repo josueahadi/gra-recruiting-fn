@@ -5,7 +5,7 @@ import ProfileSection from "@/components/profile/core/profile-section";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Edit1 } from "@/components/icons/edit-1";
-import type { ProfileInfo } from "@/hooks/use-profile";
+import type { ProfileInfo } from "@/types/profile";
 import { Separator } from "@/components/ui/separator";
 
 interface PersonalInfoSectionProps {

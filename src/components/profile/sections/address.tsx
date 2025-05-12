@@ -2,7 +2,7 @@ import type React from "react";
 import { useState } from "react";
 import ProfileSection from "@/components/profile/core/profile-section";
 import { Input } from "@/components/ui/input";
-import type { AddressInfo } from "@/hooks/use-profile";
+import type { AddressInfo } from "@/types/profile";
 import { Separator } from "@/components/ui/separator";
 
 interface AddressSectionProps {

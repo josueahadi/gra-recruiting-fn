@@ -2,7 +2,6 @@ import type React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Loader2 } from "lucide-react";
 import type { Education, EducationLevel } from "@/types/education-experience";
 import { Label } from "@/components/ui/label";
 import {
@@ -13,6 +12,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import DateRangePicker from "@/components/common/date-range-picker";
+import { convertUIDateToApiDate } from "@/lib/utils/date-utils";
 
 interface EducationFormProps {
 	onAddEducation: (education: Omit<Education, "id">) => void;
@@ -46,15 +46,36 @@ const formatEducationLevel = (level: string) => {
 	);
 };
 
-const EducationForm: React.FC<EducationFormProps> = ({
+const EducationForm: React.FC<
+	EducationFormProps & {
+		initialData?: Education;
+		isEdit?: boolean;
+		onCancel?: () => void;
+	}
+> = ({
 	onAddEducation,
 	isSubmitting = false,
+	initialData,
+	isEdit = false,
+	onCancel,
 }) => {
-	const [institution, setInstitution] = useState("");
-	const [level, setLevel] = useState<EducationLevel | "">("");
-	const [program, setProgram] = useState("");
-	const [dateJoined, setDateJoined] = useState<Date | undefined>();
-	const [dateGraduated, setDateGraduated] = useState<Date | undefined>();
+	const [institution, setInstitution] = useState(
+		initialData?.institutionName || "",
+	);
+	const [level, setLevel] = useState<EducationLevel | "">(
+		initialData?.educationLevel
+			? (initialData.educationLevel as EducationLevel)
+			: "",
+	);
+	const [program, setProgram] = useState(initialData?.program || "");
+	const [dateJoined, setDateJoined] = useState<Date | undefined>(
+		initialData?.dateJoined ? new Date(initialData.dateJoined) : undefined,
+	);
+	const [dateGraduated, setDateGraduated] = useState<Date | undefined>(
+		initialData?.dateGraduated
+			? new Date(initialData.dateGraduated)
+			: undefined,
+	);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -64,8 +85,8 @@ const EducationForm: React.FC<EducationFormProps> = ({
 				institutionName: institution,
 				educationLevel: level as EducationLevel,
 				program,
-				dateJoined: dateJoined.toISOString(),
-				dateGraduated: dateGraduated.toISOString(),
+				dateJoined: convertUIDateToApiDate(dateJoined.toISOString()),
+				dateGraduated: convertUIDateToApiDate(dateGraduated.toISOString()),
 			});
 
 			// Reset form
@@ -133,23 +154,24 @@ const EducationForm: React.FC<EducationFormProps> = ({
 				toPlaceholder="End date (DD/MM/YYYY)"
 			/>
 
-			<Button
-				type="submit"
-				className="w-full bg-primary-base hover:bg-custom-skyBlue text-white"
-				disabled={isSubmitting}
-			>
-				{isSubmitting ? (
-					<>
-						<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-						Adding Education...
-					</>
-				) : (
-					<>
-						<Plus className="h-4 w-4 mr-2" />
-						Add Education
-					</>
+			<p className="text-xs text-gray-500 -mt-2">
+				If you are currently enrolled, leave the end date field empty.
+			</p>
+
+			<div className="flex gap-2">
+				<Button
+					type="submit"
+					className="bg-primary-base hover:bg-custom-skyBlue text-white"
+					disabled={isSubmitting}
+				>
+					{isEdit ? "Save Changes" : "Add Education"}
+				</Button>
+				{isEdit && onCancel && (
+					<Button type="button" variant="outline" onClick={onCancel}>
+						Cancel
+					</Button>
 				)}
-			</Button>
+			</div>
 		</form>
 	);
 };

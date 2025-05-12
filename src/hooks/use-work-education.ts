@@ -111,7 +111,7 @@ export function useWorkEducation(
 							: exp.id;
 
 						await api.patch(
-							`/api/v1/applicants/update-experience/${originalId}`,
+							`/api/v1/applicants/updated-experience/${originalId}`,
 							{
 								companyName: exp.company,
 								jobTitle: exp.role,

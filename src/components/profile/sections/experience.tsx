@@ -3,11 +3,11 @@ import { useState } from "react";
 import ProfileSection from "@/components/profile/core/profile-section";
 import ExperienceForm from "./experience/experience-form";
 import ExperienceCard from "./experience/experience-card";
-import type { WorkExperience } from "@/hooks/use-profile";
+import type { WorkExperience } from "@/types/profile";
 import { useExperience } from "@/hooks/use-experience";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
-import type { EmploymentType } from "@/types/education-experience";
+import Modal from "@/components/common/modal";
 
 interface ExperienceSectionProps {
 	experience: WorkExperience[];
@@ -21,7 +21,10 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 	onUpdate,
 }) => {
 	const [isEditing, setIsEditing] = useState(false);
-	const { addExperience, deleteExperience } = useExperience();
+	const [editExperience, setEditExperience] = useState<WorkExperience | null>(
+		null,
+	);
+	const { addExperience, updateExperience, deleteExperience } = useExperience();
 
 	const handleEdit = () => {
 		setIsEditing(true);
@@ -38,39 +41,31 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 		}
 	};
 
-	// Map from display names to API enum values
-	const employmentTypeMap: Record<string, EmploymentType> = {
-		"Full-time": "FULL_TIME",
-		"Part-time": "PART_TIME",
-		Contract: "CONTRACT",
-		Internship: "INTERNSHIP",
-		Freelance: "FREELANCE",
-	};
-
-	// Convert from WorkExperience to Experience type expected by the API
 	const handleAddExperience = async (
 		newExperience: Omit<WorkExperience, "id">,
 	) => {
 		try {
-			// Map WorkExperience to Experience type
-			const { company, role, duration, responsibilities, country } =
-				newExperience;
-
-			// Parse dates from duration string if possible
-			const durationParts = duration.split("-").map((p) => p.trim());
-			const startDate = durationParts[0] || new Date().toISOString();
-			const endDate = durationParts.length > 1 ? durationParts[1] : "";
-
-			// Convert employment type from responsibilities
-			const employmentType = employmentTypeMap[responsibilities] || "FULL_TIME";
+			let startDate: string | undefined = undefined;
+			let endDate: string | undefined = undefined;
+			if (newExperience.duration) {
+				const durationParts = newExperience.duration
+					.split("-")
+					.map((p) => p.trim());
+				startDate = durationParts[0];
+				const endDateWithParentheses = durationParts[1];
+				if (endDateWithParentheses) {
+					const endDateStr = endDateWithParentheses.split("(")[0].trim();
+					endDate = endDateStr === "Present" ? undefined : endDateStr;
+				}
+			}
 
 			await addExperience.mutateAsync({
-				companyName: company,
-				jobTitle: role,
-				employmentType,
-				country: country || "Rwanda",
+				companyName: newExperience.company,
+				jobTitle: newExperience.role,
+				employmentType: newExperience.responsibilities,
+				country: newExperience.country,
 				startDate,
-				endDate: endDate === "Present" ? "" : endDate,
+				endDate,
 			});
 		} catch (error) {
 			console.error("Error adding experience:", error);
@@ -79,13 +74,57 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 
 	const handleRemoveExperience = async (id: string) => {
 		try {
-			await deleteExperience.mutateAsync(id);
+			const numId = Number(id);
+			if (!Number.isNaN(numId)) {
+				await deleteExperience.mutateAsync(numId);
+			}
 		} catch (error) {
 			console.error("Error removing experience:", error);
 		}
 	};
 
-	const isLoading = addExperience.isPending || deleteExperience.isPending;
+	const handleEditExperience = (experience: WorkExperience) => {
+		setEditExperience(experience);
+	};
+
+	const handleUpdateExperience = async (
+		updated: Omit<WorkExperience, "id">,
+	) => {
+		if (!editExperience?.id) return;
+		try {
+			let startDate: string | undefined = undefined;
+			let endDate: string | undefined = undefined;
+			if (updated.duration) {
+				const durationParts = updated.duration.split("-").map((p) => p.trim());
+				startDate = durationParts[0];
+				const endDateWithParentheses = durationParts[1];
+				if (endDateWithParentheses) {
+					const endDateStr = endDateWithParentheses.split("(")[0].trim();
+					endDate = endDateStr === "Present" ? undefined : endDateStr;
+				}
+			}
+
+			await updateExperience.mutateAsync({
+				id: Number(editExperience.id),
+				data: {
+					companyName: updated.company,
+					jobTitle: updated.role,
+					employmentType: updated.responsibilities,
+					country: updated.country,
+					startDate,
+					endDate,
+				},
+			});
+			setEditExperience(null);
+		} catch (error) {
+			console.error("Error updating experience:", error);
+		}
+	};
+
+	const isLoading =
+		addExperience.isPending ||
+		deleteExperience.isPending ||
+		updateExperience.isPending;
 
 	return (
 		<>
@@ -127,6 +166,7 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 									experience={exp}
 									onRemove={handleRemoveExperience}
 									canEdit={isEditing}
+									onEdit={handleEditExperience}
 								/>
 							))
 						) : (
@@ -155,6 +195,22 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 					</Button>
 				)}
 			</div>
+
+			<Modal
+				open={!!editExperience}
+				onClose={() => setEditExperience(null)}
+				title="Edit Work Experience"
+			>
+				{editExperience && (
+					<ExperienceForm
+						initialData={editExperience}
+						onAddExperience={handleUpdateExperience}
+						isSubmitting={updateExperience.isPending}
+						isEdit
+						onCancel={() => setEditExperience(null)}
+					/>
+				)}
+			</Modal>
 		</>
 	);
 };
