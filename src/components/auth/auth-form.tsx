@@ -7,10 +7,10 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { EducationBackgroundFields } from "./background-fields";
 import { ContactInfoFields } from "./contact-info-fields";
-import GoogleAuthButton from "./google-auth-button";
+// import GoogleAuthButton from "./google-auth-button";
 import { LoginFields } from "./login-fields";
 import ProgressIndicator from "./progress-indicator";
-import Link from "next/link";
+// import Link from "next/link";
 import { showToast } from "@/services/toast";
 
 const REGISTRATION_STEPS = [
@@ -54,7 +54,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		setShowPassword,
 		signIn,
 		signUp,
-		handleGoogleAuth,
+		// handleGoogleAuth,
 		error: authError,
 		clearErrors,
 	} = useAuth({
