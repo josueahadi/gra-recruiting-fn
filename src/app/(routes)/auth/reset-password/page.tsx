@@ -98,7 +98,7 @@ export default function ResetPasswordPage() {
 	}, []);
 
 	return (
-		<div className="w-full max-w-md mx-auto">
+		<div className="w-full max-w-md mx-auto ">
 			{/* Request Reset Step */}
 			{step === "request" && (
 				<Card>

@@ -389,7 +389,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 	};
 
 	return (
-		<div>
+		<div className="bg-white rounded-xl p-12 shadow-md sm:min-w-[450px]">
 			{mode === "signup" && (
 				<ProgressIndicator
 					currentStep={currentStep}
