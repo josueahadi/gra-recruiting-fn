@@ -3,10 +3,7 @@ import { showToast } from "@/services/toast";
 import type { PortfolioLinks, ApplicantData } from "@/types/profile";
 import { documentsService } from "@/services/documents";
 import type { QueryClient } from "@tanstack/react-query";
-import {
-	uploadFileToFirebase,
-	uploadFileToFirebaseWithProgress,
-} from "@/lib/upload-file";
+import { uploadFileToFirebaseWithProgress } from "@/lib/upload-file";
 
 export function useDocuments(
 	profileData: ApplicantData | null,
@@ -100,6 +97,7 @@ export function useDocuments(
 
 				return profileData;
 			} catch (err) {
+				console.error("Error uploading file:", err);
 				setUploadError("Failed to upload file. Please try again.");
 				showToast({
 					title: "Failed to upload file",
