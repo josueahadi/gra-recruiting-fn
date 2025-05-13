@@ -5,6 +5,7 @@ import { BackgroundGradient } from "@/components/layout/background-gradient";
 import Providers from "@/components/providers";
 import { AuthCheck } from "@/components/auth/auth-check";
 import { ToastProvider } from "@/services/toast";
+import { Suspense } from "react";
 
 const raleway = Raleway({
 	subsets: ["latin"],
@@ -27,7 +28,9 @@ export default function RootLayout({
 				<BackgroundGradient />
 				<Providers>
 					<ToastProvider>
-						<AuthCheck>{children}</AuthCheck>
+						<Suspense fallback={null}>
+							<AuthCheck>{children}</AuthCheck>
+						</Suspense>
 					</ToastProvider>
 				</Providers>
 			</body>
