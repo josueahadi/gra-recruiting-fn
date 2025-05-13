@@ -1,6 +1,5 @@
 "use client";
 
-// import { Plus, Minus } from "lucide-react";
 import ImageWithShape from "@/components/common/image-with-shape";
 import SectionWrapper from "@/components/common/section-wrapper";
 import {
@@ -10,7 +9,6 @@ import {
 	AccordionTrigger,
 } from "@/components/ui/accordion";
 import React from "react";
-// import { cn } from "@/lib/utils";
 
 const faqItems = [
 	{
@@ -40,28 +38,6 @@ const faqItems = [
 	},
 ];
 
-// Custom AccordionTrigger with Plus/Minus icons
-// const CustomAccordionTrigger = React.forwardRef<
-// 	React.ElementRef<typeof AccordionTrigger>,
-// 	React.ComponentPropsWithoutRef<typeof AccordionTrigger>
-// >(({ className, children, ...props }, ref) => (
-// 	<AccordionTrigger
-// 		ref={ref}
-// 		className={cn(
-// 			"flex items-center justify-between p-6 text-base font-medium focus:outline-none data-[state=open]:text-primary-base data-[state=open]:border-none hover:no-underline group",
-// 			className,
-// 		)}
-// 		{...props}
-// 	>
-// 		{children}
-// 		<div className="flex shrink-0">
-// 			<Plus className="h-5 w-5 text-primary-base transition-opacity duration-200 opacity-100 group-data-[state=open]:opacity-0 group-data-[state=open]:hidden" />
-// 			<Minus className="h-5 w-5 text-primary-base transition-opacity duration-200 opacity-0 hidden group-data-[state=open]:opacity-100 group-data-[state=open]:block" />
-// 		</div>
-// 	</AccordionTrigger>
-// ));
-// CustomAccordionTrigger.displayName = "CustomAccordionTrigger";
-
 const FAQ = () => {
 	return (
 		<SectionWrapper
@@ -73,7 +49,6 @@ const FAQ = () => {
 			className="py-16"
 		>
 			<div className="flex flex-col md:flex-row items-center gap-10">
-				{/* Image Side */}
 				<div className="w-full md:w-1/2 lg:w-[38%] flex justify-center ">
 					<div className="w-[300px] h-[400px] md:w-[350px] md:h-[450px]">
 						<ImageWithShape
@@ -85,24 +60,6 @@ const FAQ = () => {
 					</div>
 				</div>
 
-				{/* FAQ Side */}
-				{/* <div className="w-full md:w-1/2">
-					<Accordion type="single" collapsible className="space-y-4">
-						{faqItems.map((item, index) => (
-							<AccordionItem
-								// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
-								key={index}
-								value={`item-${index}`}
-								className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm"
-							>
-								<CustomAccordionTrigger>{item.question}</CustomAccordionTrigger>
-								<AccordionContent className="px-6 pb-6 pt-0 text-base">
-									{item.answer}
-								</AccordionContent>
-							</AccordionItem>
-						))}
-					</Accordion>
-				</div> */}
 				<div className="w-full md:w-1/2 lg:w-[62%]">
 					<Accordion type="single" collapsible className="space-y-4">
 						{faqItems.map((item, index) => (

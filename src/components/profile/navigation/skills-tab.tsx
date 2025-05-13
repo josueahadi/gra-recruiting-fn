@@ -1,83 +1,89 @@
 import type React from "react";
+import { useCallback, useEffect, useState } from "react";
 import DepartmentSection from "@/components/profile/sections/department";
 import SkillsSection from "@/components/profile/sections/skills";
 import LanguagesSection from "@/components/profile/sections/languages";
-import { Separator } from "@/components/ui/separator";
-import type { Skill, LanguageProficiency } from "@/hooks/use-profile";
+import type { Skill, LanguageProficiency } from "@/types/profile";
 import ProfileNavigationButtons from "@/components/profile/navigation/profile-nav-buttons";
+import { Separator } from "@/components/ui/separator";
+import { showToast } from "@/services/toast";
 
 interface SkillsTabProps {
-	technicalSkills: Skill[];
-	softSkills: Skill[];
+	skills: Skill[];
 	languages: LanguageProficiency[];
 	department?: string;
-	canEdit?: boolean;
-	onUpdate: (data: {
-		technical: Skill[];
-		soft: Skill[];
-		languages: LanguageProficiency[];
-		department?: string;
-	}) => void;
+	onUpdate: (
+		skills: Skill[],
+		languages: LanguageProficiency[],
+		department?: string,
+	) => void;
+	onUpdateLanguage?: (
+		languageId: number,
+		language: string,
+		proficiencyLevel: number,
+	) => Promise<boolean>;
+	onDeleteLanguage?: (languageId: number) => Promise<boolean>;
+	onAddLanguage?: (
+		language: string,
+		proficiencyLevel: number,
+	) => Promise<boolean>;
 }
 
-/**
- * SkillsTab component to be used in the profile navigation
- */
 const SkillsTab: React.FC<SkillsTabProps> = ({
-	technicalSkills = [],
-	softSkills = [],
-	languages = [],
+	skills: initialSkills,
+	languages: initialLanguages,
 	department,
-	canEdit = true,
 	onUpdate,
+	onUpdateLanguage,
+	onDeleteLanguage,
+	onAddLanguage,
 }) => {
-	// Ensure we have arrays and combine them
-	const combinedSkills = [
-		...(Array.isArray(technicalSkills) ? technicalSkills : []),
-		...(Array.isArray(softSkills) ? softSkills : []),
-	];
+	const [skills, setSkills] = useState<Skill[]>(initialSkills);
+	const [languages, setLanguages] =
+		useState<LanguageProficiency[]>(initialLanguages);
+	const [, setIsProcessing] = useState(false);
 
-	// Department update handler
-	const handleDepartmentUpdate = (updatedDepartment?: string) => {
-		onUpdate({
-			technical: technicalSkills || [],
-			soft: softSkills || [],
-			languages: languages || [],
-			department: updatedDepartment,
-		});
-	};
+	useEffect(() => {
+		setSkills(initialSkills);
+		setLanguages(initialLanguages);
+	}, [initialSkills, initialLanguages]);
 
-	// Skills update handler
-	const handleSkillsUpdate = (updatedSkills: Skill[]) => {
-		// All skills are treated as technical skills in this implementation
-		onUpdate({
-			technical: updatedSkills,
-			soft: [], // Keeping this for backward compatibility
-			languages: languages || [],
-			department,
-		});
-	};
+	const handleDepartmentChange = useCallback(
+		(newDepartment?: string) => {
+			onUpdate(skills, languages, newDepartment);
+		},
+		[skills, languages, onUpdate],
+	);
 
-	// Languages update handler
-	const handleLanguagesUpdate = (updatedLanguages: LanguageProficiency[]) => {
-		onUpdate({
-			technical: technicalSkills || [],
-			soft: softSkills || [],
-			languages: updatedLanguages,
-			department,
-		});
-	};
+	const handleSkillsUpdate = useCallback(
+		async (updatedSkills: Skill[]): Promise<boolean> => {
+			try {
+				setIsProcessing(true);
+				setSkills(updatedSkills);
+				onUpdate(updatedSkills, languages, department);
+				return true;
+			} catch (error) {
+				console.error("Error updating skills:", error);
+				showToast({
+					title: "Failed to update skills",
+					variant: "error",
+				});
+				return false;
+			} finally {
+				setIsProcessing(false);
+			}
+		},
+		[languages, department, onUpdate],
+	);
 
 	return (
 		<>
-			<h1 className="text-2xl font-bold text-primary-base mb-6">
-				Skills & Competence
-			</h1>
+			<h1 className="text-2xl font-bold text-primary-base mb-6">Skills</h1>
 
 			<DepartmentSection
 				department={department}
-				canEdit={canEdit}
-				onUpdate={handleDepartmentUpdate}
+				canEdit={true}
+				onUpdate={handleDepartmentChange}
 			/>
 
 			<div className="md:px-10">
@@ -85,8 +91,8 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 			</div>
 
 			<SkillsSection
-				skills={combinedSkills}
-				canEdit={canEdit}
+				skills={skills}
+				canEdit={true}
 				onUpdate={handleSkillsUpdate}
 			/>
 
@@ -95,12 +101,13 @@ const SkillsTab: React.FC<SkillsTabProps> = ({
 			</div>
 
 			<LanguagesSection
-				languages={languages || []}
-				canEdit={canEdit}
-				onUpdate={handleLanguagesUpdate}
+				languages={languages}
+				canEdit={true}
+				onUpdateLanguage={onUpdateLanguage}
+				onDeleteLanguage={onDeleteLanguage}
+				onAddLanguage={onAddLanguage}
 			/>
 
-			{/* Navigation buttons */}
 			<ProfileNavigationButtons />
 		</>
 	);

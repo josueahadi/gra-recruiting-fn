@@ -1,168 +1,167 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useRouter } from "next/navigation";
 import ContentCard from "@/components/admin/common/content-card";
 import FilterBar, {
 	type FilterConfig,
 } from "@/components/admin/common/filter-bar";
 import TableActions from "@/components/admin/common/table-actions";
-import AddQuestionForm, {
-	type QuestionFormValues,
-} from "./questions/add-question-form";
 import QuestionDetail from "./questions/question-detail";
 import ConfirmationDialog from "@/components/common/confirm-dialog";
 import DataTable from "@/components/common/data-table";
-import { Plus } from "lucide-react";
-import React, { useState } from "react";
+import StatsSection, { type StatCardProps } from "./common/stats-section";
+import { Plus, CircleHelp, FileText, Server } from "lucide-react";
+import { useState } from "react";
+import { useQuestions } from "@/hooks/use-questions";
+import type {
+	Question,
+	MultipleChoiceQuestion,
+	Choice as SourceChoice,
+	EssayQuestion,
+} from "@/types";
 
-// Mock data - in a real app this would come from an API
-const MOCK_QUESTIONS = [
-	{
-		id: "01",
-		text: "What is the most important aspect of a well-structured resume?",
-		excerpt:
-			"A well-structured resume is one of the most important tools for job seekers. It helps...",
-		section: "Multiple Choice",
-		type: "Problem Solving",
-		choices: [
-			{ text: "Clear formatting and organization", isCorrect: true },
-			{ text: "Including all past jobs", isCorrect: false },
-			{ text: "Using advanced vocabulary", isCorrect: false },
-			{ text: "Adding personal hobbies", isCorrect: false },
-		],
-	},
-	{
-		id: "02",
-		text: "What are the essential components of a professional email?",
-		excerpt:
-			"A well-structured resume is one of the most important tools for job seekers. It helps...",
-		section: "Multiple Choice",
-		type: "Computer Skills",
-		choices: [
-			{ text: "Clear subject line", isCorrect: true },
-			{ text: "Formal greeting", isCorrect: false },
-			{ text: "Concise message", isCorrect: false },
-			{ text: "Professional signature", isCorrect: false },
-		],
-	},
-	{
-		id: "03",
-		excerpt:
-			"A well-structured resume is one of the most important tools for job seekers. It helps...",
-		section: "Multiple Choice",
-		type: "Computer Skills",
-	},
-	{
-		id: "04",
-		excerpt:
-			"A well-structured resume is one of the most important tools for job seekers. It helps...",
-		section: "Multiple Choice",
-		type: "Math",
-	},
-	{
-		id: "05",
-		excerpt:
-			"A well-structured resume is one of the most important tools for job seekers. It helps...",
-		section: "Multiple Choice",
-		type: "Essay",
-	},
-	{
-		id: "06",
-		excerpt:
-			"A well-structured resume is one of the most important tools for job seekers. It helps...",
-		section: "Multiple Choice",
-		type: "Math",
-	},
-	{
-		id: "07",
-		excerpt:
-			"A well-structured resume is one of the most important tools for job seekers. It helps...",
-		section: "Multiple Choice",
-		type: "Problem Solving",
-	},
-	{
-		id: "08",
-		excerpt:
-			"A well-structured resume is one of the most important tools for job seekers. It helps...",
-		section: "Multiple Choice",
-		type: "Problem Solving",
-	},
-];
+// Define the shape that QuestionDetail expects
+interface DetailQuestion {
+	id: string;
+	text: string;
+	type: string;
+	section: string;
+	choices?: DetailChoice[];
+	excerpt?: string;
+	difficulty?: string;
+	active?: boolean;
+	createdAt?: string;
+	updatedAt?: string;
+	imageUrl?: string;
+	maxScore?: number;
+}
+
+interface DetailChoice {
+	id: string;
+	text: string;
+	isCorrect: boolean;
+	imageUrl?: string;
+}
+
+// Adapter function to convert from your Question type to what QuestionDetail expects
+const adaptQuestionForDetail = (question: Question): DetailQuestion => {
+	const baseQuestion: DetailQuestion = {
+		id: question.id,
+		text: question.text,
+		type: question.type,
+		section: question.section,
+		excerpt: question.excerpt,
+		difficulty: question.difficulty,
+		active: question.active,
+		createdAt: question.createdAt,
+		updatedAt: question.updatedAt,
+		imageUrl: question.imageUrl,
+	};
+
+	// Check if it's a multiple choice question
+	if (question.section === "Multiple Choice") {
+		const mcQuestion = question as MultipleChoiceQuestion;
+		if (mcQuestion.choices && Array.isArray(mcQuestion.choices)) {
+			baseQuestion.choices = mcQuestion.choices.map(
+				(choice: SourceChoice): DetailChoice => ({
+					id: choice.id,
+					text: choice.text || "", // Ensure text is never undefined
+					isCorrect: choice.isCorrect,
+					imageUrl: choice.imageUrl,
+				}),
+			);
+		}
+	} else if (question.section === "Essay") {
+		// For essay questions, you might need to add the maxScore property
+		baseQuestion.maxScore = (question as EssayQuestion).maxScore;
+	}
+
+	return baseQuestion;
+};
 
 const QuestionsManagement = () => {
+	const router = useRouter();
 	const [searchValue, setSearchValue] = useState("");
-	const [statusFilter, setStatusFilter] = useState("all");
+	const [typeFilter, setTypeFilter] = useState("all");
 
-	// Question detail modal state
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	const [selectedQuestion, setSelectedQuestion] = useState<any | null>(null);
+	const [selectedQuestion, setSelectedQuestion] =
+		useState<DetailQuestion | null>(null);
 	const [isQuestionDetailOpen, setIsQuestionDetailOpen] = useState(false);
 
-	// Add question modal state
-	const [isAddQuestionOpen, setIsAddQuestionOpen] = useState(false);
-
-	// Delete confirmation dialog state
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
 
-	// Handle search
+	const { questions, metadata, deleteQuestion } = useQuestions({
+		search: searchValue,
+		type: typeFilter,
+	});
+
 	const handleSearch = (value: string) => {
 		setSearchValue(value);
 	};
 
-	// Handle filter change
-	const handleStatusChange = (value: string) => {
-		setStatusFilter(value);
+	const handleTypeChange = (value: string) => {
+		setTypeFilter(value);
 	};
 
-	// Handle clear filters
 	const handleClearFilters = () => {
 		setSearchValue("");
-		setStatusFilter("all");
+		setTypeFilter("all");
 	};
 
-	// Handle viewing question details
 	const handleViewQuestion = (id: string) => {
-		const question = MOCK_QUESTIONS.find((q) => q.id === id);
-		if (question) {
-			setSelectedQuestion(question);
-			setIsQuestionDetailOpen(true);
+		if (questions.data) {
+			const question = questions.data.data.find((q) => q.id === id);
+			if (question) {
+				setSelectedQuestion(adaptQuestionForDetail(question));
+				setIsQuestionDetailOpen(true);
+			}
 		}
 	};
 
-	// Handle edit question
 	const handleEditQuestion = (id: string) => {
 		console.log("Edit question", id);
-		// In a real app, you would open the edit form with the question data
+		// router.push(`/admin/questions/edit/${id}`);
 	};
 
-	// Handle add question
 	const handleAddQuestion = () => {
-		setIsAddQuestionOpen(true);
+		router.push("/admin/questions/add");
 	};
 
-	// Handle submit new question
-	const handleSubmitQuestion = (values: QuestionFormValues) => {
-		console.log("Submitted question:", values);
-		// In a real app, you would call an API to save the question
-		setIsAddQuestionOpen(false);
-	};
-
-	// Handle delete question
 	const handleDeleteQuestion = (id: string) => {
 		setQuestionToDelete(id);
 		setIsDeleteDialogOpen(true);
 	};
 
-	// Confirm delete question
 	const confirmDeleteQuestion = () => {
-		console.log(`Deleting question: ${questionToDelete}`);
-		// In a real app, you would call an API to delete the question
-		setIsDeleteDialogOpen(false);
-		setQuestionToDelete(null);
+		if (questionToDelete) {
+			deleteQuestion.mutate(questionToDelete, {
+				onSuccess: () => {
+					setIsDeleteDialogOpen(false);
+					setQuestionToDelete(null);
+				},
+			});
+		}
 	};
 
-	// Filter configurations
+	const statsData: StatCardProps[] = [
+		{
+			title: "Total Questions",
+			value: metadata.total.toString(),
+			icon: <CircleHelp className="w-8 h-8" />,
+		},
+		{
+			title: "Multiple Choice",
+			value: metadata.multipleChoice.toString(),
+			icon: <FileText className="w-8 h-8" />,
+		},
+		{
+			title: "Essay",
+			value: metadata.essay.toString(),
+			icon: <Server className="w-8 h-8" />,
+		},
+	];
+
 	const filterConfigs: FilterConfig[] = [
 		{
 			type: "search",
@@ -177,18 +176,18 @@ const QuestionsManagement = () => {
 			props: {
 				options: [
 					{ value: "all", label: "Type - All" },
-					{ value: "multiple-choice", label: "Multiple Choice" },
-					{ value: "essay", label: "Essay" },
-					{ value: "problem-solving", label: "Problem Solving" },
+					...metadata.types.map((type) => ({
+						value: type.toLowerCase().replace(" ", "-"),
+						label: type,
+					})),
 				],
-				value: statusFilter,
-				onChange: handleStatusChange,
+				value: typeFilter,
+				onChange: handleTypeChange,
 			},
 			width: "w-full md:w-1/5",
 		},
 	];
 
-	// Table columns
 	const columns = [
 		{
 			accessorKey: "id",
@@ -209,8 +208,7 @@ const QuestionsManagement = () => {
 		{
 			id: "actions",
 			header: "Actions",
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-			cell: ({ row }: any) => (
+			cell: ({ row }: { row: { original: Question } }) => (
 				<TableActions
 					actions={[
 						{
@@ -234,26 +232,11 @@ const QuestionsManagement = () => {
 		},
 	];
 
-	// Filter questions based on search and filters
-	const filteredQuestions = MOCK_QUESTIONS.filter((question) => {
-		// Filter by search
-		const matchesSearch =
-			searchValue === "" ||
-			question.excerpt.toLowerCase().includes(searchValue.toLowerCase()) ||
-			question.type.toLowerCase().includes(searchValue.toLowerCase());
-
-		// Filter by status/type
-		const matchesStatus =
-			statusFilter === "all" ||
-			question.type.toLowerCase().replace(" ", "-") === statusFilter;
-
-		return matchesSearch && matchesStatus;
-	});
-
 	return (
 		<div className="space-y-6">
+			<StatsSection stats={statsData} />
+
 			<ContentCard title="Questions">
-				{/* Filter Controls */}
 				<FilterBar
 					filters={filterConfigs}
 					hasAddButton={true}
@@ -263,26 +246,27 @@ const QuestionsManagement = () => {
 						icon: <Plus className="h-4 w-4 mr-2" />,
 					}}
 					onClear={handleClearFilters}
-					clearDisabled={!searchValue && statusFilter === "all"}
+					clearDisabled={!searchValue && typeFilter === "all"}
 				/>
 
-				{/* Questions Table */}
-				<DataTable
-					columns={columns}
-					data={filteredQuestions}
-					searchColumn="excerpt"
-					showSearch={false}
-				/>
+				{questions.isLoading ? (
+					<div className="flex justify-center py-8">
+						<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+					</div>
+				) : questions.error ? (
+					<div className="py-8 text-center text-red-500">
+						Error loading questions. Please try again.
+					</div>
+				) : (
+					<DataTable
+						columns={columns}
+						data={questions.data?.data || []}
+						searchColumn="excerpt"
+						showSearch={false}
+					/>
+				)}
 			</ContentCard>
 
-			{/* Add Question Form Modal */}
-			<AddQuestionForm
-				isOpen={isAddQuestionOpen}
-				onClose={() => setIsAddQuestionOpen(false)}
-				onSubmit={handleSubmitQuestion}
-			/>
-
-			{/* Question Detail Modal */}
 			{selectedQuestion && (
 				<QuestionDetail
 					isOpen={isQuestionDetailOpen}
@@ -293,7 +277,6 @@ const QuestionsManagement = () => {
 				/>
 			)}
 
-			{/* Delete Confirmation Dialog */}
 			<ConfirmationDialog
 				isOpen={isDeleteDialogOpen}
 				onClose={() => setIsDeleteDialogOpen(false)}

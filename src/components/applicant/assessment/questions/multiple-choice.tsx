@@ -21,10 +21,6 @@ interface MultipleChoiceQuestionProps {
 	buttonText?: string;
 }
 
-/**
- * Component for rendering multiple choice questions
- * Supports both text and image-based options
- */
 const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 	questionNumber,
 	// totalQuestions,
@@ -38,23 +34,20 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 }) => {
 	// Get letter for option (A, B, C, D)
 	const getLetterForOption = (index: number) => {
-		return String.fromCharCode(65 + index); // 65 is ASCII for 'A'
+		return String.fromCharCode(65 + index); // 65 = ASCII for 'A'
 	};
 
 	return (
 		<div className="flex flex-col h-full p-6">
-			{/* Section title */}
 			<div className="mb-6 border-b pb-2">
 				<h2 className="text-lg text-gray-600">Section one - Multiple Choice</h2>
 			</div>
 
-			{/* Question number and text */}
 			<div className="mb-8">
 				<h3 className="text-2xl mb-4">Q: {questionNumber}</h3>
 				<div className="p-6 bg-white rounded-lg border">
 					<p className="text-lg">{questionText}</p>
 
-					{/* Question image if provided */}
 					{questionImageUrl && (
 						<div className="mt-4 flex justify-center">
 							<div className="relative h-64 w-full max-w-xl">
@@ -70,7 +63,6 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 				</div>
 			</div>
 
-			{/* Options with letters (A, B, C, D) */}
 			<div className="space-y-4 mb-8">
 				{options.map((option, index) => (
 					// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>

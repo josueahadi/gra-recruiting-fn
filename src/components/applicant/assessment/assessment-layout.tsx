@@ -20,9 +20,6 @@ interface AssessmentLayoutProps {
 	pageTitle?: string;
 }
 
-/**
- * Inner component that uses the layout context
- */
 const AssessmentLayoutInner: React.FC<AssessmentLayoutProps> = ({
 	children,
 	userName = "John Doe",
@@ -36,16 +33,11 @@ const AssessmentLayoutInner: React.FC<AssessmentLayoutProps> = ({
 }) => {
 	const { isMobileMenuOpen, toggleMobileMenu, closeMobileMenu } = useLayout();
 
-	// State for timer (in a real app, this would be from the server)
 	const [timeLeft, setTimeLeft] = useState("00:15:00");
-
-	// Mock timer countdown (would be replaced with actual countdown logic)
 	useEffect(() => {
-		// Just for demo - not actually counting down
 		setTimeLeft("00:15:00");
 	}, []);
 
-	// For section configuration
 	const sections = [
 		{ id: 1, title: "One", description: "Multiple Choice", questionCount: 15 },
 		{ id: 2, title: "Two", description: "Short Essay", questionCount: 5 },
@@ -53,10 +45,8 @@ const AssessmentLayoutInner: React.FC<AssessmentLayoutProps> = ({
 
 	return (
 		<div className="flex min-h-screen bg-[#E0F5FF]">
-			{/* Background pattern */}
 			<BackgroundPattern />
 
-			{/* Sidebar component - only shown if showNavigation is true */}
 			{showNavigation && (
 				<AssessmentSidebar
 					currentSectionId={currentSectionId}
@@ -70,14 +60,12 @@ const AssessmentLayoutInner: React.FC<AssessmentLayoutProps> = ({
 				/>
 			)}
 
-			{/* Main content container */}
 			<div
 				className={cn(
 					"flex-1 flex flex-col relative z-10",
 					showNavigation && "md:ml-80",
 				)}
 			>
-				{/* Top header */}
 				<AppHeader
 					title={pageTitle}
 					userType="applicant"
@@ -87,7 +75,6 @@ const AssessmentLayoutInner: React.FC<AssessmentLayoutProps> = ({
 					showMobileMenu={showNavigation}
 				/>
 
-				{/* Main content */}
 				<main className="flex-1 p-4 md:p-12">
 					<div className="bg-white rounded-lg shadow-sm">{children}</div>
 				</main>
@@ -96,9 +83,6 @@ const AssessmentLayoutInner: React.FC<AssessmentLayoutProps> = ({
 	);
 };
 
-/**
- * Main assessment layout component that wraps with context providers
- */
 const AssessmentLayout: React.FC<AssessmentLayoutProps> = (props) => {
 	return (
 		<LayoutProvider>

@@ -13,9 +13,6 @@ interface SectionLayoutProps {
 	contentClassName?: string;
 }
 
-/**
- * A common layout component for dashboard sections
- */
 const SectionLayout: React.FC<SectionLayoutProps> = ({
 	title,
 	children,
@@ -30,16 +27,13 @@ const SectionLayout: React.FC<SectionLayoutProps> = ({
 				className,
 			)}
 		>
-			{/* Header with title */}
 			<div className="mb-6">
 				<h1 className="text-2xl font-bold text-primary-base">{title}</h1>
 			</div>
 
-			{/* Optional top section (e.g., user avatar and name) */}
 			{topSection && <div className="mb-10 px-4">{topSection}</div>}
 			<Separator className="my-8" />
 
-			{/* Main content sections */}
 			<div className={cn("", contentClassName)}>
 				{React.Children.map(children, (child, index) => {
 					if (!React.isValidElement(child)) return child;
@@ -57,9 +51,6 @@ const SectionLayout: React.FC<SectionLayoutProps> = ({
 	);
 };
 
-/**
- * A sub-section component for consistent styling within a section
- */
 export const SectionItem: React.FC<{
 	title: string;
 	children: React.ReactNode;

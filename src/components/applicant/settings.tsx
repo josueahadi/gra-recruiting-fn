@@ -6,15 +6,35 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { Bell, Lock, LogOut, Save, Shield, Trash2 } from "lucide-react";
+import {
+	Bell,
+	Eye,
+	EyeOff,
+	Lock,
+	LogOut,
+	Save,
+	Shield,
+	Trash2,
+} from "lucide-react";
 import type React from "react";
 import { useState } from "react";
+import { useProfile } from "@/hooks/use-profile";
+import toast from "react-hot-toast";
 
-const SettingsSection = () => {
+const ApplicantSettingsSection = () => {
+	const { updatePassword } = useProfile({ userType: "applicant" });
+
 	const [passwordForm, setPasswordForm] = useState({
 		currentPassword: "",
 		newPassword: "",
 		confirmPassword: "",
+	});
+
+	// Add state for password visibility
+	const [showPasswords, setShowPasswords] = useState({
+		currentPassword: false,
+		newPassword: false,
+		confirmPassword: false,
 	});
 
 	const [notificationSettings, setNotificationSettings] = useState({
@@ -38,6 +58,14 @@ const SettingsSection = () => {
 		});
 	};
 
+	// Add toggle function for password visibility
+	const togglePasswordVisibility = (field: keyof typeof showPasswords) => {
+		setShowPasswords({
+			...showPasswords,
+			[field]: !showPasswords[field],
+		});
+	};
+
 	const handleNotificationToggle = (
 		setting: keyof typeof notificationSettings,
 	) => {
@@ -56,8 +84,18 @@ const SettingsSection = () => {
 
 	const handlePasswordSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-		console.log("Password change submitted:", passwordForm);
-		// Reset form after submission
+
+		if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+			toast.error("New password and confirmation don't match");
+			return;
+		}
+
+		updatePassword({
+			currentPassword: passwordForm.currentPassword,
+			newPassword: passwordForm.newPassword,
+			confirmPassword: passwordForm.confirmPassword,
+		});
+
 		setPasswordForm({
 			currentPassword: "",
 			newPassword: "",
@@ -74,7 +112,6 @@ const SettingsSection = () => {
 			</div>
 
 			<div className="space-y-8">
-				{/* Password Settings */}
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<Lock className="h-5 w-5 text-primary-500" />
@@ -89,28 +126,64 @@ const SettingsSection = () => {
 						<form onSubmit={handlePasswordSubmit} className="space-y-4">
 							<div>
 								<Label htmlFor="currentPassword">Current Password</Label>
-								<Input
-									id="currentPassword"
-									name="currentPassword"
-									type="password"
-									value={passwordForm.currentPassword}
-									onChange={handlePasswordChange}
-									className="mt-1"
-									required
-								/>
+								<div className="relative">
+									<Input
+										id="currentPassword"
+										name="currentPassword"
+										type={showPasswords.currentPassword ? "text" : "password"}
+										value={passwordForm.currentPassword}
+										onChange={handlePasswordChange}
+										className="mt-1"
+										required
+									/>
+									<button
+										type="button"
+										onClick={() => togglePasswordVisibility("currentPassword")}
+										className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+										aria-label={
+											showPasswords.currentPassword
+												? "Hide password"
+												: "Show password"
+										}
+									>
+										{showPasswords.currentPassword ? (
+											<EyeOff size={20} />
+										) : (
+											<Eye size={20} />
+										)}
+									</button>
+								</div>
 							</div>
 
 							<div>
 								<Label htmlFor="newPassword">New Password</Label>
-								<Input
-									id="newPassword"
-									name="newPassword"
-									type="password"
-									value={passwordForm.newPassword}
-									onChange={handlePasswordChange}
-									className="mt-1"
-									required
-								/>
+								<div className="relative">
+									<Input
+										id="newPassword"
+										name="newPassword"
+										type={showPasswords.newPassword ? "text" : "password"}
+										value={passwordForm.newPassword}
+										onChange={handlePasswordChange}
+										className="mt-1"
+										required
+									/>
+									<button
+										type="button"
+										onClick={() => togglePasswordVisibility("newPassword")}
+										className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+										aria-label={
+											showPasswords.newPassword
+												? "Hide password"
+												: "Show password"
+										}
+									>
+										{showPasswords.newPassword ? (
+											<EyeOff size={20} />
+										) : (
+											<Eye size={20} />
+										)}
+									</button>
+								</div>
 								<p className="text-xs text-gray-500 mt-1">
 									Password must be at least 8 characters long and include
 									uppercase, lowercase, numbers, and special characters.
@@ -119,15 +192,33 @@ const SettingsSection = () => {
 
 							<div>
 								<Label htmlFor="confirmPassword">Confirm New Password</Label>
-								<Input
-									id="confirmPassword"
-									name="confirmPassword"
-									type="password"
-									value={passwordForm.confirmPassword}
-									onChange={handlePasswordChange}
-									className="mt-1"
-									required
-								/>
+								<div className="relative">
+									<Input
+										id="confirmPassword"
+										name="confirmPassword"
+										type={showPasswords.confirmPassword ? "text" : "password"}
+										value={passwordForm.confirmPassword}
+										onChange={handlePasswordChange}
+										className="mt-1"
+										required
+									/>
+									<button
+										type="button"
+										onClick={() => togglePasswordVisibility("confirmPassword")}
+										className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+										aria-label={
+											showPasswords.confirmPassword
+												? "Hide password"
+												: "Show password"
+										}
+									>
+										{showPasswords.confirmPassword ? (
+											<EyeOff size={20} />
+										) : (
+											<Eye size={20} />
+										)}
+									</button>
+								</div>
 							</div>
 
 							<Button
@@ -141,7 +232,6 @@ const SettingsSection = () => {
 					</CardContent>
 				</Card>
 
-				{/* Notification Settings */}
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<Bell className="h-5 w-5 text-primary-500" />
@@ -224,7 +314,6 @@ const SettingsSection = () => {
 					</CardContent>
 				</Card>
 
-				{/* Privacy Settings */}
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<Shield className="h-5 w-5 text-primary-500" />
@@ -285,7 +374,6 @@ const SettingsSection = () => {
 					</CardContent>
 				</Card>
 
-				{/* Account Actions */}
 				<Card className="border-red-200">
 					<CardHeader className="flex flex-row items-center space-x-2">
 						<Trash2 className="h-5 w-5 text-red-500" />
@@ -337,4 +425,4 @@ const SettingsSection = () => {
 	);
 };
 
-export default SettingsSection;
+export default ApplicantSettingsSection;

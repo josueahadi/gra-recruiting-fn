@@ -41,7 +41,6 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({
 		<div
 			className={`bg-gradient-to-tr from-primary-dark to-custom-skyBlue rounded-lg text-white relative z-10 overflow-hidden  ${className}`}
 		>
-			{/* Background pattern */}
 			<div
 				className="absolute inset-0 z-0 opacity-100 pointer-events-none"
 				style={{
@@ -51,7 +50,6 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({
 				}}
 			/>
 			<div className="flex flex-col md:flex-row items-center">
-				{/* Image */}
 				<Image
 					src={imageUrl}
 					alt="Happy Applicant"
@@ -60,7 +58,6 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({
 					className="z-10"
 				/>
 
-				{/* Text and buttons */}
 				<div className="relative z-10 py-6 flex flex-col items-center text-center md:items-start md:text-left">
 					<h2 className="text-lg">Hi, {userName}</h2>
 					<h1 className="text-3xl font-semibold mt-2 mb-6">

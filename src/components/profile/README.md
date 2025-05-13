@@ -287,8 +287,6 @@ function CustomProfilePage() {
         onAvatarChange={(file) => uploadFile('avatar', file)}
       />
       
-      {/* You can add other sections as needed */}
-      
     </div>
   );
 }

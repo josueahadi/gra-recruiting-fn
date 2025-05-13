@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 export type ProfileTab = {
 	label: string;
 	href: string;
-	shortLabel?: string; // Optional shorter label for mobile
+	shortLabel?: string;
 };
 
 interface ProfileNavigationProps {
@@ -42,12 +42,9 @@ export const ProfileNavigation: React.FC<ProfileNavigationProps> = ({
 		},
 	];
 
-	// Function to determine if a tab is active based on the current path
 	const isTabActive = (href: string): boolean => {
-		// Exact match for root applicant route
 		if (href === "/applicant" && pathname === "/applicant") return true;
 
-		// For other routes check if the pathname includes the href
 		if (href !== "/applicant" && pathname.includes(href)) return true;
 
 		return false;
@@ -67,7 +64,6 @@ export const ProfileNavigation: React.FC<ProfileNavigationProps> = ({
 								: "bg-white text-primary-shades-800 hover:bg-gray-50",
 						)}
 					>
-						{/* Show short label on small screens, full label on larger screens */}
 						<span className="hidden sm:block">{tab.label}</span>
 						<span className="block sm:hidden">
 							{tab.shortLabel || tab.label}

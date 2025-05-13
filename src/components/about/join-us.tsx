@@ -1,7 +1,5 @@
 "use client";
 
-// import Link from "next/link";
-// import { ExternalLink } from "lucide-react";
 import LearnMoreCTA from "@/components/common/learn-more-cta";
 import Image from "next/image";
 import React from "react";
@@ -11,7 +9,6 @@ const JoinUs = () => {
 		<section className="w-full max-w-screen-2xl mx-auto px-5 md:px-20 py-8 md:pb-16 md:pt-10">
 			<div className="relative overflow-visible rounded-32 w-full bg-gradient-to-r from-primary-base to-primary-dark">
 				<div className="relative z-10 flex flex-col md:flex-row gap-0">
-					{/* Text Content */}
 					<div className="lg:w-1/2 w-full flex flex-col justify-center items-center md:items-start text-white space-y-6 p-6 pb-0 md:p-9 md:pl-20">
 						<h2 className="text-2xl md:text-5xl font-semibold capitalize tracking-wide text-center md:text-left">
 							Empowering Rwandan Professionals for Global Success!
@@ -31,7 +28,6 @@ const JoinUs = () => {
 						<LearnMoreCTA href="/careers" />
 					</div>
 
-					{/* Image */}
 					<div className="lg:w-1/2 w-full aspect-[589/532] relative">
 						<Image
 							src="/images/join-us.png"

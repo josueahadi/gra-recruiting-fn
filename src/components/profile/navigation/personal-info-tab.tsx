@@ -1,10 +1,11 @@
-// File: components/profile/sections/applicant/PersonalInfoTab.tsx
 "use client";
 
 import type React from "react";
+import { useState } from "react";
 import { PersonalInfoSection, AddressSection } from "@/components/profile";
 // import { Separator } from "@/components/ui/separator";
-import type { ProfileInfo, AddressInfo } from "@/hooks/use-profile";
+import { Button } from "@/components/ui/button";
+import type { ProfileInfo, AddressInfo } from "@/types/profile";
 import ProfileNavigationButtons from "./profile-nav-buttons";
 
 interface PersonalInfoTabProps {
@@ -17,10 +18,6 @@ interface PersonalInfoTabProps {
 	onAvatarChange: (file: File) => void;
 }
 
-/**
- * Combined component for Personal Info tab in applicant view
- * Contains both personal info and address sections
- */
 const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
 	personalInfo,
 	addressInfo,
@@ -30,17 +27,36 @@ const PersonalInfoTab: React.FC<PersonalInfoTabProps> = ({
 	onAddressUpdate,
 	onAvatarChange,
 }) => {
+	const [showInfoAlert, setShowInfoAlert] = useState(true);
+
 	return (
 		<>
 			<h1 className="text-2xl font-bold text-primary-base mb-6">
 				User Profile
 			</h1>
 
+			{showInfoAlert && (
+				<div className="bg-blue-50 border border-blue-200 rounded p-4 mb-6 text-sm text-blue-700 flex items-center justify-between">
+					<div>
+						Personal and address information is saved separately but both are
+						required by our system. Please ensure both sections are complete and
+						accurate.
+					</div>
+					<Button
+						variant="link"
+						onClick={() => setShowInfoAlert(false)}
+						className="text-xs ml-2"
+					>
+						Dismiss
+					</Button>
+				</div>
+			)}
+
 			<PersonalInfoSection
 				personalInfo={personalInfo}
 				avatarSrc={avatarSrc}
 				locationLabel={locationLabel}
-				canEdit={true} // Applicants can always edit their own profile
+				canEdit={true}
 				onInfoUpdate={onPersonalInfoUpdate}
 				onAvatarChange={onAvatarChange}
 			/>

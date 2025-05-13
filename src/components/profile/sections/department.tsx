@@ -1,7 +1,10 @@
 import type React from "react";
 import { useState } from "react";
 import ProfileSection from "@/components/profile/core/profile-section";
-import DepartmentSelector from "./skills/department-selector";
+import DepartmentSelector from "@/components/profile/sections/skills/department-selector";
+import { api } from "@/services/api";
+import { showToast } from "@/services/toast";
+import type { CareerResponse } from "@/types/profile";
 
 interface DepartmentSectionProps {
 	department?: string;
@@ -18,6 +21,7 @@ const DepartmentSection: React.FC<DepartmentSectionProps> = ({
 	const [department, setDepartment] = useState<string | null>(
 		initialDepartment || null,
 	);
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	const handleEdit = () => {
 		setIsEditing(true);
@@ -25,6 +29,9 @@ const DepartmentSection: React.FC<DepartmentSectionProps> = ({
 
 	const handleSave = () => {
 		setIsEditing(false);
+
+		// We're only updating the UI here - the actual API call happens in handleDepartmentChange
+		// This is to maintain the existing behavior where onUpdate is called
 		onUpdate(department || undefined);
 	};
 
@@ -33,8 +40,34 @@ const DepartmentSection: React.FC<DepartmentSectionProps> = ({
 		setDepartment(initialDepartment || null);
 	};
 
-	const handleDepartmentChange = (value: string) => {
-		setDepartment(value);
+	const handleDepartmentChange = async (career: CareerResponse) => {
+		try {
+			setIsSubmitting(true);
+
+			// Make API call to update the user profile with careerId
+			await api.patch("/api/v1/users/update-user-profile", {
+				careerId: career.id,
+			});
+
+			// Update local state
+			setDepartment(career.name);
+
+			showToast({
+				title: "Department updated",
+				description: `Your department has been set to ${career.name}`,
+				variant: "success",
+			});
+		} catch (error) {
+			console.error("Error updating department:", error);
+			showToast({
+				title: "Failed to update department",
+				description:
+					"There was an error updating your department. Please try again.",
+				variant: "error",
+			});
+		} finally {
+			setIsSubmitting(false);
+		}
 	};
 
 	return (
@@ -45,6 +78,7 @@ const DepartmentSection: React.FC<DepartmentSectionProps> = ({
 			onEdit={handleEdit}
 			onSave={handleSave}
 			onCancel={handleCancel}
+			isSubmitting={isSubmitting}
 		>
 			<div className="md:px-4">
 				{isEditing ? (

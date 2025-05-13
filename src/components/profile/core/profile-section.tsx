@@ -1,7 +1,7 @@
 import type React from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { Edit1 } from "@/components/icons/edit-1";
 
 interface ProfileSectionProps {
@@ -9,27 +9,35 @@ interface ProfileSectionProps {
 	children: React.ReactNode;
 	canEdit?: boolean;
 	isEditing: boolean;
+	isSubmitting?: boolean;
 	onEdit: () => void;
-	onSave: () => void;
+	onSave?: () => void;
 	onCancel?: () => void;
 	className?: string;
 	contentClassName?: string;
+	saveButtonText?: string;
+	customActions?: React.ReactNode;
 }
 
-/**
- * Consistent section wrapper for profile sections with edit functionality
- */
 const ProfileSection: React.FC<ProfileSectionProps> = ({
 	title,
 	children,
 	canEdit = false,
 	isEditing,
+	isSubmitting = false,
 	onEdit,
 	onSave,
 	onCancel,
 	className,
 	contentClassName,
+	saveButtonText = "Save Changes",
+	customActions,
 }) => {
+	const showSaveButtons = isEditing && onCancel && onSave && !customActions;
+	const showCancelButton = isEditing && onCancel && !onSave && !customActions;
+
+	const isLanguageSection = title === "Language Proficiency";
+
 	return (
 		<div className={cn("mb-8 md:px-10", className)}>
 			<div className="flex items-center justify-between mb-6">
@@ -38,12 +46,27 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 				{canEdit && (
 					<button
 						type="button"
-						className="text-primary-500 hover:text-primary-600"
-						aria-label={isEditing ? "Save changes" : `Edit ${title}`}
-						onClick={isEditing ? onSave : onEdit}
+						className={cn(
+							"text-primary-500 hover:text-primary-600",
+							(isSubmitting || (isEditing && !onCancel)) &&
+								"opacity-50 cursor-not-allowed",
+						)}
+						aria-label={
+							isEditing
+								? isLanguageSection
+									? "Done"
+									: "Exit edit mode"
+								: `Edit ${title}`
+						}
+						onClick={onEdit}
+						disabled={isSubmitting}
 					>
 						{isEditing ? (
-							<Check className="h-5 w-5" />
+							isSubmitting ? (
+								<Loader2 className="h-5 w-5 animate-spin" />
+							) : onSave ? (
+								<Check className="h-5 w-5" />
+							) : null
 						) : (
 							<Edit1 className="h-5 w-5" />
 						)}
@@ -53,16 +76,41 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 
 			<div className={cn("px-6", contentClassName)}>{children}</div>
 
-			{isEditing && (
+			{customActions && (
+				<div className="flex justify-end mt-6 px-6">{customActions}</div>
+			)}
+
+			{showSaveButtons && (
 				<div className="flex justify-end mt-6 px-6">
-					<Button variant="outline" className="mr-4" onClick={onCancel}>
-						Cancel
+					<Button
+						variant="outline"
+						className="mr-4"
+						onClick={onCancel}
+						disabled={isSubmitting}
+					>
+						{isLanguageSection ? "Done" : "Exit"}
 					</Button>
 					<Button
 						onClick={onSave}
 						className="bg-primary-base hover:bg-custom-skyBlue"
+						disabled={isSubmitting}
 					>
-						Save Changes
+						{isSubmitting ? (
+							<>
+								<Loader2 className="h-4 w-4 mr-2 animate-spin" />
+								Saving...
+							</>
+						) : (
+							saveButtonText
+						)}
+					</Button>
+				</div>
+			)}
+
+			{showCancelButton && (
+				<div className="flex justify-end mt-6 px-6">
+					<Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
+						{isLanguageSection ? "Done" : "Exit"}
 					</Button>
 				</div>
 			)}

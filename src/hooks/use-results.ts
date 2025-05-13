@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // import { api } from "@/services/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "react-hot-toast";
 
-// Types
 export interface TestResult {
 	id: string;
 	applicantId: string;
@@ -27,7 +26,6 @@ export interface PaginatedResults {
 	};
 }
 
-// Mock data for demonstration
 const MOCK_RESULTS = [
 	{
 		id: "1",
@@ -122,7 +120,6 @@ const MOCK_RESULTS = [
 	},
 ];
 
-// Mock exam questions and answers
 export const MOCK_EXAM_DATA = {
 	questions: [
 		{
@@ -164,23 +161,14 @@ export interface ResultsFilterParams {
 }
 
 export function useResults(filterParams: ResultsFilterParams = {}) {
-	const { toast } = useToast();
 	const queryClient = useQueryClient();
 
-	// Default to page 1 and 10 results per page
 	const page = filterParams.page || 1;
 	const limit = filterParams.limit || 10;
 
-	// In a real application, we would fetch this data from the API
 	const fetchResults = async () => {
 		try {
-			// Simulate API call
-			// const response = await api.get(`/results?page=${page}&limit=${limit}`);
-			// return response.data;
-
-			// For now, return mock data with filtering
 			const filteredResults = MOCK_RESULTS.filter((result) => {
-				// Filter by search
 				const matchesSearch =
 					!filterParams.search ||
 					result.applicantName
@@ -190,13 +178,11 @@ export function useResults(filterParams: ResultsFilterParams = {}) {
 						.toLowerCase()
 						.includes(filterParams.search.toLowerCase());
 
-				// Filter by status
 				const matchesStatus =
 					!filterParams.status ||
 					filterParams.status === "all" ||
 					result.status === filterParams.status;
 
-				// Filter by date range
 				let matchesDateRange = true;
 				if (filterParams.fromDate || filterParams.toDate) {
 					const resultDate = new Date(result.submittedAt);
@@ -212,7 +198,6 @@ export function useResults(filterParams: ResultsFilterParams = {}) {
 				return matchesSearch && matchesStatus && matchesDateRange;
 			});
 
-			// Create paginated response
 			const startIndex = (page - 1) * limit;
 			const endIndex = startIndex + limit;
 			const paginatedResults = filteredResults.slice(startIndex, endIndex);
@@ -232,7 +217,6 @@ export function useResults(filterParams: ResultsFilterParams = {}) {
 		}
 	};
 
-	// Get summary statistics
 	const getResultsStats = () => {
 		const total = MOCK_RESULTS.length;
 		const passed = MOCK_RESULTS.filter((r) => r.status === "success").length;
@@ -247,33 +231,19 @@ export function useResults(filterParams: ResultsFilterParams = {}) {
 		};
 	};
 
-	// Fetch a single result by ID
 	const fetchResultById = async (id: string) => {
-		// In a real app, this would be an API call
-		// const response = await api.get(`/results/${id}`);
-		// return response.data;
-
-		// For now, find the result in the mock data
 		const result = MOCK_RESULTS.find((r) => r.id === id);
 		if (!result) throw new Error(`Result with ID ${id} not found`);
 		return result;
 	};
 
-	// Trigger AI grading for a result
 	const triggerAIGrading = useMutation({
 		mutationFn: async (resultId: string) => {
-			// In a real app, this would be an API call to trigger the AI grading
-			// const response = await api.post(`/results/${resultId}/grade`);
-			// return response.data;
-
-			// For mock data, simulate a successful AI grading after a delay
 			await new Promise((resolve) => setTimeout(resolve, 1000));
 
-			// Update the result in the mock data
 			const result = MOCK_RESULTS.find((r) => r.id === resultId);
 			if (!result) throw new Error(`Result with ID ${resultId} not found`);
 
-			// Update the result with AI grading
 			result.status = Math.random() > 0.3 ? "success" : "fail";
 			result.score =
 				result.status === "success"
@@ -290,22 +260,13 @@ export function useResults(filterParams: ResultsFilterParams = {}) {
 		},
 		onSuccess: (data) => {
 			queryClient.invalidateQueries({ queryKey: ["results"] });
-			toast({
-				title: "AI Grading Complete",
-				description: `Result has been graded by AI Assistant with a score of ${data.score}`,
-			});
+			toast.success(`Result has been graded by AI Assistant with a score of ${data.score}`);
 		},
 		onError: (_error) => {
-			toast({
-				title: "Grading Failed",
-				description:
-					"Failed to complete the AI grading process. Please try again.",
-				variant: "destructive",
-			});
+			toast.error("Failed to complete the AI grading process. Please try again.");
 		},
 	});
 
-	// Export the query and mutation hooks
 	return {
 		results: useQuery({
 			queryKey: ["results", page, limit, filterParams],

@@ -13,9 +13,6 @@ interface ContentCardProps {
 	headerActions?: React.ReactNode;
 }
 
-/**
- * Reusable content card component for consistently styled sections
- */
 const ContentCard: React.FC<ContentCardProps> = ({
 	title,
 	description,

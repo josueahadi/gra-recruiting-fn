@@ -1,6 +1,6 @@
 "use client";
 
-import AppLayout from "@/components/layout/app-layout";
+import AppLayoutWrapper from "@/components/layout/app-layout-wrapper";
 import { usePathname } from "next/navigation";
 import React from "react";
 import AdminDashboard from "@/components/admin/admin-dashboard";
@@ -11,7 +11,6 @@ import ResultsManagement from "@/components/admin/results-management";
 const AdminPage = () => {
 	const pathname = usePathname();
 
-	// Determine which section to display based on the current path
 	const renderContent = () => {
 		if (pathname.includes("/admin/applicants")) {
 			return (
@@ -37,7 +36,6 @@ const AdminPage = () => {
 			);
 		}
 
-		// Default to dashboard
 		return (
 			<>
 				<AdminDashboard />
@@ -46,9 +44,9 @@ const AdminPage = () => {
 	};
 
 	return (
-		<AppLayout userType="admin">
+		<AppLayoutWrapper>
 			<div className="space-y-6">{renderContent()}</div>
-		</AppLayout>
+		</AppLayoutWrapper>
 	);
 };
 

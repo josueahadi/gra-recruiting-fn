@@ -19,10 +19,6 @@ interface AssessmentIntroProps {
 	onStartExam?: () => void;
 }
 
-/**
- * Assessment introduction component that displays exam information
- * and allows users to start the exam
- */
 const AssessmentIntro: React.FC<AssessmentIntroProps> = ({
 	title = "GROW RWANDA RECRUITMENT ASSESSMENT",
 	description = "The Grow Rwanda Recruitment Assessment is designed to evaluate candidates based on their knowledge and reasoning skills. The exam consists of two sections:",

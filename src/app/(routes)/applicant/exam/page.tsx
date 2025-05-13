@@ -2,30 +2,19 @@
 
 import AssessmentIntro from "@/components/applicant/exam/assessment-intro";
 import ProfileBlockMessage from "@/components/applicant/exam/profile-block-message";
-import AppLayout from "@/components/layout/app-layout";
+import AppLayoutWrapper from "@/components/layout/app-layout-wrapper";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 
-/**
- * The main exam page component - shows either exam intro or profile block message
- * This is what's displayed when user clicks on "Exam" in the sidebar
- */
 export default function ExamPage() {
 	const router = useRouter();
 	const [isProfileComplete, setIsProfileComplete] = useState(false);
 	const [isLoading, setIsLoading] = useState(true);
 
-	// Check if the profile is complete when component mounts
 	useEffect(() => {
 		const checkProfileStatus = async () => {
 			setIsLoading(true);
 			try {
-				// In a real app, this would be an API call
-				// const response = await fetch('/api/profile/status');
-				// const data = await response.json();
-				// setIsProfileComplete(data.isComplete);
-
-				// For demo purposes, check localStorage or URL params
 				const urlParams = new URLSearchParams(window.location.search);
 				const completionParam = urlParams.get("completion");
 				const savedCompletion = localStorage.getItem("profileCompletion");
@@ -39,7 +28,6 @@ export default function ExamPage() {
 					profileCompletion = Number.parseInt(savedCompletion, 10);
 				}
 
-				// Profile is complete when 100%
 				setIsProfileComplete(profileCompletion === 100);
 			} catch (error) {
 				console.error("Error checking profile status:", error);
@@ -51,30 +39,26 @@ export default function ExamPage() {
 		checkProfileStatus();
 	}, []);
 
-	// Handle starting the exam
 	const handleStartExam = () => {
-		// Navigate to the assessment page instead of a specific question URL
 		router.push("/applicant/assessment");
 	};
 
-	// Show loading state
 	if (isLoading) {
 		return (
-			<AppLayout userType="applicant">
+			<AppLayoutWrapper>
 				<div className="bg-white rounded-lg p-6 shadow-sm">
 					<div className="flex items-center justify-center h-64">
 						<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base" />
 					</div>
 				</div>
-			</AppLayout>
+			</AppLayoutWrapper>
 		);
 	}
 
 	return (
-		<AppLayout userType="applicant">
+		<AppLayoutWrapper>
 			<div className="bg-white rounded-lg shadow-sm py-10 md:py-20">
 				{isProfileComplete ? (
-					// Show exam introduction if profile is complete
 					<AssessmentIntro
 						title="GROW RWANDA RECRUITMENT ASSESSMENT"
 						description="The Grow Rwanda Recruitment Assessment is designed to evaluate candidates based on their knowledge and reasoning skills. The exam consists of two sections:"
@@ -100,7 +84,6 @@ export default function ExamPage() {
 						onStartExam={handleStartExam}
 					/>
 				) : (
-					// Show message to complete profile
 					<ProfileBlockMessage
 						title="First complete your profile to unlock the assessment"
 						buttonText="Complete Your Profile"
@@ -108,6 +91,6 @@ export default function ExamPage() {
 					/>
 				)}
 			</div>
-		</AppLayout>
+		</AppLayoutWrapper>
 	);
 }

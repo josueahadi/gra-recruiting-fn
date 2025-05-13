@@ -5,9 +5,8 @@ import ProfileSection from "@/components/profile/core/profile-section";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Edit1 } from "@/components/icons/edit-1";
-import type { ProfileInfo } from "@/hooks/use-profile";
+import type { ProfileInfo } from "@/types/profile";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 
 interface PersonalInfoSectionProps {
 	personalInfo: ProfileInfo;
@@ -44,12 +43,16 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 
 	const handleSave = () => {
 		setIsEditing(false);
-		onInfoUpdate(personalInfo);
+		const updatedInfo = {
+			...personalInfo,
+			email: initialInfo.email,
+		};
+		onInfoUpdate(updatedInfo);
 	};
 
 	const handleCancel = () => {
 		setIsEditing(false);
-		setPersonalInfo(initialInfo); // Reset to initial data
+		setPersonalInfo(initialInfo);
 	};
 
 	const handleAvatarClick = () => {
@@ -65,13 +68,10 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 			const file = e.target.files[0];
 
 			onAvatarChange(file);
-
-			// In a real implementation, this would be done after upload completes
 			setTimeout(() => setIsUploading(false), 1000);
 		}
 	};
 
-	// User profile header with avatar
 	const profileHeader = (
 		<div className="md:px-10">
 			<div className="flex flex-row items-center gap-6 mb-8 ">
@@ -175,9 +175,10 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 							<Input
 								name="email"
 								value={personalInfo.email}
-								onChange={handleInfoChange}
-								className="mt-1 border-gray-400/95"
+								className="mt-1 border-gray-400/95 bg-gray-100"
 								type="email"
+								disabled={true}
+								title="Email address cannot be changed"
 							/>
 						) : (
 							<p className="font-normal">{personalInfo.email}</p>
@@ -198,24 +199,6 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 							/>
 						) : (
 							<p className="font-normal">{personalInfo.phone}</p>
-						)}
-					</div>
-
-					<div className="md:col-span-2">
-						<h3 className="text-sm md:text-base text-custom-darkGray font-semibold mb-1">
-							Bio
-						</h3>
-						{isEditing ? (
-							<Textarea
-								name="bio"
-								value={personalInfo.bio}
-								onChange={handleInfoChange}
-								className="mt-1 border-gray-400/95"
-								rows={3}
-								style={{ resize: "none" }}
-							/>
-						) : (
-							<p className="font-normal">{personalInfo.bio}</p>
 						)}
 					</div>
 				</div>

@@ -3,6 +3,7 @@
 import React from "react";
 import { useRouter } from "next/navigation";
 import { ProfileContainer } from "@/components/profile";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ApplicantProfileClientProps {
 	id: string;
@@ -10,6 +11,7 @@ interface ApplicantProfileClientProps {
 
 export function ApplicantProfileClient({ id }: ApplicantProfileClientProps) {
 	const router = useRouter();
+	const { userType } = useAuth();
 
 	const handleGoBack = () => {
 		router.push("/admin/applicants");
@@ -18,7 +20,7 @@ export function ApplicantProfileClient({ id }: ApplicantProfileClientProps) {
 	return (
 		<ProfileContainer
 			userId={id}
-			userType="admin"
+			userType={userType}
 			onNavigateBack={handleGoBack}
 			wrapperClassName=""
 		/>

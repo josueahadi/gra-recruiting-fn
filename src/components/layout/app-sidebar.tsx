@@ -1,4 +1,3 @@
-// components/layout/app-sidebar.tsx
 "use client";
 
 import { Brand } from "@/components/ui/brand";
@@ -26,9 +25,6 @@ export interface AppSidebarProps {
 	mobileClassName?: string;
 }
 
-/**
- * Reusable sidebar component that adapts based on user type
- */
 export const AppSidebar: React.FC<AppSidebarProps> = ({
 	userType,
 	isMobileMenuOpen = false,
@@ -38,11 +34,15 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 	mobileClassName,
 }) => {
 	const pathname = usePathname();
-
-	// Use custom links or generate default ones based on user type
+	
+	console.log(`[AppSidebar] Rendering sidebar for userType: ${userType}, pathname: ${pathname}`);
+	
 	const links = customLinks || getSidebarLinks(userType);
+	
+	if (userType === 'admin' && links.some(link => link.href.startsWith('/applicant'))) {
+		console.error('[AppSidebar] ERROR: Admin user received applicant links!', { links });
+	}
 
-	// Desktop sidebar
 	const renderSidebar = (mobile = false) => (
 		<aside
 			className={cn(

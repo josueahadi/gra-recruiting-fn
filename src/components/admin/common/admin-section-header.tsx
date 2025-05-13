@@ -17,9 +17,6 @@ interface AdminSectionHeaderProps {
 	descriptionClassName?: string;
 }
 
-/**
- * Reusable section header component for admin pages
- */
 const AdminSectionHeader: React.FC<AdminSectionHeaderProps> = ({
 	title,
 	description,

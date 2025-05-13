@@ -2,49 +2,99 @@ import type React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus } from "lucide-react";
-import type { Education } from "@/hooks/use-profile";
+import type { Education, EducationLevel } from "@/types/education-experience";
 import { Label } from "@/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import DateRangePicker from "@/components/common/date-range-picker";
+import { convertUIDateToApiDate } from "@/lib/utils/date-utils";
 
 interface EducationFormProps {
 	onAddEducation: (education: Omit<Education, "id">) => void;
+	isSubmitting?: boolean;
 }
 
-const EducationForm: React.FC<EducationFormProps> = ({ onAddEducation }) => {
-	const [institution, setInstitution] = useState("");
-	const [startDate, setStartDate] = useState("");
-	const [endDate, setEndDate] = useState("");
-	const [level, setLevel] = useState("");
-	const [program, setProgram] = useState("");
+const EDUCATION_LEVELS: EducationLevel[] = [
+	"HIGH_SCHOOL",
+	"ASSOCIATE",
+	"BACHELOR",
+	"MASTER",
+	"DOCTORATE",
+];
+
+// Format the education level for display
+const formatEducationLevel = (level: string) => {
+	const educationLevelMap: Record<string, string> = {
+		HIGH_SCHOOL: "High School",
+		ASSOCIATE: "Associate Degree",
+		BACHELOR: "Bachelor's Degree",
+		MASTER: "Master's Degree",
+		DOCTORATE: "Doctorate",
+	};
+
+	return (
+		educationLevelMap[level] ||
+		level
+			.split("_")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(" ")
+	);
+};
+
+const EducationForm: React.FC<
+	EducationFormProps & {
+		initialData?: Education;
+		isEdit?: boolean;
+		onCancel?: () => void;
+	}
+> = ({
+	onAddEducation,
+	isSubmitting = false,
+	initialData,
+	isEdit = false,
+	onCancel,
+}) => {
+	const [institution, setInstitution] = useState(
+		initialData?.institutionName || "",
+	);
+	const [level, setLevel] = useState<EducationLevel | "">(
+		initialData?.educationLevel
+			? (initialData.educationLevel as EducationLevel)
+			: "",
+	);
+	const [program, setProgram] = useState(initialData?.program || "");
+	const [dateJoined, setDateJoined] = useState<Date | undefined>(
+		initialData?.dateJoined ? new Date(initialData.dateJoined) : undefined,
+	);
+	const [dateGraduated, setDateGraduated] = useState<Date | undefined>(
+		initialData?.dateGraduated
+			? new Date(initialData.dateGraduated)
+			: undefined,
+	);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (institution && level) {
-			// Format dates to "Month Year" format (e.g., "Jun 2021")
-			const formatDate = (dateStr: string) => {
-				if (!dateStr) return "";
-				const date = new Date(dateStr);
-				return date.toLocaleDateString("en-US", {
-					month: "short",
-					year: "numeric",
-				});
-			};
-
+		if (institution && level && program && dateJoined && dateGraduated) {
 			onAddEducation({
-				institution,
-				degree: level,
+				institutionName: institution,
+				educationLevel: level as EducationLevel,
 				program,
-				startYear: formatDate(startDate),
-				endYear: formatDate(endDate) || "Present",
+				dateJoined: convertUIDateToApiDate(dateJoined.toISOString()),
+				dateGraduated: convertUIDateToApiDate(dateGraduated.toISOString()),
 			});
 
 			// Reset form
 			setInstitution("");
-			setStartDate("");
-			setEndDate("");
 			setLevel("");
 			setProgram("");
+			setDateJoined(undefined);
+			setDateGraduated(undefined);
 		}
 	};
 
@@ -62,46 +112,26 @@ const EducationForm: React.FC<EducationFormProps> = ({ onAddEducation }) => {
 				/>
 			</div>
 
-			<div className="grid grid-cols-2 gap-4">
-				<div>
-					<Label className="block text-sm font-medium mb-1">Date Joined</Label>
-					<Input
-						type="date"
-						placeholder="dd-mm-yyyy"
-						value={startDate}
-						onChange={(e) => setStartDate(e.target.value)}
-						required
-					/>
-				</div>
-				<div>
-					<Label className="block text-sm font-medium mb-1">
-						Date Graduated
-					</Label>
-					<Input
-						type="date"
-						placeholder="dd-mm-yyyy"
-						value={endDate}
-						onChange={(e) => setEndDate(e.target.value)}
-						required
-					/>
-				</div>
-			</div>
-
 			<div>
-				<Label className="block text-sm font-medium mb-1">Level</Label>
-				<select
-					className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+				<Label className="block text-sm font-medium mb-1">
+					Education Level
+				</Label>
+				<Select
 					value={level}
-					onChange={(e) => setLevel(e.target.value)}
+					onValueChange={(value) => setLevel(value as EducationLevel)}
 					required
 				>
-					<option value="">Select Education Level</option>
-					<option value="High School">High School</option>
-					<option value="Associate Degree">Associate Degree</option>
-					<option value="Bachelor's Degree">Bachelor&apos;s Degree</option>
-					<option value="Master's Degree">Master&apos;s Degree</option>
-					<option value="Doctorate">Doctorate</option>
-				</select>
+					<SelectTrigger>
+						<SelectValue placeholder="Select education level" />
+					</SelectTrigger>
+					<SelectContent>
+						{EDUCATION_LEVELS.map((level) => (
+							<SelectItem key={level} value={level}>
+								{formatEducationLevel(level)}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
 			</div>
 
 			<div>
@@ -110,16 +140,38 @@ const EducationForm: React.FC<EducationFormProps> = ({ onAddEducation }) => {
 					placeholder="Enter your program"
 					value={program}
 					onChange={(e) => setProgram(e.target.value)}
+					required
 				/>
 			</div>
 
-			<Button
-				type="submit"
-				className="w-full bg-primary-base hover:bg-custom-skyBlue text-white"
-			>
-				<Plus className="h-4 w-4 mr-2" />
-				Add Education History
-			</Button>
+			<DateRangePicker
+				fromDate={dateJoined}
+				toDate={dateGraduated}
+				onFromDateChange={setDateJoined}
+				onToDateChange={setDateGraduated}
+				label="Education Period"
+				fromPlaceholder="Start date (DD/MM/YYYY)"
+				toPlaceholder="End date (DD/MM/YYYY)"
+			/>
+
+			<p className="text-xs text-gray-500 -mt-2">
+				If you are currently enrolled, leave the end date field empty.
+			</p>
+
+			<div className="flex gap-2">
+				<Button
+					type="submit"
+					className="bg-primary-base hover:bg-custom-skyBlue text-white"
+					disabled={isSubmitting}
+				>
+					{isEdit ? "Save Changes" : "Add Education"}
+				</Button>
+				{isEdit && onCancel && (
+					<Button type="button" variant="outline" onClick={onCancel}>
+						Cancel
+					</Button>
+				)}
+			</div>
 		</form>
 	);
 };

@@ -51,7 +51,6 @@ const FeatureHighlight = ({
 						imageOnRight ? "md:flex-row gap-6 md:gap-0" : "md:flex-row-reverse",
 					)}
 				>
-					{/* Text Content */}
 					<div
 						className={cn(
 							"lg:w-[58%] w-full flex flex-col justify-center items-center md:items-start space-y-6 py-0 md:py-10 order-2 md:order-1",
@@ -75,7 +74,6 @@ const FeatureHighlight = ({
 						{children}
 					</div>
 
-					{/* Image */}
 					<div
 						className={cn(
 							"lg:w-[42%] w-full relative order-1 md:order-2",

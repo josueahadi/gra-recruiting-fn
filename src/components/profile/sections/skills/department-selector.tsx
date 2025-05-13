@@ -1,4 +1,5 @@
 import type React from "react";
+import { useCareers } from "@/hooks";
 import {
 	Select,
 	SelectContent,
@@ -6,47 +7,56 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { CareerResponse } from "@/types/profile";
 
 interface DepartmentSelectorProps {
 	selectedDepartment: string | null;
-	onChange: (value: string) => void;
-	departments?: string[];
+	onChange: (career: CareerResponse) => void;
 	className?: string;
 }
-
-const DEFAULT_DEPARTMENTS = [
-	"Software Development",
-	"Frontend Development",
-	"Backend Development",
-	"UI/UX Design",
-	"Data Analysis",
-	"Machine Learning",
-	"Project Management",
-	"Quality Assurance",
-];
 
 const DepartmentSelector: React.FC<DepartmentSelectorProps> = ({
 	selectedDepartment,
 	onChange,
-	departments = DEFAULT_DEPARTMENTS,
 	className,
 }) => {
+	const { data: careers, isLoading, isError } = useCareers();
+
 	return (
 		<div className={className}>
 			<h3 className="text-lg font-medium mb-4">Choose A Department</h3>
 
-			<Select value={selectedDepartment || ""} onValueChange={onChange}>
-				<SelectTrigger className="w-full">
-					<SelectValue placeholder="Choose A Department" />
-				</SelectTrigger>
-				<SelectContent>
-					{departments.map((dept) => (
-						<SelectItem key={dept} value={dept}>
-							{dept}
-						</SelectItem>
-					))}
-				</SelectContent>
-			</Select>
+			{isLoading ? (
+				<Skeleton className="w-full h-10" />
+			) : isError || !careers || careers.length === 0 ? (
+				<div className="text-red-500 p-2 text-sm">
+					Unable to load departments. Please try again later.
+				</div>
+			) : (
+				<Select
+					value={selectedDepartment || ""}
+					onValueChange={(departmentName) => {
+						const selectedCareer = careers.find(
+							(career) => career.name === departmentName,
+						);
+						if (selectedCareer) {
+							onChange(selectedCareer);
+						}
+					}}
+				>
+					<SelectTrigger className="w-full">
+						<SelectValue placeholder="Choose A Department" />
+					</SelectTrigger>
+					<SelectContent>
+						{careers.map((career: CareerResponse) => (
+							<SelectItem key={career.id} value={career.name}>
+								{career.name}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+			)}
 		</div>
 	);
 };

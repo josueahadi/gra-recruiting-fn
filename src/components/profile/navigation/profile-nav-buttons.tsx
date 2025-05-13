@@ -3,14 +3,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "@/components/icons";
 
-/**
- * Navigation buttons for moving between profile pages
- * Includes responsive design for mobile devices
- */
 const ProfileNavigationButtons: React.FC = () => {
 	const pathname = usePathname();
 
-	// Define the navigation flow
 	const routes = [
 		{ path: "/applicant", label: "User Profile", shortLabel: "Profile" },
 		{
@@ -26,7 +21,6 @@ const ProfileNavigationButtons: React.FC = () => {
 		{ path: "/applicant/documents", label: "Documents", shortLabel: "Docs" },
 	];
 
-	// Find current page index
 	const currentIndex = routes.findIndex(
 		(route) =>
 			pathname === route.path ||

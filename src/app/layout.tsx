@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Raleway } from "next/font/google";
 import "./globals.css";
-import Providers from "@/components/Providers";
 import { BackgroundGradient } from "@/components/layout/background-gradient";
-import { Toaster } from "@/components/ui/toaster";
+import Providers from "@/components/providers";
+import { AuthCheck } from "@/components/auth/auth-check";
+import { ToastProvider } from "@/services/toast";
+import { Suspense } from "react";
 
 const raleway = Raleway({
 	subsets: ["latin"],
@@ -25,8 +27,11 @@ export default function RootLayout({
 			<body className={`${raleway.variable} font-sans antialiased`}>
 				<BackgroundGradient />
 				<Providers>
-					{children}
-					<Toaster />
+					<ToastProvider>
+						<Suspense fallback={null}>
+							<AuthCheck>{children}</AuthCheck>
+						</Suspense>
+					</ToastProvider>
 				</Providers>
 			</body>
 		</html>

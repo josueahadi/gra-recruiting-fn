@@ -1,4 +1,3 @@
-// components/auth/progress-indicator.tsx
 import { cn } from "@/lib/utils";
 import type { FormStepProps, ProgressIndicatorProps } from "@/types/auth";
 import * as React from "react";

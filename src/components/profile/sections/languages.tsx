@@ -1,60 +1,57 @@
 import type React from "react";
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import ProfileSection from "@/components/profile/core/profile-section";
-import type { LanguageProficiency as LanguageProficiencyType } from "@/hooks/use-profile";
-import LanguageProficiency from "./skills/language-proficiency";
-import LanguageDisplay from "./skills/language-display";
+import type { LanguageProficiency as LanguageProficiencyType } from "@/types/profile";
+import LanguageProficiency from "@/components/profile/sections/skills/language-proficiency";
+import LanguageDisplay from "@/components/profile/sections/skills/language-display";
 
 interface LanguagesSectionProps {
 	languages: LanguageProficiencyType[];
 	canEdit: boolean;
-	onUpdate: (languages: LanguageProficiencyType[]) => void;
+	onUpdateLanguage?: (
+		languageId: number,
+		language: string,
+		proficiencyLevel: number,
+	) => Promise<boolean>;
+	onDeleteLanguage?: (languageId: number) => Promise<boolean>;
+	onAddLanguage?: (
+		language: string,
+		proficiencyLevel: number,
+	) => Promise<boolean>;
 }
 
 const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 	languages: initialLanguages,
 	canEdit,
-	onUpdate,
+	onUpdateLanguage,
+	onDeleteLanguage,
+	onAddLanguage,
 }) => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [languages, setLanguages] = useState<LanguageProficiencyType[]>(
 		initialLanguages || [],
 	);
 
-	// Edit mode handlers
-	const handleEdit = () => {
-		setIsEditing(true);
-	};
-
-	const handleSave = () => {
-		setIsEditing(false);
-		onUpdate(languages);
-	};
-
-	const handleCancel = () => {
-		setIsEditing(false);
-		// Reset to initial values
+	// Sync languages with parent component when initialLanguages prop changes
+	useEffect(() => {
 		setLanguages(initialLanguages || []);
-	};
+	}, [initialLanguages]);
 
-	// Language handlers
-	const handleAddLanguage = (language: string, level: number) => {
-		// Check if language already exists
-		if (
-			languages.some(
-				(lang) => lang.language.toLowerCase() === language.toLowerCase(),
-			)
-		) {
-			// Could show a toast notification here
-			return;
-		}
+	const handleEdit = useCallback(() => {
+		setIsEditing((prev) => !prev);
+	}, []);
 
-		setLanguages([...languages, { language, level }]);
-	};
+	const handleCancel = useCallback(() => {
+		setIsEditing(false);
+		setLanguages(initialLanguages || []);
+	}, [initialLanguages]);
 
-	const handleRemoveLanguage = (language: string) => {
-		setLanguages(languages.filter((lang) => lang.language !== language));
-	};
+	const handleLanguagesChange = useCallback(
+		(updatedLanguages: LanguageProficiencyType[]) => {
+			setLanguages(updatedLanguages);
+		},
+		[],
+	);
 
 	return (
 		<ProfileSection
@@ -62,15 +59,16 @@ const LanguagesSection: React.FC<LanguagesSectionProps> = ({
 			canEdit={canEdit}
 			isEditing={isEditing}
 			onEdit={handleEdit}
-			onSave={handleSave}
 			onCancel={handleCancel}
 		>
 			<div className="md:px-4">
 				{isEditing ? (
 					<LanguageProficiency
 						languages={languages}
-						onAddLanguage={handleAddLanguage}
-						onRemoveLanguage={handleRemoveLanguage}
+						onLanguagesChange={handleLanguagesChange}
+						onUpdateLanguage={onUpdateLanguage}
+						onDeleteLanguage={onDeleteLanguage}
+						onAddLanguage={onAddLanguage}
 					/>
 				) : (
 					<LanguageDisplay languages={languages} />

@@ -1,4 +1,3 @@
-// components/common/user-avatar.tsx
 "use client";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,8 +11,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React from "react";
+// import { useRouter } from "next/navigation";
+import React, { useCallback, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { formatUserName } from "@/lib/utils/auth-utils";
+import { toast } from "react-hot-toast";
 
 export interface UserAvatarProps {
 	userType: "applicant" | "admin";
@@ -29,9 +31,6 @@ export interface UserAvatarProps {
 	className?: string;
 }
 
-/**
- * Reusable user avatar component with dropdown menu
- */
 export const UserAvatar: React.FC<UserAvatarProps> = ({
 	userType,
 	userName = "",
@@ -39,47 +38,63 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 	menuItems,
 	onLogout,
 }) => {
-	const router = useRouter();
+	const { signOut, displayName, user, refreshProfile } = useAuth();
 
-	// Generate fallback initials for avatar
-	const getInitials = (): string => {
-		if (userType === "admin") return "AD";
+	// We prioritize data from the auth store, then fall back to props
+	const actualUserName = displayName || 
+		(user ? formatUserName(user.firstName, user.lastName) : userName);
+	
+	// Try to load user profile if not already loaded or if it's temporary
+	useEffect(() => {
+		if (!user || user.isTemporary) {
+			refreshProfile().catch(() => {
+				// Silent failure - the UI will use fallback values
+			});
+		}
+	}, [user, refreshProfile]);
 
-		// If we have a username, use their initials
-		if (userName) {
-			return userName
-				.split(" ")
-				.map((n) => n[0])
-				.join("")
-				.toUpperCase()
-				.substring(0, 2);
+	const getInitials = useCallback((): string => {
+		if (!actualUserName) {
+			return userType === "admin" ? "AD" : "JD";
 		}
 
-		return "JD"; // John Doe default
-	};
+		// Show loading indicator if user data is temporary
+		if (user?.isTemporary) {
+			return "...";
+		}
 
-	// Default logout handler
+		return actualUserName
+			.split(" ")
+			.map((n) => n[0])
+			.join("")
+			.toUpperCase()
+			.substring(0, 2);
+	}, [actualUserName, userType, user]);
+
 	const handleLogout = () => {
-		if (onLogout) {
-			onLogout();
-		} else {
-			console.log("Logging out...");
-			// Default logout implementation
-			// In a real app, this would call an API or auth service
-			router.push("/login");
+		try {
+			if (onLogout) {
+				onLogout();
+			} else {
+				console.log("[UserAvatar] Logging out using auth hook...");
+				signOut();
+			}
+			toast.success("You have been signed out.");
+		} catch (error) {
+			console.error("[UserAvatar] Error during logout:", error);
+			toast.error("There was a problem signing out. Please try again.");
 		}
 	};
 
-	// Default menu items if none are provided
 	const defaultMenuItems = [
 		{
 			icon: <User className="mr-2 h-4 w-4" />,
 			label: "Account",
-			href: userType === "admin" ? "/admin/profile" : "/applicant",
+			href: userType === "admin" ? "/admin/settings" : "/applicant/settings",
 		},
 		{
 			icon: <LogOut className="mr-2 h-4 w-4" />,
-			label: "Logout",
+			label: "Sign Out",
 			onClick: handleLogout,
 		},
 	];
@@ -91,12 +106,29 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" className="p-0 h-auto">
 					<Avatar className="h-10 w-10 border-2 border-primary-light cursor-pointer">
-						<AvatarImage src={avatarSrc} alt={userName || "User"} />
+						<AvatarImage 
+							src={avatarSrc} 
+							alt={actualUserName || "User"} 
+						/>
 						<AvatarFallback>{getInitials()}</AvatarFallback>
 					</Avatar>
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-56">
+				{actualUserName && (
+					<>
+						<div className="px-2 py-1.5 text-sm font-medium text-gray-700">
+							{actualUserName}
+							{user?.email && (
+								<div className="text-xs text-gray-500 mt-1 truncate">
+									{user.email}
+								</div>
+							)}
+						</div>
+						<DropdownMenuSeparator />
+					</>
+				)}
+
 				{itemsToRender.map((item, index) => (
 					<React.Fragment
 						key={`menu-item-${

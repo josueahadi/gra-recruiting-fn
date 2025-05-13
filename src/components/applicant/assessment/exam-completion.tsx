@@ -13,9 +13,6 @@ interface ExamCompletionProps {
 	imageUrl?: string;
 }
 
-/**
- * Component displayed when an exam is completed
- */
 const ExamCompletion: React.FC<ExamCompletionProps> = ({
 	title = "Exam Completed",
 	message = "You have successfully completed the exam. Thank you for your time and effort.",

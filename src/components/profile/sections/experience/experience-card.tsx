@@ -1,23 +1,49 @@
 import type React from "react";
-import { X } from "lucide-react";
-import type { WorkExperience } from "@/hooks/use-profile";
+import { MoreVertical, Pencil, Trash2 } from "lucide-react";
+import type { WorkExperience } from "@/types/profile";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 
 interface ExperienceCardProps {
 	experience: WorkExperience;
 	onRemove: (id: string) => void;
 	canEdit: boolean;
+	onEdit?: (experience: WorkExperience) => void;
 }
 
 const ExperienceCard: React.FC<ExperienceCardProps> = ({
 	experience,
 	onRemove,
 	canEdit,
+	onEdit,
 }) => {
-	// Format the display of duration
+	const formatEmploymentType = (type?: string) => {
+		if (!type) return "";
+
+		const employmentTypeMap: Record<string, string> = {
+			FULL_TIME: "Full-time",
+			PART_TIME: "Part-time",
+			CONTRACT: "Contract",
+			INTERNSHIP: "Internship",
+			FREELANCE: "Freelance",
+		};
+
+		return (
+			employmentTypeMap[type] ||
+			type
+				.split("_")
+				.map(
+					(word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+				)
+				.join(" ")
+		);
+	};
+
 	const formatDuration = (duration: string) => {
-		// Check if duration already has the LinkedIn format with parentheses
 		if (duration.includes("(") && duration.includes(")")) {
-			// Extract date range and duration
 			const [dateRange, calculatedDuration] = duration.split("(");
 			return (
 				<>
@@ -30,7 +56,6 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 			);
 		}
 
-		// If it's just a date range without calculated duration
 		return <span>{duration}</span>;
 	};
 
@@ -40,7 +65,8 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 				<div>
 					<h3 className="font-semibold text-lg">{experience.role}</h3>
 					<p className="text-gray-600">
-						{experience.company} · {experience.responsibilities}
+						{experience.company} ·{" "}
+						{formatEmploymentType(experience.responsibilities)}
 					</p>
 					<p className="text-sm text-gray-500">
 						{formatDuration(experience.duration)}
@@ -48,14 +74,33 @@ const ExperienceCard: React.FC<ExperienceCardProps> = ({
 				</div>
 
 				{canEdit && (
-					<button
-						type="button"
-						onClick={() => onRemove(experience.id)}
-						className="text-gray-500 hover:text-red-600 p-1 rounded-full hover:bg-gray-100"
-						aria-label="Remove experience"
-					>
-						<X size={18} />
-					</button>
+					<Popover>
+						<PopoverTrigger asChild>
+							<button
+								type="button"
+								className="p-2 rounded-full hover:bg-blue-100 text-primary-base"
+								aria-label="More actions"
+							>
+								<MoreVertical className="h-5 w-5" />
+							</button>
+						</PopoverTrigger>
+						<PopoverContent align="end" className="w-32 p-1">
+							<button
+								type="button"
+								className="flex items-center w-full px-2 py-2 text-sm hover:bg-blue-100 rounded transition-colors"
+								onClick={() => onEdit?.(experience)}
+							>
+								<Pencil className="h-4 w-4 mr-2 text-gray-600" /> Edit
+							</button>
+							<button
+								type="button"
+								className="flex items-center w-full px-2 py-2 text-sm text-red-600 hover:bg-red-50 rounded transition-colors"
+								onClick={() => onRemove(experience.id)}
+							>
+								<Trash2 className="h-4 w-4 mr-2" /> Delete
+							</button>
+						</PopoverContent>
+					</Popover>
 				)}
 			</div>
 		</div>
