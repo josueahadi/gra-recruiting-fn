@@ -8,7 +8,7 @@ export default function ResetPasswordLayout({
 	children: ReactNode;
 }) {
 	return (
-		<div className="min-h-screen flex flex-col bg-white">
+		<div className="min-h-screen flex flex-col">
 			<div className="p-4">
 				<Brand />
 			</div>

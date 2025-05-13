@@ -9,7 +9,7 @@ export default function AuthPage() {
 	const mode = (searchParams.get("mode") as "login" | "signup") || "login";
 
 	return (
-		<div className="min-h-screen flex flex-col bg-white">
+		<div className="min-h-screen flex flex-col">
 			<div className="p-4">
 				<Brand />
 			</div>
