@@ -3,6 +3,10 @@ import { showToast } from "@/services/toast";
 import type { PortfolioLinks, ApplicantData } from "@/types/profile";
 import { documentsService } from "@/services/documents";
 import type { QueryClient } from "@tanstack/react-query";
+import {
+	uploadFileToFirebase,
+	uploadFileToFirebaseWithProgress,
+} from "@/lib/upload-file";
 
 export function useDocuments(
 	profileData: ApplicantData | null,
@@ -10,68 +14,93 @@ export function useDocuments(
 	queryClient: QueryClient,
 ) {
 	const [documentsLoading, setDocumentsLoading] = useState(false);
+	const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+	const [uploadError, setUploadError] = useState<string | null>(null);
 
 	const uploadFile = useCallback(
 		async (type: "avatar" | "resume" | "sample", file: File) => {
 			if (!profileData) return;
 			setDocumentsLoading(true);
+			setUploadProgress(null);
+			setUploadError(null);
+
+			// File validation for resume
+			if (type === "resume") {
+				const allowedTypes = ["application/pdf"];
+				if (!allowedTypes.includes(file.type)) {
+					setUploadError("Only PDF files are allowed.");
+					setDocumentsLoading(false);
+					return;
+				}
+				if (file.size > 5 * 1024 * 1024) {
+					setUploadError("File size must be less than 5 MB.");
+					setDocumentsLoading(false);
+					return;
+				}
+			}
 
 			try {
-				// Update UI immediately
-				setProfileData((currentData: ApplicantData | null) => {
-					if (!currentData) return null;
+				if (type === "resume") {
+					const userId = profileData.id || "unknown";
+					const path = `resumes/${userId}-${Date.now()}-${file.name}`;
+					const firebaseUrl = await uploadFileToFirebaseWithProgress(
+						file,
+						path,
+						(progress) => setUploadProgress(progress),
+					);
 
-					if (type === "avatar") {
-						return {
-							...currentData,
-							avatarSrc: URL.createObjectURL(file),
-						};
-					}
-
-					if (type === "resume") {
+					// Update UI optimistically
+					setProfileData((currentData) => {
+						if (!currentData) return null;
 						return {
 							...currentData,
 							documents: {
 								...currentData.documents,
 								resume: {
 									name: file.name,
-									url: URL.createObjectURL(file),
+									url: firebaseUrl,
 								},
 							},
 						};
-					}
+					});
 
-					if (type === "sample") {
-						return {
-							...currentData,
-							documents: {
-								...currentData.documents,
-								samples: [
-									...currentData.documents.samples,
-									{ name: file.name, url: URL.createObjectURL(file) },
-								],
-							},
-						};
-					}
+					// Send URL to backend (add or update)
+					await documentsService.add({ resumeUrl: firebaseUrl });
 
-					return currentData;
-				});
+					queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
-				const apiType = type === "avatar" ? "profile-picture" : type;
+					showToast({
+						title: `${file.name} uploaded successfully`,
+						variant: "success",
+					});
 
-				// Use the documents service
-				const responseData = await documentsService.uploadFile(file, apiType);
+					setUploadProgress(null);
+					return { fileUrl: firebaseUrl };
+				}
 
-				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
+				if (type === "avatar") {
+					return {
+						...profileData,
+						avatarSrc: URL.createObjectURL(file),
+					};
+				}
 
-				showToast({
-					title: `${file.name} uploaded successfully`,
-					variant: "success",
-				});
+				if (type === "sample") {
+					return {
+						...profileData,
+						documents: {
+							...profileData.documents,
+							samples: [
+								...profileData.documents.samples,
+								{ name: file.name, url: URL.createObjectURL(file) },
+							],
+						},
+					};
+				}
 
-				return responseData;
+				return profileData;
 			} catch (err) {
-				console.error("Error uploading file:", err);
+				setUploadError("Failed to upload file. Please try again.");
 				showToast({
 					title: "Failed to upload file",
 					variant: "error",
@@ -79,6 +108,7 @@ export function useDocuments(
 				return null;
 			} finally {
 				setDocumentsLoading(false);
+				setUploadProgress(null);
 			}
 		},
 		[profileData, setProfileData, queryClient],
@@ -204,5 +234,8 @@ export function useDocuments(
 		removeDocument,
 		updatePortfolioLinks,
 		documentsLoading,
+		uploadProgress,
+		uploadError,
+		setUploadError,
 	};
 }

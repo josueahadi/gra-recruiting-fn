@@ -1,13 +1,13 @@
 import { initializeApp } from "firebase/app";
 import { getStorage } from "firebase/storage";
 const firebaseConfig = {
-	apiKey: "AIzaSyCvttAwcUJHtjVpjW1_KC-_Tb7B8_Ownms",
-	authDomain: "gra-recruiting-fn.firebaseapp.com",
-	projectId: "gra-recruiting-fn",
-	storageBucket: "gra-recruiting-fn.firebasestorage.app",
-	messagingSenderId: "956805407689",
-	appId: "1:956805407689:web:d01813c2e9f9db7ab87e18",
-	measurementId: "G-5GPFFRFJML",
+	apiKey: "AIzaSyDa48wDXrlxleTTXH4Tnw-L6gsGTTeKJTw",
+	authDomain: "gra-recruiting-a9819.firebaseapp.com",
+	projectId: "gra-recruiting-a9819",
+	storageBucket: "gra-recruiting-a9819.firebasestorage.app",
+	messagingSenderId: "635063901971",
+	appId: "1:635063901971:web:a38d04a70116b69cb604e6",
+	measurementId: "G-9GHTFE1F38",
 };
 
 const app = initializeApp(firebaseConfig);
