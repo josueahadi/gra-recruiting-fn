@@ -488,6 +488,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 					)}
 				</form>
 
+				{/* 
 				{(mode === "login" || (mode === "signup" && currentStep === 1)) && (
 					<>
 						<div className="flex items-center">
@@ -499,34 +500,35 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 						</div>
 
 						<GoogleAuthButton onClick={handleGoogleAuth} />
-
-						<p className="text-center text-sm text-gray-600">
-							{mode === "login"
-								? AUTH_CONSTANTS.LOGIN.noAccount
-								: AUTH_CONSTANTS.SIGNUP.hasAccount}{" "}
-							<button
-								onClick={toggleMode}
-								type="button"
-								className="text-primary-base hover:text-primary-dark font-semibold"
-							>
-								{mode === "login"
-									? AUTH_CONSTANTS.LOGIN.signUpLink
-									: AUTH_CONSTANTS.SIGNUP.signInLink}
-							</button>
-						</p>
-
-						{mode === "login" && (
-							<p className="text-center text-sm">
-								<Link
-									href="/auth/reset-password"
-									className="text-primary-base hover:text-primary-dark font-medium"
-								>
-									Forgot your password?
-								</Link>
-							</p>
-						)}
 					</>
 				)}
+				*/}
+
+				<p className="text-center text-sm text-gray-600">
+					{mode === "login"
+						? AUTH_CONSTANTS.LOGIN.noAccount
+						: AUTH_CONSTANTS.SIGNUP.hasAccount}{" "}
+					<button
+						onClick={toggleMode}
+						type="button"
+						className="text-primary-base hover:text-primary-dark font-semibold"
+					>
+						{mode === "login"
+							? AUTH_CONSTANTS.LOGIN.signUpLink
+							: AUTH_CONSTANTS.SIGNUP.signInLink}
+					</button>
+				</p>
+
+				{/* {mode === "login" && (
+					<p className="text-center text-sm">
+						<Link
+							href="/auth/reset-password"
+							className="text-primary-base hover:text-primary-dark font-medium"
+						>
+							Forgot your password?
+						</Link>
+					</p>
+				)} */}
 			</div>
 		</div>
 	);
