@@ -7,10 +7,10 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { EducationBackgroundFields } from "./background-fields";
 import { ContactInfoFields } from "./contact-info-fields";
-import GoogleAuthButton from "./google-auth-button";
+// import GoogleAuthButton from "./google-auth-button";
 import { LoginFields } from "./login-fields";
 import ProgressIndicator from "./progress-indicator";
-import Link from "next/link";
+// import Link from "next/link";
 import { showToast } from "@/services/toast";
 
 const REGISTRATION_STEPS = [
@@ -54,7 +54,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		setShowPassword,
 		signIn,
 		signUp,
-		handleGoogleAuth,
+		// handleGoogleAuth,
 		error: authError,
 		clearErrors,
 	} = useAuth({
@@ -488,6 +488,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 					)}
 				</form>
 
+				{/* 
 				{(mode === "login" || (mode === "signup" && currentStep === 1)) && (
 					<>
 						<div className="flex items-center">
@@ -499,34 +500,35 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 						</div>
 
 						<GoogleAuthButton onClick={handleGoogleAuth} />
-
-						<p className="text-center text-sm text-gray-600">
-							{mode === "login"
-								? AUTH_CONSTANTS.LOGIN.noAccount
-								: AUTH_CONSTANTS.SIGNUP.hasAccount}{" "}
-							<button
-								onClick={toggleMode}
-								type="button"
-								className="text-primary-base hover:text-primary-dark font-semibold"
-							>
-								{mode === "login"
-									? AUTH_CONSTANTS.LOGIN.signUpLink
-									: AUTH_CONSTANTS.SIGNUP.signInLink}
-							</button>
-						</p>
-
-						{mode === "login" && (
-							<p className="text-center text-sm">
-								<Link
-									href="/auth/reset-password"
-									className="text-primary-base hover:text-primary-dark font-medium"
-								>
-									Forgot your password?
-								</Link>
-							</p>
-						)}
 					</>
 				)}
+				*/}
+
+				<p className="text-center text-sm text-gray-600">
+					{mode === "login"
+						? AUTH_CONSTANTS.LOGIN.noAccount
+						: AUTH_CONSTANTS.SIGNUP.hasAccount}{" "}
+					<button
+						onClick={toggleMode}
+						type="button"
+						className="text-primary-base hover:text-primary-dark font-semibold"
+					>
+						{mode === "login"
+							? AUTH_CONSTANTS.LOGIN.signUpLink
+							: AUTH_CONSTANTS.SIGNUP.signInLink}
+					</button>
+				</p>
+
+				{/* {mode === "login" && (
+					<p className="text-center text-sm">
+						<Link
+							href="/auth/reset-password"
+							className="text-primary-base hover:text-primary-dark font-medium"
+						>
+							Forgot your password?
+						</Link>
+					</p>
+				)} */}
 			</div>
 		</div>
 	);
