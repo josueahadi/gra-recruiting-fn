@@ -143,8 +143,8 @@ export default function ProfileContent() {
 					</ul>
 					<div className="flex justify-center">
 						<Button asChild>
-							<Link href="/applicant/education" className="flex items-center">
-								Start by adding your education{" "}
+							<Link href="/applicant" className="flex items-center">
+								Start by adding your address information{" "}
 								<ArrowRight className="ml-2 h-4 w-4" />
 							</Link>
 						</Button>

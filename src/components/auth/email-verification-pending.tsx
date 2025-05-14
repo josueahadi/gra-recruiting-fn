@@ -1,22 +1,33 @@
 import { Button } from "@/components/ui/button";
-import { Mail, AlertCircle, Clock, Loader2 } from "lucide-react";
+import { Mail, Clock, Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 interface EmailVerificationPendingProps {
 	email: string;
 	onResendVerification?: () => void;
-	onBackToLogin?: () => void;
+	onBackToSignup?: () => void;
 	resendComingSoon?: boolean;
+	cooldownTime?: number;
+	linkExpiryTime?: number;
 	isLoading?: boolean;
 }
 
 const EmailVerificationPending = ({
 	email,
 	onResendVerification,
-	onBackToLogin,
+	onBackToSignup,
 	resendComingSoon = false,
+	cooldownTime = 60,
+	linkExpiryTime = 300,
 	isLoading = false,
 }: EmailVerificationPendingProps) => {
+	// Helper to format seconds as mm:ss
+	const formatTime = (seconds: number) => {
+		const m = Math.floor(seconds / 60);
+		const s = seconds % 60;
+		return `${m}:${s.toString().padStart(2, "0")}`;
+	};
+
 	return (
 		<div className="max-w-md mx-auto bg-white p-8 rounded-xl shadow-md border border-gray-100">
 			<div className="text-center mb-6">
@@ -32,29 +43,27 @@ const EmailVerificationPending = ({
 				</p>
 			</div>
 
-			<div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-5">
+			{/* <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-5">
 				<div className="flex">
 					<AlertCircle className="h-5 w-5 text-amber-500 mr-3 flex-shrink-0 mt-0.5" />
 					<div className="text-sm text-amber-700">
 						<p className="font-medium">Important</p>
 						<p>
-							You need to verify your email before completing your profile
-							setup.
+							You need to verify your email before signing in to your account
 						</p>
 					</div>
 				</div>
-			</div>
+			</div> */}
 
-			<div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-				<div className="flex">
-					<Clock className="h-5 w-5 text-blue-500 mr-3 flex-shrink-0 mt-0.5" />
-					<div className="text-sm text-blue-700">
+			<div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+				<div className="flex items-center">
+					<Clock className="h-5 w-5 text-amber-500 mr-3 flex-shrink-0 mt-0.5" />
+					<div className="text-amber-700">
 						<p className="font-medium">
-							Verification link expires in 5 minutes
-						</p>
-						<p>
-							If you don&apos;t verify your email within 5 minutes, you&apos;ll
-							need to request a new verification link.
+							Verification link expires in{" "}
+							<span className="font-bold text-red-500">
+								{formatTime(linkExpiryTime)}
+							</span>
 						</p>
 					</div>
 				</div>
@@ -71,7 +80,7 @@ const EmailVerificationPending = ({
 					<Button
 						variant="outline"
 						onClick={onResendVerification}
-						className="w-full font-medium"
+						className="w-full bg-primary-base text-white hover:text-white hover:bg-custom-skyBlue font-bold"
 						disabled={isLoading || resendComingSoon}
 					>
 						{isLoading ? (
@@ -79,17 +88,20 @@ const EmailVerificationPending = ({
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 								Sending verification email...
 							</>
+						) : resendComingSoon ? (
+							`Resend available in ${formatTime(cooldownTime)}`
 						) : (
 							"Resend Verification Email"
 						)}
 					</Button>
 					<Button
 						variant="ghost"
-						onClick={onBackToLogin}
+						onClick={onBackToSignup}
 						className="w-full font-medium hover:bg-gray-100"
 						disabled={isLoading}
 					>
-						Back to Login
+						<ArrowLeft className="mr-2 h-4 w-4" />
+						Back to Signup
 					</Button>
 				</div>
 			</div>

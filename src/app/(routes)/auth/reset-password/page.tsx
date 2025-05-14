@@ -69,7 +69,6 @@ export default function ResetPasswordPage() {
 		resetPassword();
 	};
 
-	// Handle resend verification code with cooldown
 	const handleResendCode = () => {
 		if (resendCooldown) return;
 
@@ -89,7 +88,6 @@ export default function ResetPasswordPage() {
 		}, 1000);
 	};
 
-	// Clear cooldown on unmount
 	useEffect(() => {
 		return () => {
 			setCooldownTime(0);
@@ -99,7 +97,6 @@ export default function ResetPasswordPage() {
 
 	return (
 		<div className="w-full max-w-md mx-auto ">
-			{/* Request Reset Step */}
 			{step === "request" && (
 				<Card>
 					<CardHeader>
@@ -156,10 +153,10 @@ export default function ResetPasswordPage() {
 							<Button
 								type="button"
 								variant="ghost"
-								className="w-full flex items-center justify-center"
+								className="w-full flex items-center justify-center "
 								onClick={goToLogin}
 							>
-								<ChevronLeft className="h-4 w-4 mr-2" />
+								<ChevronLeft className="h-4 w-4" />
 								Back to Login
 							</Button>
 						</form>
@@ -167,7 +164,6 @@ export default function ResetPasswordPage() {
 				</Card>
 			)}
 
-			{/* Verify Code Step */}
 			{step === "verify" && (
 				<Card>
 					<CardHeader>
@@ -264,7 +260,6 @@ export default function ResetPasswordPage() {
 				</Card>
 			)}
 
-			{/* Reset Password Step */}
 			{step === "reset" && (
 				<Card>
 					<CardHeader>
@@ -370,7 +365,6 @@ export default function ResetPasswordPage() {
 				</Card>
 			)}
 
-			{/* Success Step */}
 			{step === "success" && (
 				<Card>
 					<CardHeader>

@@ -20,7 +20,8 @@ export const AUTH_CONSTANTS = {
 		steps: {
 			contact: {
 				title: "Create Your Account",
-				subtitle: "Enter your personal information to get started",
+				subtitle:
+					"Enter your personal information and contact details to get started",
 			},
 			education: {
 				title: "Complete Your Profile",
