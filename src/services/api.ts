@@ -3,7 +3,7 @@ import axios from "axios";
 import { useAuthStore } from "@/store/auth";
 import { cleanToken, isTokenExpired } from "@/lib/utils/auth-utils";
 
-const BASE_URL = "https://jobs-staging.api.growrwanda.com";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 let isLoggingOut = false;
 
@@ -19,8 +19,7 @@ const handleAuthError = () => {
 	if (isLoggingOut) return;
 
 	isLoggingOut = true;
-	
-	// Use Zustand's logout function
+
 	const { logout } = useAuthStore.getState();
 	logout();
 
@@ -40,7 +39,7 @@ api.interceptors.request.use(
 		if (process.env.NODE_ENV === "development") {
 			console.log(
 				`[API Request] ${config.method?.toUpperCase()} ${config.url}`,
-				config.data ? { data: config.data } : ''
+				config.data ? { data: config.data } : "",
 			);
 		}
 
@@ -63,7 +62,10 @@ api.interceptors.request.use(
 					config.url,
 				);
 			}
-		} else if (config.url?.includes('/auth/signin') || config.url?.includes('/auth/signup')) {
+		} else if (
+			config.url?.includes("/auth/signin") ||
+			config.url?.includes("/auth/signup")
+		) {
 			console.log("[API] Making unauthenticated request to auth endpoint");
 		} else {
 			console.log("[API] No auth token available for request");
@@ -81,7 +83,7 @@ api.interceptors.response.use(
 		if (process.env.NODE_ENV === "development") {
 			console.log(
 				`[API] ${response.config.method?.toUpperCase()} ${response.config.url} - Status: ${response.status}`,
-				response.data ? { data: response.data } : ''
+				response.data ? { data: response.data } : "",
 			);
 		}
 		return response;
@@ -115,13 +117,17 @@ api.interceptors.response.use(
 
 		if (error.response.status === 401) {
 			console.log("[API] 401 Unauthorized response");
-			if (!originalRequest._retry && !originalRequest.url?.includes('/auth/signin')) {
+			if (
+				!originalRequest._retry &&
+				!originalRequest.url?.includes("/auth/signin")
+			) {
 				console.log("[API] Non-login request failed with 401, logging out");
 				originalRequest._retry = true;
 				handleAuthError();
 			} else {
 				console.log("[API] Login request failed with 401");
-				errorMessage = error.response.data?.message || "Invalid email or password";
+				errorMessage =
+					error.response.data?.message || "Invalid email or password";
 				throw new Error(errorMessage);
 			}
 		}

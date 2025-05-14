@@ -59,7 +59,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		clearErrors,
 	} = useAuth({
 		onSuccess: () => {
-			// Custom success handler that doesn't trigger additional redirects
 			console.log(
 				"[AuthForm] Authentication successful, middleware will handle redirection",
 			);
@@ -78,7 +77,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		setServerError(null);
 		clearErrors?.();
 
-		// Cleanup function to clear data if component unmounts
 		return () => {
 			if (mode === "signup" && currentStep === 1) {
 				// Keep step 1 data in case user comes back

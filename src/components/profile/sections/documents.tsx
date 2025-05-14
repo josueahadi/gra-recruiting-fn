@@ -17,6 +17,9 @@ interface DocumentsSectionProps {
 	onFileUpload: (type: "resume" | "sample", file: File) => void;
 	onFileRemove: (type: "resume" | "sample", index?: number) => void;
 	onLinksUpdate: (links: PortfolioLinks) => void;
+	uploadProgress?: number | null;
+	uploadError?: string | null;
+	setUploadError?: (err: string | null) => void;
 }
 
 const DocumentsSection: React.FC<DocumentsSectionProps> = ({
@@ -27,6 +30,9 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 	onFileUpload,
 	onFileRemove,
 	onLinksUpdate,
+	uploadProgress,
+	uploadError,
+	setUploadError,
 }) => {
 	// Resume upload state
 	const [isUploading, setIsUploading] = useState(false);
@@ -39,6 +45,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 	// Resume/CV handling
 	const handleResumeUpload = () => {
 		if (canEdit && resumeInputRef.current) {
+			if (setUploadError) setUploadError(null);
 			resumeInputRef.current.click();
 		}
 	};
@@ -100,12 +107,58 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 
 							{canEdit && (
 								<Button
+									className="bg-white border border-custom-navyBlue text-black hover:bg-white hover:bg-opacity-50 flex items-center gap-2"
+									onClick={handleResumeUpload}
+									disabled={isUploading}
+								>
+									{isUploading ? (
+										<>
+											<div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin mr-2" />
+											Updating...
+										</>
+									) : (
+										<>
+											<span>Update Resume</span>
+											<Upload className="h-4 w-4" />
+										</>
+									)}
+								</Button>
+							)}
+
+							{canEdit && (
+								<Button
 									variant="ghost"
 									className="text-red-500 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto md:ml-2"
 									onClick={() => onFileRemove("resume")}
 								>
 									Remove
 								</Button>
+							)}
+
+							<input
+								ref={resumeInputRef}
+								type="file"
+								accept=".pdf"
+								className="hidden"
+								onChange={handleResumeFileChange}
+							/>
+
+							{/* Show progress bar and error for update */}
+							{uploadError && (
+								<div className="text-red-500 text-sm mt-2">{uploadError}</div>
+							)}
+							{isUploading && uploadProgress !== null && (
+								<div className="mt-2">
+									<div className="w-full bg-gray-200 rounded-full h-2">
+										<div
+											className="bg-blue-500 h-2 rounded-full"
+											style={{ width: `${uploadProgress}%` }}
+										/>
+									</div>
+									<div className="text-xs text-gray-600 mt-1">
+										{Math.round(uploadProgress ?? 0)}%
+									</div>
+								</div>
 							)}
 						</div>
 					) : (
@@ -132,10 +185,29 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 									<input
 										ref={resumeInputRef}
 										type="file"
-										accept=".pdf,.doc,.docx"
+										accept=".pdf"
 										className="hidden"
 										onChange={handleResumeFileChange}
 									/>
+									{/* Show progress bar and error for upload */}
+									{uploadError && (
+										<div className="text-red-500 text-sm mt-2">
+											{uploadError}
+										</div>
+									)}
+									{isUploading && uploadProgress !== null && (
+										<div className="mt-2">
+											<div className="w-full bg-gray-200 rounded-full h-2">
+												<div
+													className="bg-blue-500 h-2 rounded-full"
+													style={{ width: `${uploadProgress}%` }}
+												/>
+											</div>
+											<div className="text-xs text-gray-600 mt-1">
+												{Math.round(uploadProgress ?? 0)}%
+											</div>
+										</div>
+									)}
 								</>
 							) : (
 								<p className="text-gray-500 italic">No resume uploaded yet.</p>
