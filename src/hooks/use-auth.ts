@@ -347,37 +347,15 @@ export const useAuth = (options?: UseAuthOptions) => {
 				phoneNumber: data.phoneNumber,
 			});
 
-			// Store signup data for later completion after email verification
-			if (data.career) {
-				try {
-					// Save step 2 data for later completion after verification
-					localStorage.setItem(
-						"signupPendingData",
-						JSON.stringify({
-							career: data.career,
-							levelOfEducation: data.levelOfEducation,
-							university: data.university,
-							graduationDate: data.graduationDate,
-							major: data.major,
-							linkedinProfileUrl: data.linkedinProfileUrl,
-							githubProfileUrl: data.githubProfileUrl,
-							email: data.email,
-						}),
-					);
-				} catch (error) {
-					console.error("[useAuth] Error saving signup data:", error);
-				}
-			}
-
 			return response.data;
 		},
 		onSuccess: async (data) => {
-			// We don't set the token here since the user needs to verify email first
+			// Check if we need to show verification pending screen
 			if (data?.message?.includes("verification")) {
 				try {
-					localStorage.removeItem("signupStep1Data");
+					localStorage.removeItem("signupData");
 				} catch (error) {
-					console.error("[useAuth] Error clearing signup step 1 data:", error);
+					console.error("[useAuth] Error clearing signup data:", error);
 				}
 
 				showToast(
@@ -385,20 +363,23 @@ export const useAuth = (options?: UseAuthOptions) => {
 					{ type: "success" },
 				);
 
+				// Redirect to verification pending page
 				router.push("/auth/verification-pending");
 
 				if (options?.onSuccess) {
 					options.onSuccess();
 				}
-			} else {
+			} else if (data?.accessToken) {
+				// If we get a token directly (no verification needed)
 				setToken(data.accessToken);
 				showToast("Your account has been created successfully", {
 					type: "success",
 				});
 
 				try {
-					localStorage.removeItem("signupStep1Data");
+					localStorage.removeItem("signupData");
 					localStorage.removeItem("signupPendingData");
+					localStorage.removeItem("pendingVerificationEmail");
 				} catch (error) {
 					console.error("[useAuth] Error clearing signup data:", error);
 				}
@@ -414,34 +395,8 @@ export const useAuth = (options?: UseAuthOptions) => {
 					handleRedirect(data.accessToken);
 				}
 			}
-		},
-		onError: (error: unknown) => {
-			let errorMessage = "Registration failed";
-			if (typeof error === "object" && error !== null) {
-				if (
-					"response" in error &&
-					typeof (error as ErrorWithResponse).response?.data?.message ===
-						"string"
-				) {
-					errorMessage =
-						(error as ErrorWithResponse).response?.data?.message ??
-						errorMessage;
-				} else if (
-					"message" in error &&
-					typeof (error as ErrorWithResponse).message === "string"
-				) {
-					errorMessage = (error as ErrorWithResponse).message ?? errorMessage;
-				}
-			}
-			setError(errorMessage);
-			showToast(errorMessage, { type: "error" });
 
-			options?.onError?.(
-				error instanceof Error ? error : new Error(errorMessage),
-			);
-		},
-		onSettled: () => {
-			setLoading(false);
+			return data;
 		},
 	});
 
@@ -623,44 +578,6 @@ export const useAuth = (options?: UseAuthOptions) => {
 		return user ? formatUserName(user.firstName, user.lastName) : "";
 	};
 
-	const completeSignupAfterVerification = async (authToken: string) => {
-		try {
-			const storedDataStr = localStorage.getItem("signupPendingData");
-			if (!storedDataStr) return;
-
-			const storedData = JSON.parse(storedDataStr);
-
-			await api.post(
-				"/api/v1/applicants/complete-application-profile",
-				{
-					career: storedData.career,
-					levelOfEducation: storedData.levelOfEducation,
-					university: storedData.university,
-					graduationDate: storedData.graduationDate,
-					major: storedData.major,
-					linkedinProfileUrl: storedData.linkedinProfileUrl,
-					githubProfileUrl: storedData.githubProfileUrl,
-				},
-				{
-					headers: { Authorization: `Bearer ${authToken}` },
-				},
-			);
-
-			localStorage.removeItem("signupPendingData");
-
-			showToast("Your profile setup is complete!", { type: "success" });
-		} catch (error) {
-			console.error(
-				"[useAuth] Error completing profile after verification:",
-				error,
-			);
-			showToast(
-				"Failed to complete your profile. You can update it later in your settings.",
-				{ type: "error" },
-			);
-		}
-	};
-
 	return {
 		// State
 		user,
@@ -691,8 +608,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 		isTokenExpired: () => (token ? isTokenExpired(token) : true),
 		getUserDisplayName,
 
-		// Signup methods
-		completeSignupAfterVerification,
+		// Verification methods
 		resendVerification: resendVerificationMutation.mutate,
 	};
 };

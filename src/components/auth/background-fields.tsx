@@ -223,7 +223,7 @@ export const EducationBackgroundFields = ({
 					{isLoading ? (
 						<span className="flex items-center justify-center">
 							<Loader2 className="h-4 w-4 mr-2 animate-spin" />
-							Creating Account...
+							Create Account...
 						</span>
 					) : (
 						"Create Account"
