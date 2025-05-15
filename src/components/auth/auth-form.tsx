@@ -6,10 +6,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { ContactInfoFields } from "./contact-info-fields";
-// import GoogleAuthButton from "./google-auth-button";
 import { LoginFields } from "./login-fields";
-// import Link from "next/link";
 import { showToast } from "@/services/toast";
+import type { ApiErrorResponse } from "@/types/errors";
 
 interface AuthFormProps {
 	mode: "login" | "signup";
@@ -39,7 +38,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		setShowPassword,
 		signIn,
 		signUp,
-		// handleGoogleAuth,
 		error: authError,
 		clearErrors,
 	} = useAuth({
@@ -50,11 +48,80 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			if (onSuccess) onSuccess();
 		},
 		onError: (error) => {
-			const errorMessage =
-				error.message || "Please check your information and try again.";
-			setServerError(errorMessage);
+			let errorMessage = "Please check your information and try again.";
+			let fieldErrors: Record<string, string> = {};
 
-			// If error is about unverified email, redirect to verification page
+			if (typeof error === "object" && error !== null) {
+				const apiError = error as unknown as ApiErrorResponse;
+				const data = apiError.response?.data;
+
+				if (data) {
+					if (data.errors && typeof data.errors === "object") {
+						fieldErrors = data.errors;
+					} else if (typeof data.message === "string") {
+						if (data.message.toLowerCase().includes("email")) {
+							fieldErrors.email = data.message;
+						} else if (data.message.toLowerCase().includes("password")) {
+							fieldErrors.password = data.message;
+						} else if (data.message.toLowerCase().includes("first name")) {
+							fieldErrors.firstName = data.message;
+						} else if (data.message.toLowerCase().includes("last name")) {
+							fieldErrors.lastName = data.message;
+						} else if (data.message.toLowerCase().includes("phone")) {
+							fieldErrors.phoneNumber = data.message;
+						} else {
+							errorMessage = data.message;
+						}
+					} else if (Array.isArray(data.message)) {
+						if (data.message.every((item) => typeof item === "string")) {
+							const messages = data.message as string[];
+							for (const msg of messages) {
+								const lowerMsg = msg.toLowerCase();
+								if (lowerMsg.includes("last name")) {
+									fieldErrors.lastName = msg;
+								} else if (lowerMsg.includes("first name")) {
+									fieldErrors.firstName = msg;
+								} else if (lowerMsg.includes("email")) {
+									fieldErrors.email = msg;
+								} else if (lowerMsg.includes("password")) {
+									fieldErrors.password = msg;
+								} else if (lowerMsg.includes("phone")) {
+									fieldErrors.phoneNumber = msg;
+								} else {
+									errorMessage = msg;
+								}
+							}
+						} else {
+							for (const err of data.message) {
+								if (
+									typeof err === "object" &&
+									err &&
+									"field" in err &&
+									"message" in err
+								) {
+									const fieldErr = err as { field: string; message: string };
+									fieldErrors[fieldErr.field] = fieldErr.message;
+								}
+							}
+						}
+					}
+
+					console.log("API Error Details:", {
+						fieldErrors,
+						errorMessage,
+						originalResponse: data,
+					});
+				}
+			}
+
+			if (Object.keys(fieldErrors).length > 0) {
+				console.log("Setting form errors:", fieldErrors);
+				setFormErrors(fieldErrors);
+				setServerError(null);
+			} else {
+				setServerError(errorMessage);
+			}
+
 			if (
 				errorMessage.toLowerCase().includes("not verified") ||
 				errorMessage.toLowerCase().includes("verify your email")
@@ -62,7 +129,7 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 				router.push("/auth/verification-pending");
 			}
 
-			if (onError) onError(error);
+			if (onError) onError(error as Error);
 		},
 	});
 
@@ -169,10 +236,16 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		if (!formData.firstName) {
 			errors.firstName = "First name is required";
 			isValid = false;
+		} else if (formData.firstName.length < 3) {
+			errors.firstName = "First name should be at least 3 characters";
+			isValid = false;
 		}
 
 		if (!formData.lastName) {
 			errors.lastName = "Last name is required";
+			isValid = false;
+		} else if (formData.lastName.length < 3) {
+			errors.lastName = "Last name should be at least 3 characters";
 			isValid = false;
 		}
 
@@ -210,9 +283,17 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		if (!formData.password) {
 			errors.password = "Password is required";
 			isValid = false;
-		} else if (formData.password.length < 8) {
-			errors.password = "Password must be at least 8 characters";
-			isValid = false;
+		} else {
+			const hasMinLength = formData.password.length >= 8;
+			const hasLetter = /[a-zA-Z]/.test(formData.password);
+			const hasNumber = /[0-9]/.test(formData.password);
+			const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(formData.password);
+
+			if (!hasMinLength || !hasLetter || !hasNumber || !hasSpecial) {
+				errors.password =
+					"Password must contain at least 8 characters, including 1 letter, 1 number, and 1 special character.";
+				isValid = false;
+			}
 		}
 
 		if (formData.password !== formData.confirmPassword) {
@@ -226,14 +307,17 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 
 	const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
+		console.log("[AuthForm] Form submission started", { mode, formData });
 		setIsSubmitting(true);
 		try {
 			if (mode === "login") {
 				const isValid = validateLoginForm();
 				if (!isValid) {
+					console.log("[AuthForm] Login validation failed", formErrors);
 					setIsSubmitting(false);
 					return;
 				}
+				console.log("[AuthForm] Login validation passed, signing in...");
 				await signIn({
 					email: formData.email,
 					password: formData.password,
@@ -241,11 +325,12 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			} else {
 				const isValid = validateSignupForm();
 				if (!isValid) {
+					console.log("[AuthForm] Signup validation failed", formErrors);
 					setIsSubmitting(false);
 					return;
 				}
 
-				// Save form data for potential future use
+				console.log("[AuthForm] Signup validation passed, preparing data...");
 				localStorage.setItem(
 					"signupData",
 					JSON.stringify({
@@ -256,17 +341,21 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 					}),
 				);
 
-				// Save email for verification page
 				localStorage.setItem("pendingVerificationEmail", formData.email);
 
-				// Format phone number if needed
 				const formattedPhoneNumber = formData.phoneNumber.startsWith("+250")
 					? formData.phoneNumber
 					: formData.phoneNumber.startsWith("0")
 						? `+250${formData.phoneNumber.slice(1)}`
 						: `+250${formData.phoneNumber}`;
 
-				// Call signUp - on success, this will redirect to verification page
+				console.log("[AuthForm] Calling signUp with data", {
+					firstName: formData.firstName,
+					lastName: formData.lastName,
+					email: formData.email,
+					phoneNumber: formattedPhoneNumber,
+				});
+
 				await signUp({
 					firstName: formData.firstName,
 					lastName: formData.lastName,

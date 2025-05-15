@@ -17,7 +17,7 @@ import {
 	syncTokenToCookie,
 } from "@/lib/utils/auth-utils";
 import { showToast } from "@/services/toast";
-import type { ErrorWithResponse } from "@/types/errors";
+import type { ErrorWithResponse, ApiErrorResponse } from "@/types/errors";
 import type { SignInResponse } from "@/types/auth";
 
 interface UseAuthOptions {
@@ -61,6 +61,10 @@ interface UserProfileResponse {
 	createdAt: string;
 	updatedAt: string;
 	profileUpdatedAt: string | null;
+}
+
+interface FieldError extends Error {
+	fieldErrors?: Record<string, string>;
 }
 
 export const useAuth = (options?: UseAuthOptions) => {
@@ -191,7 +195,7 @@ export const useAuth = (options?: UseAuthOptions) => {
 				setUser(userData);
 				return data;
 			} catch (error: unknown) {
-				const apiError = error as ApiError;
+				const apiError = error as ApiErrorResponse;
 				console.error(
 					`[useAuth] Error fetching user profile (attempt ${retryCount + 1}/${MAX_RETRIES + 1}):`,
 					apiError.response?.data?.statusCode,
@@ -339,18 +343,83 @@ export const useAuth = (options?: UseAuthOptions) => {
 			setLoading(true);
 			clearError();
 
-			const response = await api.post("/api/v1/users/signup", {
-				firstName: data.firstName,
-				lastName: data.lastName,
-				email: data.email,
-				password: data.password,
-				phoneNumber: data.phoneNumber,
-			});
-
-			return response.data;
+			try {
+				const response = await api.post("/api/v1/users/signup", {
+					firstName: data.firstName,
+					lastName: data.lastName,
+					email: data.email,
+					password: data.password,
+					phoneNumber: data.phoneNumber,
+				});
+				return response.data;
+			} catch (error: unknown) {
+				let fieldErrors: Record<string, string> = {};
+				let errorMessage = "Signup failed. Please try again.";
+				if (typeof error === "object" && error !== null) {
+					const apiError = error as ApiErrorResponse;
+					const data = apiError.response?.data;
+					if (data) {
+						if (data.errors && typeof data.errors === "object") {
+							fieldErrors = data.errors;
+						} else if (typeof data.message === "string") {
+							if (data.message.toLowerCase().includes("email")) {
+								fieldErrors.email = data.message;
+							} else if (data.message.toLowerCase().includes("password")) {
+								fieldErrors.password = data.message;
+							} else if (data.message.toLowerCase().includes("first name")) {
+								fieldErrors.firstName = data.message;
+							} else if (data.message.toLowerCase().includes("last name")) {
+								fieldErrors.lastName = data.message;
+							} else if (data.message.toLowerCase().includes("phone")) {
+								fieldErrors.phoneNumber = data.message;
+							} else {
+								errorMessage = data.message;
+							}
+						} else if (Array.isArray(data.message)) {
+							if (
+								data.message.every(
+									(m: unknown) =>
+										typeof m === "object" &&
+										m &&
+										"field" in m &&
+										"message" in m,
+								)
+							) {
+								(
+									data.message as Array<{ field: string; message: string }>
+								).forEach((err) => {
+									fieldErrors[err.field] = err.message;
+								});
+							} else if (
+								data.message.every((m: unknown) => typeof m === "string")
+							) {
+								(data.message as string[]).forEach((msg: string) => {
+									const lowerMsg = msg.toLowerCase();
+									if (lowerMsg.includes("last name")) {
+										fieldErrors.lastName = msg;
+									} else if (lowerMsg.includes("first name")) {
+										fieldErrors.firstName = msg;
+									} else if (lowerMsg.includes("email")) {
+										fieldErrors.email = msg;
+									} else if (lowerMsg.includes("password")) {
+										fieldErrors.password = msg;
+									} else if (lowerMsg.includes("phone")) {
+										fieldErrors.phoneNumber = msg;
+									} else {
+										errorMessage = msg;
+									}
+								});
+							}
+						}
+					}
+				}
+				const err: FieldError = Object.assign(new Error(errorMessage), {
+					fieldErrors,
+				});
+				throw err;
+			}
 		},
 		onSuccess: async (data) => {
-			// Check if we need to show verification pending screen
 			if (data?.message?.includes("verification")) {
 				try {
 					localStorage.removeItem("signupData");
@@ -363,14 +432,12 @@ export const useAuth = (options?: UseAuthOptions) => {
 					{ type: "success" },
 				);
 
-				// Redirect to verification pending page
 				router.push("/auth/verification-pending");
 
 				if (options?.onSuccess) {
 					options.onSuccess();
 				}
 			} else if (data?.accessToken) {
-				// If we get a token directly (no verification needed)
 				setToken(data.accessToken);
 				showToast("Your account has been created successfully", {
 					type: "success",
@@ -397,6 +464,38 @@ export const useAuth = (options?: UseAuthOptions) => {
 			}
 
 			return data;
+		},
+		onError: (error: unknown) => {
+			if (
+				typeof error === "object" &&
+				error !== null &&
+				"fieldErrors" in error &&
+				(error as FieldError).fieldErrors &&
+				Object.keys((error as FieldError).fieldErrors || {}).length > 0
+			) {
+				setError(
+					(error as FieldError).message ?? "Signup failed. Please try again.",
+				);
+				if (options?.onError) {
+					options.onError(error as unknown as Error);
+				}
+			} else {
+				const errorMessage =
+					typeof error === "object" &&
+					error &&
+					"message" in error &&
+					typeof (error as { message?: string }).message === "string"
+						? ((error as { message?: string }).message ??
+							"Signup failed. Please try again.")
+						: "Signup failed. Please try again.";
+
+				setError(errorMessage);
+
+				if (options?.onError) {
+					options.onError(error as unknown as Error);
+				}
+			}
+			setLoading(false);
 		},
 	});
 
