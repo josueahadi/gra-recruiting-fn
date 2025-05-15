@@ -41,9 +41,10 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 	const { signOut, displayName, user, refreshProfile } = useAuth();
 
 	// We prioritize data from the auth store, then fall back to props
-	const actualUserName = displayName || 
+	const actualUserName =
+		displayName ||
 		(user ? formatUserName(user.firstName, user.lastName) : userName);
-	
+
 	// Try to load user profile if not already loaded or if it's temporary
 	useEffect(() => {
 		if (!user || user.isTemporary) {
@@ -79,7 +80,6 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 				console.log("[UserAvatar] Logging out using auth hook...");
 				signOut();
 			}
-			toast.success("You have been signed out.");
 		} catch (error) {
 			console.error("[UserAvatar] Error during logout:", error);
 			toast.error("There was a problem signing out. Please try again.");
@@ -106,10 +106,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" className="p-0 h-auto">
 					<Avatar className="h-10 w-10 border-2 border-primary-light cursor-pointer">
-						<AvatarImage 
-							src={avatarSrc} 
-							alt={actualUserName || "User"} 
-						/>
+						<AvatarImage src={avatarSrc} alt={actualUserName || "User"} />
 						<AvatarFallback>{getInitials()}</AvatarFallback>
 					</Avatar>
 				</Button>

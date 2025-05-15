@@ -28,6 +28,7 @@ export default function ProfileContent() {
 		uploadFile,
 		removeDocument,
 		updatePortfolioLinks,
+		updateResumeUrl,
 		updateLanguage,
 		deleteLanguageById,
 		addLanguage,
@@ -206,6 +207,7 @@ export default function ProfileContent() {
 					onFileUpload={uploadFile}
 					onFileRemove={removeDocument}
 					onLinksUpdate={updatePortfolioLinks}
+					updateResumeUrl={updateResumeUrl}
 				/>
 			)}
 		</div>

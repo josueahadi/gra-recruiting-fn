@@ -17,6 +17,7 @@ interface ProfileSectionProps {
 	contentClassName?: string;
 	saveButtonText?: string;
 	customActions?: React.ReactNode;
+	saveDisabled?: boolean;
 }
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({
@@ -32,6 +33,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 	contentClassName,
 	saveButtonText = "Save Changes",
 	customActions,
+	saveDisabled = false,
 }) => {
 	const showSaveButtons = isEditing && onCancel && onSave && !customActions;
 	const showCancelButton = isEditing && onCancel && !onSave && !customActions;
@@ -87,7 +89,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 					<Button
 						onClick={onSave}
 						className="bg-primary-base hover:bg-custom-skyBlue"
-						disabled={isSubmitting}
+						disabled={isSubmitting || saveDisabled}
 					>
 						{isSubmitting ? (
 							<>

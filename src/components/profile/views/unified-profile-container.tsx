@@ -12,6 +12,8 @@ import DocumentsSection from "../sections/documents";
 import { useProfile } from "@/hooks/use-profile";
 import { cn } from "@/lib/utils";
 import type { Skill } from "@/types/profile";
+import { useQueryClient } from "@tanstack/react-query";
+import { useDocuments } from "@/hooks/use-documents";
 
 interface ProfileContainerProps {
 	userId?: string;
@@ -40,6 +42,7 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 		uploadFile,
 		removeDocument,
 		updatePortfolioLinks,
+		updateResumeUrl,
 		canEdit,
 		updateLanguage,
 		deleteLanguage,
@@ -47,6 +50,14 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 		id: userId,
 		userType,
 	});
+
+	// Get field errors for documents
+	const queryClient = useQueryClient();
+	const { fieldErrors, updateSingleLink } = useDocuments(
+		profileData,
+		() => {},
+		queryClient,
+	);
 
 	const getLocationLabel = () => {
 		if (!profileData) return undefined;
@@ -191,6 +202,9 @@ const ProfileContainer: React.FC<ProfileContainerProps> = ({
 					onFileUpload={uploadFile}
 					onFileRemove={removeDocument}
 					onLinksUpdate={updatePortfolioLinks}
+					updateResumeUrl={updateResumeUrl}
+					fieldErrors={fieldErrors}
+					updateSingleLink={updateSingleLink}
 				/>
 			</div>
 		</div>

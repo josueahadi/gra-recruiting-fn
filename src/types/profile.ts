@@ -27,6 +27,7 @@ export interface PortfolioLinks {
 	github?: string;
 	behance?: string;
 	linkedin?: string;
+	resumeUrl?: string;
 }
 
 export interface LanguageProficiency {

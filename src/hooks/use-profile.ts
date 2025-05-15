@@ -50,8 +50,13 @@ export function useProfile(options: UseProfileOptions) {
 		queryClient,
 	);
 
-	const { uploadFile, removeDocument, updatePortfolioLinks, documentsLoading } =
-		useDocuments(profileData, setProfileData, queryClient);
+	const {
+		uploadFile,
+		removeDocument,
+		updatePortfolioLinks,
+		updateResumeUrl,
+		documentsLoading,
+	} = useDocuments(profileData, setProfileData, queryClient);
 
 	const { updatePassword } = usePassword();
 
@@ -81,6 +86,7 @@ export function useProfile(options: UseProfileOptions) {
 		uploadFile,
 		removeDocument,
 		updatePortfolioLinks,
+		updateResumeUrl,
 		updatePassword,
 		getProfileCompletion,
 		pendingOperations: hasPendingOperations,
