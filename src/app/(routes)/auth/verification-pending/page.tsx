@@ -44,14 +44,17 @@ export default function VerificationPendingPage() {
 		}
 	}, [router]);
 
-	// Link expiry countdown
 	useEffect(() => {
-		if (linkExpiryTime <= 0) return;
+		if (linkExpiryTime <= 0) {
+			localStorage.removeItem("verificationSentAt");
+			return;
+		}
 		expiryIntervalRef.current = setInterval(() => {
 			setLinkExpiryTime((prev) => {
 				if (prev <= 1) {
 					if (expiryIntervalRef.current)
 						clearInterval(expiryIntervalRef.current);
+					localStorage.removeItem("verificationSentAt");
 					return 0;
 				}
 				return prev - 1;

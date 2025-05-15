@@ -69,6 +69,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 	>({});
 
 	const MAX_LANGUAGES = 10;
+	const MAX_LANGUAGE_LENGTH = 50;
 
 	const markPending = useCallback((key: string, isPending: boolean) => {
 		setPendingOperations((prev) => ({
@@ -85,14 +86,25 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 	);
 
 	const handleAddLanguage = useCallback(async () => {
+		setErrorMessage("");
+
 		if (!newLanguage.trim()) {
 			setErrorMessage("Please enter a language name");
 			return;
 		}
+
+		if (newLanguage.length > MAX_LANGUAGE_LENGTH) {
+			setErrorMessage(
+				`Language name cannot exceed ${MAX_LANGUAGE_LENGTH} characters`,
+			);
+			return;
+		}
+
 		if (!selectedProficiency) {
 			setErrorMessage("Please select a proficiency level");
 			return;
 		}
+
 		if (languages.length >= MAX_LANGUAGES) {
 			showToast({
 				title: `Maximum of ${MAX_LANGUAGES} languages allowed.`,
@@ -100,6 +112,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 			});
 			return;
 		}
+
 		if (
 			languages.some(
 				(lang) => lang.language.toLowerCase() === newLanguage.toLowerCase(),
@@ -108,6 +121,7 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 			setErrorMessage("This language already exists.");
 			return;
 		}
+
 		setErrorMessage("");
 		if (onAddLanguage) {
 			const success = await onAddLanguage(
@@ -120,7 +134,6 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 			}
 			return;
 		}
-		// fallback UI-only logic
 		const tempId = Date.now();
 		const tempLanguageObj: LanguageProficiencyType = {
 			id: tempId,
@@ -130,10 +143,6 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 		onLanguagesChange([...languages, tempLanguageObj]);
 		setNewLanguage("");
 		setSelectedProficiency("");
-		showToast({
-			title: `${newLanguage.trim()} added successfully`,
-			variant: "success",
-		});
 	}, [
 		newLanguage,
 		selectedProficiency,
@@ -156,10 +165,6 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 			try {
 				if (onDeleteLanguage) {
 					await onDeleteLanguage(language.languageId);
-					showToast({
-						title: `${language.language} removed successfully`,
-						variant: "success",
-					});
 				}
 			} catch (error) {
 				showToast({
@@ -188,15 +193,26 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 
 	const handleUpdateLanguage = useCallback(
 		async (index: number) => {
+			setErrorMessage("");
+
 			if (!editLanguage.trim()) {
 				setErrorMessage("Language name cannot be empty");
 				return;
 			}
+
+			if (editLanguage.length > MAX_LANGUAGE_LENGTH) {
+				setErrorMessage(
+					`Language name cannot exceed ${MAX_LANGUAGE_LENGTH} characters`,
+				);
+				return;
+			}
+
 			const language = languages[index];
 			if (!language || !language.languageId) {
 				setErrorMessage("Cannot update language: missing languageId");
 				return;
 			}
+
 			if (
 				languages.some(
 					(lang, idx) =>
@@ -207,9 +223,11 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 				setErrorMessage("This language already exists.");
 				return;
 			}
+
 			const operationKey = `update-${language.languageId}`;
 			markPending(operationKey, true);
 			setErrorMessage("");
+
 			try {
 				if (onUpdateLanguage) {
 					await onUpdateLanguage(
@@ -217,10 +235,6 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 						editLanguage.trim(),
 						Number.parseInt(editProficiency, 10),
 					);
-					showToast({
-						title: `${editLanguage.trim()} updated successfully`,
-						variant: "success",
-					});
 					setEditIndex(null);
 					setEditLanguage("");
 					setEditProficiency("5");
@@ -274,21 +288,38 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 		(key) => key.startsWith("add-") && pendingOperations[key],
 	);
 
+	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setNewLanguage(e.target.value);
+		if (errorMessage) {
+			setErrorMessage("");
+		}
+	};
+
+	const handleEditInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+		setEditLanguage(e.target.value);
+		if (errorMessage) {
+			setErrorMessage("");
+		}
+	};
+
 	return (
 		<div className={className}>
 			<div className="flex flex-col sm:flex-row gap-2 mb-6">
 				<Input
 					value={newLanguage}
-					onChange={(e) => setNewLanguage(e.target.value)}
+					onChange={handleInputChange}
 					onKeyPress={handleKeyPress}
 					placeholder="Enter language"
-					className="flex-grow"
+					className={`flex-grow ${newLanguage.length > MAX_LANGUAGE_LENGTH ? "border-red-500" : ""}`}
 					disabled={isAddingPending}
 				/>
 
 				<Select
 					value={selectedProficiency}
-					onValueChange={setSelectedProficiency}
+					onValueChange={(value) => {
+						setSelectedProficiency(value);
+						if (errorMessage) setErrorMessage("");
+					}}
 					disabled={isAddingPending}
 				>
 					<SelectTrigger className="w-full sm:w-[300px]">
@@ -310,7 +341,8 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 						isAddingPending ||
 						languages.length >= MAX_LANGUAGES ||
 						!newLanguage.trim() ||
-						!selectedProficiency
+						!selectedProficiency ||
+						newLanguage.length > MAX_LANGUAGE_LENGTH
 					}
 				>
 					{isAddingPending ? (
@@ -324,6 +356,12 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 
 			{errorMessage && (
 				<div className="text-red-500 text-sm mb-4">{errorMessage}</div>
+			)}
+
+			{newLanguage.length > MAX_LANGUAGE_LENGTH && !errorMessage && (
+				<div className="text-red-500 text-sm mb-4">
+					Language name is too long (maximum {MAX_LANGUAGE_LENGTH} characters)
+				</div>
 			)}
 
 			{languages.length >= MAX_LANGUAGES && (
@@ -351,10 +389,16 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 								<>
 									<Input
 										value={editLanguage}
-										onChange={(e) => setEditLanguage(e.target.value)}
-										className="mb-2"
+										onChange={handleEditInputChange}
+										className={`mb-2 ${editLanguage.length > MAX_LANGUAGE_LENGTH ? "border-red-500" : ""}`}
 										disabled={isLangPending}
 									/>
+									{editLanguage.length > MAX_LANGUAGE_LENGTH && (
+										<div className="text-red-500 text-xs mb-2">
+											Language name is too long (maximum {MAX_LANGUAGE_LENGTH}{" "}
+											characters)
+										</div>
+									)}
 									<Select
 										value={editProficiency}
 										onValueChange={setEditProficiency}
@@ -376,7 +420,11 @@ const LanguageProficiency: React.FC<LanguageProficiencyProps> = ({
 											size="sm"
 											className="bg-primary-base hover:bg-primary-dark text-white"
 											onClick={() => handleUpdateLanguage(index)}
-											disabled={isLangPending}
+											disabled={
+												isLangPending ||
+												editLanguage.length > MAX_LANGUAGE_LENGTH ||
+												!editLanguage.trim()
+											}
 										>
 											<Check className="h-4 w-4" />
 										</Button>

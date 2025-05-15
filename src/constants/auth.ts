@@ -51,7 +51,6 @@ export const AUTH_CONSTANTS = {
 			submitting: "Creating Account...",
 			google: "Continue with Google",
 		},
-		terms: "I agree to the",
 
 		errors: {
 			firstName: "First name is required",
@@ -60,7 +59,6 @@ export const AUTH_CONSTANTS = {
 			password:
 				"Password must be at least 8 characters with letters and numbers",
 			passwordMatch: "Passwords don't match",
-			terms: "You must accept the terms and conditions",
 		},
 	},
 	FORMS: {

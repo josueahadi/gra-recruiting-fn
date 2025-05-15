@@ -17,6 +17,7 @@ interface ProfileSectionProps {
 	contentClassName?: string;
 	saveButtonText?: string;
 	customActions?: React.ReactNode;
+	saveDisabled?: boolean;
 }
 
 const ProfileSection: React.FC<ProfileSectionProps> = ({
@@ -32,6 +33,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 	contentClassName,
 	saveButtonText = "Save Changes",
 	customActions,
+	saveDisabled = false,
 }) => {
 	const showSaveButtons = isEditing && onCancel && onSave && !customActions;
 	const showCancelButton = isEditing && onCancel && !onSave && !customActions;
@@ -51,13 +53,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 							(isSubmitting || (isEditing && !onCancel)) &&
 								"opacity-50 cursor-not-allowed",
 						)}
-						aria-label={
-							isEditing
-								? isLanguageSection
-									? "Done"
-									: "Exit edit mode"
-								: `Edit ${title}`
-						}
+						aria-label={isEditing ? "Exit edit mode" : `Edit ${title}`}
 						onClick={onEdit}
 						disabled={isSubmitting}
 					>
@@ -88,12 +84,12 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 						onClick={onCancel}
 						disabled={isSubmitting}
 					>
-						{isLanguageSection ? "Done" : "Exit"}
+						{isLanguageSection ? "Exit edit mode" : "Exit"}
 					</Button>
 					<Button
 						onClick={onSave}
 						className="bg-primary-base hover:bg-custom-skyBlue"
-						disabled={isSubmitting}
+						disabled={isSubmitting || saveDisabled}
 					>
 						{isSubmitting ? (
 							<>
@@ -110,7 +106,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 			{showCancelButton && (
 				<div className="flex justify-end mt-6 px-6">
 					<Button variant="outline" onClick={onCancel} disabled={isSubmitting}>
-						{isLanguageSection ? "Done" : "Exit"}
+						{isLanguageSection ? "Exit edit mode" : "Exit"}
 					</Button>
 				</div>
 			)}

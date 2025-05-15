@@ -1,14 +1,13 @@
 import type React from "react";
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import ProfileSection from "@/components/profile/core/profile-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Upload, ExternalLink } from "lucide-react";
+import { ExternalLink, CheckCircle } from "lucide-react";
 import type { Document, PortfolioLinks } from "@/types/profile";
-import { FaBehance, FaGithub } from "react-icons/fa";
-import { BiWorld } from "react-icons/bi";
-import { Separator } from "@/components/ui/separator";
-
+import { FaBehance, FaGithub, FaLinkedin } from "react-icons/fa";
+import { BiWorld, BiFile } from "react-icons/bi";
+import { showToast } from "@/services/toast";
 interface DocumentsSectionProps {
 	resume: Document | null;
 	samples: Document[];
@@ -17,219 +16,338 @@ interface DocumentsSectionProps {
 	onFileUpload: (type: "resume" | "sample", file: File) => void;
 	onFileRemove: (type: "resume" | "sample", index?: number) => void;
 	onLinksUpdate: (links: PortfolioLinks) => void;
-	uploadProgress?: number | null;
-	uploadError?: string | null;
-	setUploadError?: (err: string | null) => void;
+	updateResumeUrl?: (url: string) => Promise<boolean>;
+	fieldErrors?: Record<string, string>;
+	updateSingleLink?: (
+		field: keyof PortfolioLinks,
+		value: string,
+	) => Promise<boolean>;
 }
 
 const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 	resume,
-	// samples,
 	portfolioLinks,
 	canEdit,
-	onFileUpload,
-	onFileRemove,
 	onLinksUpdate,
-	uploadProgress,
-	uploadError,
-	setUploadError,
+	fieldErrors = {},
+	updateSingleLink,
 }) => {
-	// Resume upload state
-	const [isUploading, setIsUploading] = useState(false);
-	const resumeInputRef = useRef<HTMLInputElement>(null);
-
-	// Portfolio links editing state
 	const [isEditingLinks, setIsEditingLinks] = useState(false);
-	const [links, setLinks] = useState<PortfolioLinks>(portfolioLinks);
+	const [links, setLinks] = useState<PortfolioLinks>(() => {
+		// Initialize with portfolioLinks and add resumeUrl if resume exists
+		const initialLinks = { ...portfolioLinks };
+		if (resume?.url) {
+			initialLinks.resumeUrl = resume.url;
+		}
+		return initialLinks;
+	});
+	const [originalLinks, setOriginalLinks] = useState<PortfolioLinks>(() => {
+		// Initialize with portfolioLinks and add resumeUrl if resume exists
+		const initialLinks = { ...portfolioLinks };
+		if (resume?.url) {
+			initialLinks.resumeUrl = resume.url;
+		}
+		return initialLinks;
+	});
+	const [localErrors, setLocalErrors] =
+		useState<Record<string, string>>(fieldErrors);
+	const [savingField, setSavingField] = useState<string | null>(null);
+	const [hasChanges, setHasChanges] = useState<Record<string, boolean>>({});
 
-	// Resume/CV handling
-	const handleResumeUpload = () => {
-		if (canEdit && resumeInputRef.current) {
-			if (setUploadError) setUploadError(null);
-			resumeInputRef.current.click();
+	useEffect(() => {
+		if (Object.keys(fieldErrors).length > 0) {
+			setLocalErrors(fieldErrors);
+		}
+	}, [fieldErrors]);
+
+	useEffect(() => {
+		const updatedLinks = { ...portfolioLinks };
+		if (resume?.url) {
+			updatedLinks.resumeUrl = resume.url;
+		}
+		setLinks(updatedLinks);
+		setOriginalLinks(updatedLinks);
+	}, [portfolioLinks, resume]);
+
+	const validateUrl = (url: string): boolean => {
+		if (!url) return true;
+		try {
+			new URL(url);
+			return true;
+		} catch (e) {
+			console.error("Error validating URL:", e);
+			return false;
 		}
 	};
 
-	const handleResumeFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const files = e.target.files;
-		if (files && files.length > 0) {
-			setIsUploading(true);
-			onFileUpload("resume", files[0]);
-
-			// Reset the input value
-			e.target.value = "";
-
-			// Simulate upload delay
-			setTimeout(() => {
-				setIsUploading(false);
-			}, 1000);
-		}
-	};
-
-	// Portfolio links handlers
 	const handleEditLinks = () => {
 		setIsEditingLinks(true);
+		const updatedLinks = { ...portfolioLinks };
+		if (resume?.url) {
+			updatedLinks.resumeUrl = resume.url;
+		}
+		setLinks(updatedLinks);
+		setOriginalLinks(updatedLinks);
+		setLocalErrors({});
+		setHasChanges({});
 	};
 
-	const handleSaveLinks = () => {
-		setIsEditingLinks(false);
-		onLinksUpdate(links);
+	const handleSaveLinks = async () => {
+		const errors: Record<string, string> = {};
+		let hasErrors = false;
+
+		Object.entries(links).forEach(([key, value]) => {
+			if (value && !validateUrl(value)) {
+				errors[key] = `Please enter a valid ${key} URL`;
+				hasErrors = true;
+			}
+		});
+
+		if (hasErrors) {
+			setLocalErrors(errors);
+			return;
+		}
+
+		try {
+			await onLinksUpdate(links);
+			setIsEditingLinks(false);
+			setLocalErrors({});
+			setHasChanges({});
+		} catch (error) {
+			console.error("Error saving links:", error);
+		}
 	};
 
 	const handleCancelLinks = () => {
 		setIsEditingLinks(false);
-		setLinks(portfolioLinks);
+		const updatedLinks = { ...portfolioLinks };
+		if (resume?.url) {
+			updatedLinks.resumeUrl = resume.url;
+		}
+		setLinks(updatedLinks);
+		setOriginalLinks(updatedLinks);
+		setLocalErrors({});
+		setHasChanges({});
 	};
 
 	const handleLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		setLinks((prev) => ({ ...prev, [name]: value }));
+
+		const hasChanged = value !== originalLinks[name as keyof PortfolioLinks];
+		setHasChanges((prev) => ({ ...prev, [name]: hasChanged }));
+
+		if (value && !validateUrl(value)) {
+			setLocalErrors((prev) => ({
+				...prev,
+				[name]: `Please enter a valid ${name} URL`,
+			}));
+		} else {
+			setLocalErrors((prev) => {
+				const newErrors = { ...prev };
+				delete newErrors[name];
+				return newErrors;
+			});
+		}
 	};
+
+	const handleSaveField = async (fieldName: string) => {
+		const value = links[fieldName as keyof PortfolioLinks] || "";
+
+		if (!hasChanges[fieldName]) {
+			return;
+		}
+
+		if (value && !validateUrl(value)) {
+			setLocalErrors((prev) => ({
+				...prev,
+				[fieldName]: `Please enter a valid ${fieldName} URL`,
+			}));
+			return;
+		}
+
+		setSavingField(fieldName);
+
+		try {
+			let success = false;
+
+			if (updateSingleLink) {
+				success = await updateSingleLink(
+					fieldName as keyof PortfolioLinks,
+					value,
+				);
+			} else {
+				const updatePayload = { ...originalLinks, [fieldName]: value };
+				await onLinksUpdate(updatePayload);
+				success = true;
+			}
+
+			if (success) {
+				setOriginalLinks((prev) => ({ ...prev, [fieldName]: value }));
+
+				setHasChanges((prev) => ({ ...prev, [fieldName]: false }));
+
+				showToast({
+					title: value
+						? `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} link updated`
+						: `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} link removed`,
+					variant: "success",
+				});
+			}
+		} catch (error) {
+			console.error(`Error saving ${fieldName}:`, error);
+			showToast({
+				title: `Failed to save ${fieldName}`,
+				variant: "error",
+			});
+		} finally {
+			setSavingField(null);
+		}
+	};
+
+	const anyChanges = Object.values(hasChanges).some(Boolean);
+	const anyErrors = Object.keys(localErrors).length > 0;
 
 	return (
 		<>
 			<ProfileSection
-				title="Resume"
-				canEdit={false}
-				isEditing={false}
-				onEdit={() => {}}
-				onSave={() => {}}
-			>
-				<div className="border border-dashed border-primary-base rounded-md p-10 bg-primary-base bg-opacity-10">
-					{resume ? (
-						<div className="flex flex-col sm:flex-row justify-center gap-2">
-							<Button
-								className="bg-primary-base text-white font-semibold hover:bg-custom-skyBlue flex items-center justify-center gap-2 px-4 md:px-8 w-full sm:w-auto"
-								onClick={() => window.open(resume.url, "_blank")}
-							>
-								Download Resume <Download className="h-4 w-4" />
-							</Button>
-
-							{canEdit && (
-								<Button
-									className="bg-white border border-custom-navyBlue text-black hover:bg-white hover:bg-opacity-50 flex items-center gap-2"
-									onClick={handleResumeUpload}
-									disabled={isUploading}
-								>
-									{isUploading ? (
-										<>
-											<div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin mr-2" />
-											Updating...
-										</>
-									) : (
-										<>
-											<span>Update Resume</span>
-											<Upload className="h-4 w-4" />
-										</>
-									)}
-								</Button>
-							)}
-
-							{canEdit && (
-								<Button
-									variant="ghost"
-									className="text-red-500 hover:text-red-700 hover:bg-red-50 w-full sm:w-auto md:ml-2"
-									onClick={() => onFileRemove("resume")}
-								>
-									Remove
-								</Button>
-							)}
-
-							<input
-								ref={resumeInputRef}
-								type="file"
-								accept=".pdf"
-								className="hidden"
-								onChange={handleResumeFileChange}
-							/>
-
-							{/* Show progress bar and error for update */}
-							{uploadError && (
-								<div className="text-red-500 text-sm mt-2">{uploadError}</div>
-							)}
-							{isUploading && uploadProgress !== null && (
-								<div className="mt-2">
-									<div className="w-full bg-gray-200 rounded-full h-2">
-										<div
-											className="bg-blue-500 h-2 rounded-full"
-											style={{ width: `${uploadProgress}%` }}
-										/>
-									</div>
-									<div className="text-xs text-gray-600 mt-1">
-										{Math.round(uploadProgress ?? 0)}%
-									</div>
-								</div>
-							)}
-						</div>
-					) : (
-						<div className="flex justify-center">
-							{canEdit ? (
-								<>
-									<Button
-										className="bg-white border border-custom-navyBlue text-black hover:bg-white hover:bg-opacity-50 flex items-center gap-2"
-										onClick={handleResumeUpload}
-										disabled={isUploading}
-									>
-										{isUploading ? (
-											<>
-												<div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin mr-2" />
-												Uploading...
-											</>
-										) : (
-											<>
-												<span>Upload Resume/CV</span>
-												<Upload className="h-4 w-4" />
-											</>
-										)}
-									</Button>
-									<input
-										ref={resumeInputRef}
-										type="file"
-										accept=".pdf"
-										className="hidden"
-										onChange={handleResumeFileChange}
-									/>
-									{/* Show progress bar and error for upload */}
-									{uploadError && (
-										<div className="text-red-500 text-sm mt-2">
-											{uploadError}
-										</div>
-									)}
-									{isUploading && uploadProgress !== null && (
-										<div className="mt-2">
-											<div className="w-full bg-gray-200 rounded-full h-2">
-												<div
-													className="bg-blue-500 h-2 rounded-full"
-													style={{ width: `${uploadProgress}%` }}
-												/>
-											</div>
-											<div className="text-xs text-gray-600 mt-1">
-												{Math.round(uploadProgress ?? 0)}%
-											</div>
-										</div>
-									)}
-								</>
-							) : (
-								<p className="text-gray-500 italic">No resume uploaded yet.</p>
-							)}
-						</div>
-					)}
-				</div>
-			</ProfileSection>
-
-			<div className="md:px-10">
-				<Separator className="my-8 bg-custom-separator bg-opacity-50" />
-			</div>
-
-			<ProfileSection
-				title="Optional Links"
+				title="Document Links"
 				canEdit={canEdit}
 				isEditing={isEditingLinks}
 				onEdit={handleEditLinks}
 				onSave={handleSaveLinks}
 				onCancel={handleCancelLinks}
+				saveButtonText="Save Changes"
+				isSubmitting={savingField !== null}
+				saveDisabled={!anyChanges || anyErrors}
 			>
 				<div className="space-y-4 md:px-4">
+					<div className="flex flex-wrap items-start gap-2 sm:gap-4">
+						<div className="flex items-center gap-2 w-full sm:w-28">
+							<BiFile className="w-5 h-5 text-primary-base flex-shrink-0" />
+							<span className="font-medium">Resume</span>
+						</div>
+
+						{isEditingLinks ? (
+							<div className="w-full relative">
+								<div className="flex items-center">
+									<Input
+										name="resumeUrl"
+										value={links.resumeUrl || ""}
+										onChange={handleLinkChange}
+										placeholder="Resume URL"
+										className={`w-full ${localErrors.resumeUrl ? "border-red-500" : hasChanges.resumeUrl ? "border-blue-500" : ""}`}
+									/>
+									<Button
+										size="sm"
+										className="ml-2"
+										onClick={() => handleSaveField("resumeUrl")}
+										disabled={
+											!hasChanges.resumeUrl ||
+											!!localErrors.resumeUrl ||
+											savingField === "resumeUrl"
+										}
+									>
+										{savingField === "resumeUrl" ? (
+											<span className="animate-spin">⏳</span>
+										) : (
+											<CheckCircle className="h-4 w-4" />
+										)}
+									</Button>
+								</div>
+								{localErrors.resumeUrl && (
+									<p className="text-red-500 text-xs mt-1">
+										{localErrors.resumeUrl}
+									</p>
+								)}
+								{hasChanges.resumeUrl && !localErrors.resumeUrl && (
+									<p className="text-red-500 font-medium text-xs mt-1">
+										Changes not saved (Please save changes when you are done)
+									</p>
+								)}
+							</div>
+						) : resume ? (
+							<div className="flex-1 min-w-0">
+								<a
+									href={resume.url}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="text-primary-dark hover:underline inline-flex items-center gap-1 break-all"
+								>
+									<span className="break-words">
+										{resume.url.replace(/^https?:\/\/(www\.)?/i, "")}
+									</span>
+									<ExternalLink className="h-3 w-3 flex-shrink-0 inline align-text-bottom" />
+								</a>
+							</div>
+						) : (
+							<span className="text-gray-500">Not provided</span>
+						)}
+					</div>
+
+					<div className="flex flex-wrap items-start gap-2 sm:gap-4">
+						<div className="flex items-center gap-2 w-full sm:w-28">
+							<FaLinkedin className="w-5 h-5 text-primary-base flex-shrink-0" />
+							<span className="font-medium">LinkedIn</span>
+						</div>
+
+						{isEditingLinks ? (
+							<div className="w-full relative">
+								<div className="flex items-center">
+									<Input
+										name="linkedin"
+										value={links.linkedin || ""}
+										onChange={handleLinkChange}
+										placeholder="LinkedIn Profile URL"
+										className={`w-full ${localErrors.linkedin ? "border-red-500" : hasChanges.linkedin ? "border-blue-500" : ""}`}
+									/>
+									<Button
+										size="sm"
+										className="ml-2"
+										onClick={() => handleSaveField("linkedin")}
+										disabled={
+											!hasChanges.linkedin ||
+											!!localErrors.linkedin ||
+											savingField === "linkedin"
+										}
+									>
+										{savingField === "linkedin" ? (
+											<span className="animate-spin">⏳</span>
+										) : (
+											<CheckCircle className="h-4 w-4" />
+										)}
+									</Button>
+								</div>
+								{localErrors.linkedin && (
+									<p className="text-red-500 text-xs mt-1">
+										{localErrors.linkedin}
+									</p>
+								)}
+								{hasChanges.linkedin && !localErrors.linkedin && (
+									<p className="text-red-500 font-medium text-xs mt-1">
+										Changes not saved (Please save changes when you are done)
+									</p>
+								)}
+							</div>
+						) : links.linkedin ? (
+							<div className="flex-1 min-w-0">
+								<a
+									href={links.linkedin}
+									target="_blank"
+									rel="noopener noreferrer"
+									className="text-primary-dark hover:underline inline-flex items-center gap-1 break-all"
+								>
+									<span className="break-words">
+										{links.linkedin.replace(/^https?:\/\/(www\.)?/i, "")}
+									</span>
+									<ExternalLink className="h-3 w-3 flex-shrink-0 inline align-text-bottom" />
+								</a>
+							</div>
+						) : (
+							<span className="text-gray-500">Not provided</span>
+						)}
+					</div>
+
 					<div className="flex flex-wrap items-start gap-2 sm:gap-4">
 						<div className="flex items-center gap-2 w-full sm:w-28">
 							<FaGithub className="w-5 h-5 text-primary-base flex-shrink-0" />
@@ -237,13 +355,43 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 						</div>
 
 						{isEditingLinks ? (
-							<Input
-								name="github"
-								value={links.github || ""}
-								onChange={handleLinkChange}
-								placeholder="GitHub Link"
-								className="w-full"
-							/>
+							<div className="w-full relative">
+								<div className="flex items-center">
+									<Input
+										name="github"
+										value={links.github || ""}
+										onChange={handleLinkChange}
+										placeholder="GitHub Link"
+										className={`w-full ${localErrors.github ? "border-red-500" : hasChanges.github ? "border-blue-500" : ""}`}
+									/>
+									<Button
+										size="sm"
+										className="ml-2"
+										onClick={() => handleSaveField("github")}
+										disabled={
+											!hasChanges.github ||
+											!!localErrors.github ||
+											savingField === "github"
+										}
+									>
+										{savingField === "github" ? (
+											<span className="animate-spin">⏳</span>
+										) : (
+											<CheckCircle className="h-4 w-4" />
+										)}
+									</Button>
+								</div>
+								{localErrors.github && (
+									<p className="text-red-500 text-xs mt-1">
+										{localErrors.github}
+									</p>
+								)}
+								{hasChanges.github && !localErrors.github && (
+									<p className="text-red-500 font-medium text-xs mt-1">
+										Changes not saved (Please save changes when you are done)
+									</p>
+								)}
+							</div>
 						) : links.github ? (
 							<div className="flex-1 min-w-0">
 								<a
@@ -270,13 +418,43 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 						</div>
 
 						{isEditingLinks ? (
-							<Input
-								name="behance"
-								value={links.behance || ""}
-								onChange={handleLinkChange}
-								placeholder="Behance Link"
-								className="w-full"
-							/>
+							<div className="w-full relative">
+								<div className="flex items-center">
+									<Input
+										name="behance"
+										value={links.behance || ""}
+										onChange={handleLinkChange}
+										placeholder="Behance Link"
+										className={`w-full ${localErrors.behance ? "border-red-500" : hasChanges.behance ? "border-blue-500" : ""}`}
+									/>
+									<Button
+										size="sm"
+										className="ml-2"
+										onClick={() => handleSaveField("behance")}
+										disabled={
+											!hasChanges.behance ||
+											!!localErrors.behance ||
+											savingField === "behance"
+										}
+									>
+										{savingField === "behance" ? (
+											<span className="animate-spin">⏳</span>
+										) : (
+											<CheckCircle className="h-4 w-4" />
+										)}
+									</Button>
+								</div>
+								{localErrors.behance && (
+									<p className="text-red-500 text-xs mt-1">
+										{localErrors.behance}
+									</p>
+								)}
+								{hasChanges.behance && !localErrors.behance && (
+									<p className="text-red-500 font-medium text-xs mt-1">
+										Changes not saved (Please save changes when you are done)
+									</p>
+								)}
+							</div>
 						) : links.behance ? (
 							<div className="flex-1 min-w-0">
 								<a
@@ -303,13 +481,43 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 						</div>
 
 						{isEditingLinks ? (
-							<Input
-								name="portfolio"
-								value={links.portfolio || ""}
-								onChange={handleLinkChange}
-								placeholder="Portfolio Website Link"
-								className="w-full"
-							/>
+							<div className="w-full relative">
+								<div className="flex items-center">
+									<Input
+										name="portfolio"
+										value={links.portfolio || ""}
+										onChange={handleLinkChange}
+										placeholder="Portfolio Website Link"
+										className={`w-full ${localErrors.portfolio ? "border-red-500" : hasChanges.portfolio ? "border-blue-500" : ""}`}
+									/>
+									<Button
+										size="sm"
+										className="ml-2"
+										onClick={() => handleSaveField("portfolio")}
+										disabled={
+											!hasChanges.portfolio ||
+											!!localErrors.portfolio ||
+											savingField === "portfolio"
+										}
+									>
+										{savingField === "portfolio" ? (
+											<span className="animate-spin">⏳</span>
+										) : (
+											<CheckCircle className="h-4 w-4" />
+										)}
+									</Button>
+								</div>
+								{localErrors.portfolio && (
+									<p className="text-red-500 text-xs mt-1">
+										{localErrors.portfolio}
+									</p>
+								)}
+								{hasChanges.portfolio && !localErrors.portfolio && (
+									<p className="text-red-500 font-medium text-xs mt-1">
+										Changes not saved (Please save changes when you are done)
+									</p>
+								)}
+							</div>
 						) : links.portfolio ? (
 							<div className="flex-1 min-w-0">
 								<a

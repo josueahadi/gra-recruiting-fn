@@ -24,7 +24,6 @@ export interface AuthCredentials {
 
 export interface SignUpCredentials extends AuthCredentials {
 	name: string;
-	terms: boolean;
 }
 
 export interface SignUpFormProps {

@@ -22,7 +22,6 @@ import {
 	EyeOff,
 } from "lucide-react";
 import PasswordStrengthMeter from "@/components/auth/password-strength-meter";
-import { useState, useEffect } from "react";
 import { AUTH_CONSTANTS } from "@/constants";
 
 export default function ResetPasswordPage() {
@@ -49,10 +48,6 @@ export default function ResetPasswordPage() {
 		goBack,
 	} = useResetPassword();
 
-	// State for resend cooldown
-	const [resendCooldown, setResendCooldown] = useState(false);
-	const [cooldownTime, setCooldownTime] = useState(0);
-
 	// Handle form submissions
 	const handleRequestResetSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -68,32 +63,6 @@ export default function ResetPasswordPage() {
 		e.preventDefault();
 		resetPassword();
 	};
-
-	const handleResendCode = () => {
-		if (resendCooldown) return;
-
-		resendCode();
-		setResendCooldown(true);
-		setCooldownTime(60);
-
-		const interval = setInterval(() => {
-			setCooldownTime((prev) => {
-				if (prev <= 1) {
-					clearInterval(interval);
-					setResendCooldown(false);
-					return 0;
-				}
-				return prev - 1;
-			});
-		}, 1000);
-	};
-
-	useEffect(() => {
-		return () => {
-			setCooldownTime(0);
-			setResendCooldown(false);
-		};
-	}, []);
 
 	return (
 		<div className="w-full max-w-md mx-auto ">
@@ -236,12 +205,10 @@ export default function ResetPasswordPage() {
 									type="button"
 									variant="outline"
 									className="w-full"
-									onClick={handleResendCode}
-									disabled={isLoading || resendCooldown}
+									onClick={resendCode}
+									disabled={isLoading}
 								>
-									{resendCooldown
-										? `Resend available in ${cooldownTime}s`
-										: "Resend Code"}
+									Resend Code
 								</Button>
 
 								<Button

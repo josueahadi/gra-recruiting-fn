@@ -22,52 +22,52 @@ export function useProfileCompletion(profileData: ApplicantData | null) {
 			total += 4; // 4 fields
 			if (profileData.addressInfo.country) completed++;
 			if (profileData.addressInfo.city) completed++;
-			if (profileData.addressInfo.postalCode) completed++;
 			if (profileData.addressInfo.address) completed++;
+			if (profileData.addressInfo.postalCode) completed++;
 		}
 
 		// Skills
 		if (profileData.skills) {
-			total += 1;
+			total += 1; // At least one skill
 			if (profileData.skills.length > 0) completed++;
 		}
 
 		// Languages
 		if (profileData.languages) {
-			total += 1;
+			total += 1; // At least one language
 			if (profileData.languages.length > 0) completed++;
 		}
 
 		// Education
 		if (profileData.education) {
-			total += 1;
+			total += 1; // At least one education entry
 			if (profileData.education.length > 0) completed++;
 		}
 
-		// Work experience
+		// Experience
 		if (profileData.experience) {
-			total += 1;
+			total += 1; // At least one experience entry
 			if (profileData.experience.length > 0) completed++;
 		}
 
-		// Documents and portfolio
-		if (profileData.documents) {
-			total += 2;
-			if (profileData.documents.resume) completed++;
-			if (
-				profileData.portfolioLinks &&
-				(profileData.portfolioLinks.github ||
-					profileData.portfolioLinks.portfolio ||
-					profileData.portfolioLinks.behance)
-			) {
-				completed++;
-			}
+		// Documents - now only 1 point total for any document link
+		total += 1; // Only 1 point for any document
+
+		// Check if any document link is available
+		const hasResume = !!profileData.documents?.resume;
+		const hasLinkedIn = !!profileData.portfolioLinks?.linkedin;
+		const hasGitHub = !!profileData.portfolioLinks?.github;
+		const hasBehance = !!profileData.portfolioLinks?.behance;
+		const hasPortfolio = !!profileData.portfolioLinks?.portfolio;
+
+		if (hasResume || hasLinkedIn || hasGitHub || hasBehance || hasPortfolio) {
+			completed++;
 		}
 
-		return Math.round((completed / total) * 100);
+		// Calculate percentage
+		const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+		return percentage;
 	}, [profileData]);
 
-	return {
-		getProfileCompletion,
-	};
+	return { getProfileCompletion };
 }

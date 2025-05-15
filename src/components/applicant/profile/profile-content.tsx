@@ -9,9 +9,7 @@ import {
 	DocumentsTab,
 } from "@/components/profile/navigation";
 import SkillsTab from "@/components/profile/navigation/skills-tab";
-import { ArrowRight, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { X } from "lucide-react";
 import { showToast } from "@/services/toast";
 import type { Skill } from "@/types/profile";
 
@@ -30,6 +28,7 @@ export default function ProfileContent() {
 		uploadFile,
 		removeDocument,
 		updatePortfolioLinks,
+		updateResumeUrl,
 		updateLanguage,
 		deleteLanguageById,
 		addLanguage,
@@ -81,10 +80,10 @@ export default function ProfileContent() {
 		try {
 			await updateSkills(skills);
 
-			showToast({
-				title: "Skills updated successfully",
-				variant: "success",
-			});
+			// showToast({
+			// 	title: "Skills updated successfully",
+			// 	variant: "success",
+			// });
 
 			return true;
 		} catch (error) {
@@ -135,20 +134,20 @@ export default function ProfileContent() {
 						improve your chances of being discovered, please complete your
 						profile information:
 					</p>
-					<ul className="list-disc pl-5 mb-6 space-y-2">
+					<ul className="list-disc pl-5 space-y-2">
 						<li>Add your personal and address information</li>
 						<li>Add your skills and language proficiencies</li>
 						<li>Include your education and work experience</li>
 						<li>Upload your resume and portfolio links</li>
 					</ul>
-					<div className="flex justify-center">
+					{/* <div className="flex justify-center">
 						<Button asChild>
 							<Link href="/applicant" className="flex items-center">
 								Start by adding your address information{" "}
 								<ArrowRight className="ml-2 h-4 w-4" />
 							</Link>
 						</Button>
-					</div>
+					</div> */}
 				</div>
 
 				<PersonalInfoTab
@@ -208,6 +207,7 @@ export default function ProfileContent() {
 					onFileUpload={uploadFile}
 					onFileRemove={removeDocument}
 					onLinksUpdate={updatePortfolioLinks}
+					updateResumeUrl={updateResumeUrl}
 				/>
 			)}
 		</div>

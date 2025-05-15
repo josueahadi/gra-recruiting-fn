@@ -26,8 +26,14 @@ export function useProfile(options: UseProfileOptions) {
 		queryClient,
 	);
 
-	const { updateSkills, addSkill, deleteSkill, pendingSkills, skillsLoading } =
-		useSkills(profileData, setProfileData, queryClient);
+	const {
+		updateSkills,
+		addSkill,
+		deleteSkill,
+		pendingSkills,
+		skillsLoading,
+		updateSkillById,
+	} = useSkills(profileData, setProfileData, queryClient);
 
 	const {
 		addLanguage,
@@ -44,8 +50,13 @@ export function useProfile(options: UseProfileOptions) {
 		queryClient,
 	);
 
-	const { uploadFile, removeDocument, updatePortfolioLinks, documentsLoading } =
-		useDocuments(profileData, setProfileData, queryClient);
+	const {
+		uploadFile,
+		removeDocument,
+		updatePortfolioLinks,
+		updateResumeUrl,
+		documentsLoading,
+	} = useDocuments(profileData, setProfileData, queryClient);
 
 	const { updatePassword } = usePassword();
 
@@ -75,6 +86,7 @@ export function useProfile(options: UseProfileOptions) {
 		uploadFile,
 		removeDocument,
 		updatePortfolioLinks,
+		updateResumeUrl,
 		updatePassword,
 		getProfileCompletion,
 		pendingOperations: hasPendingOperations,
@@ -85,5 +97,6 @@ export function useProfile(options: UseProfileOptions) {
 		addSkill,
 		deleteSkill,
 		deleteLanguageById,
+		updateSkillById,
 	};
 }
