@@ -22,6 +22,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 	DialogFooter,
+	DialogDescription,
 } from "@/components/ui/dialog";
 import { useProfile } from "@/hooks/use-profile";
 
@@ -476,6 +477,9 @@ const SkillsInput: React.FC<SkillsInputProps> = ({
 				<DialogContent>
 					<DialogHeader>
 						<DialogTitle>Edit Skill</DialogTitle>
+						<DialogDescription>
+							Update your skill name and rating level.
+						</DialogDescription>
 					</DialogHeader>
 
 					<div className="space-y-4 py-4">

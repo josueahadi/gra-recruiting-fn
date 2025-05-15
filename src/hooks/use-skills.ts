@@ -35,11 +35,21 @@ export function useSkills(
 				setProfileData({ ...profileData, skills });
 
 				const skillsPayload = skills.map((skill) => ({
+					id:
+						typeof skill.id === "string" && skill.id.startsWith("temp-")
+							? undefined
+							: Number(skill.id),
 					skillName: skill.name,
 					experienceRating: skill.experienceRating || "FIVE",
 				}));
 
-				await skillsService.update(skillsPayload);
+				const skillsToUpdate = skillsPayload.filter(
+					(skill) => skill.id !== undefined,
+				);
+
+				if (skillsToUpdate.length > 0) {
+					await skillsService.update(skillsToUpdate);
+				}
 
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 				queryClient.invalidateQueries({ queryKey: ["user-profile"] });
@@ -66,10 +76,8 @@ export function useSkills(
 		async (skillName: string) => {
 			if (!profileData) return false;
 
-			// Normalize the skill name for comparison
 			const normalizedSkillName = skillName.trim().toLowerCase();
 
-			// Check if the skill already exists (case-insensitive)
 			if (
 				profileData.skills.some(
 					(skill) => skill.name.trim().toLowerCase() === normalizedSkillName,
@@ -96,7 +104,6 @@ export function useSkills(
 
 				const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-				// Make a copy of the current skills to avoid mutation issues
 				const currentSkills = [...profileData.skills];
 
 				const tempSkill = {
@@ -105,7 +112,6 @@ export function useSkills(
 					isTemporary: true,
 				};
 
-				// Update the UI optimistically
 				const updatedProfileData = {
 					...profileData,
 					skills: [...currentSkills, tempSkill],
@@ -113,7 +119,6 @@ export function useSkills(
 
 				setProfileData(updatedProfileData);
 
-				// Make the API call
 				const result = await skillsService.add([
 					{
 						skillName,
@@ -124,10 +129,8 @@ export function useSkills(
 				const skillResponse = result.data[0];
 
 				if (skillResponse?.id) {
-					// Get the current state again
 					const currentProfileData = { ...updatedProfileData };
 
-					// Update the skill with the server ID
 					const updatedSkills = currentProfileData.skills.map(
 						(skill: Skill) => {
 							if (skill.id === tempId) {
@@ -142,7 +145,6 @@ export function useSkills(
 						},
 					);
 
-					// Set the updated data
 					setProfileData({
 						...currentProfileData,
 						skills: updatedSkills,
@@ -160,9 +162,7 @@ export function useSkills(
 			} catch (error) {
 				console.error("Error adding skill:", error);
 
-				// Get the current profile data
 				if (profileData) {
-					// Revert the UI change on error
 					const filteredSkills = profileData.skills.filter(
 						(skill: Skill) => skill.name !== skillName || !skill.isTemporary,
 					);
@@ -218,7 +218,7 @@ export function useSkills(
 				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
 				showToast({
-					title: `${skillToDelete.name} removed successfully`,
+					title: `"${skillToDelete.name}" removed successfully`,
 					variant: "success",
 				});
 
@@ -226,10 +226,7 @@ export function useSkills(
 			} catch (error) {
 				console.error("Error deleting skill:", error);
 
-				setProfileData({
-					...profileData,
-					skills: [...profileData.skills, skillToDelete],
-				});
+				setProfileData(profileData);
 
 				showToast({
 					title: "Failed to remove skill",
@@ -238,13 +235,13 @@ export function useSkills(
 
 				return false;
 			} finally {
-				if (skillToDelete) {
-					setPendingSkills((prev) => {
-						const newSet = new Set(prev);
+				setPendingSkills((prev) => {
+					const newSet = new Set(prev);
+					if (skillToDelete) {
 						newSet.delete(skillToDelete.name);
-						return newSet;
-					});
-				}
+					}
+					return newSet;
+				});
 				setSkillsLoading(false);
 			}
 		},
@@ -272,7 +269,6 @@ export function useSkills(
 				return false;
 			}
 
-			// Check for duplicate name if name is changing
 			if (skillName.toLowerCase() !== skillToUpdate.name.toLowerCase()) {
 				const isDuplicate = profileData.skills.some(
 					(skill) =>
@@ -289,40 +285,47 @@ export function useSkills(
 				}
 			}
 
-			// Store original state for rollback
-			const originalSkill = { ...skillToUpdate };
+			const originalSkills = [...profileData.skills];
+
+			const previousNetworkMode =
+				queryClient.getDefaultOptions().queries?.networkMode;
+			queryClient.setDefaultOptions({
+				queries: {
+					networkMode: "always",
+				},
+			});
 
 			try {
 				setSkillsLoading(true);
 				setPendingSkills((prev) => new Set(prev).add(skillToUpdate.name));
 
-				// Update UI optimistically
-				setProfileData({
-					...profileData,
-					skills: profileData.skills.map((skill) => {
-						if (skill.id === skillId) {
-							return {
-								...skill,
-								name: skillName,
-								experienceRating: rating,
-							};
-						}
-						return skill;
-					}),
+				const numericId = Number(skillId);
+
+				const updatedSkills = profileData.skills.map((skill) => {
+					if (skill.id === skillId) {
+						return {
+							...skill,
+							name: skillName,
+							experienceRating: rating,
+						};
+					}
+					return skill;
 				});
 
-				// Make API call - Use the correct endpoint and payload structure
+				setProfileData({
+					...profileData,
+					skills: updatedSkills,
+				});
+
 				await api.patch("/api/v1/applicants/update-skills", {
 					skillsAndExperienceRatings: [
 						{
-							id: Number(skillId),
+							id: numericId,
 							skillName: skillName,
 							experienceRating: rating,
 						},
 					],
 				});
-
-				queryClient.invalidateQueries({ queryKey: ["application-profile"] });
 
 				showToast({
 					title: "Skill updated successfully",
@@ -333,15 +336,9 @@ export function useSkills(
 			} catch (error) {
 				console.error("Error updating skill:", error);
 
-				// Revert UI changes on error
 				setProfileData({
 					...profileData,
-					skills: profileData.skills.map((skill) => {
-						if (skill.id === skillId) {
-							return originalSkill;
-						}
-						return skill;
-					}),
+					skills: originalSkills,
 				});
 
 				showToast({
@@ -351,6 +348,12 @@ export function useSkills(
 
 				return false;
 			} finally {
+				queryClient.setDefaultOptions({
+					queries: {
+						networkMode: previousNetworkMode,
+					},
+				});
+
 				setPendingSkills((prev) => {
 					const newSet = new Set(prev);
 					newSet.delete(skillToUpdate.name);
