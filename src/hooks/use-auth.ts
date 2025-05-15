@@ -1,7 +1,6 @@
 "use client";
 
 import { api } from "@/services/api";
-import type { ApiError } from "@/types/api";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";

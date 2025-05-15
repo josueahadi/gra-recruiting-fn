@@ -9,9 +9,7 @@ import {
 	DocumentsTab,
 } from "@/components/profile/navigation";
 import SkillsTab from "@/components/profile/navigation/skills-tab";
-import { ArrowRight, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { X } from "lucide-react";
 import { showToast } from "@/services/toast";
 import type { Skill } from "@/types/profile";
 

@@ -1,10 +1,8 @@
 "use client";
 
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
-import Link from "next/link";
 import PasswordStrengthMeter from "./password-strength-meter";
 
 interface ContactInfoFieldsProps {
