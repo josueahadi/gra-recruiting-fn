@@ -43,6 +43,7 @@ const SkillsDisplay: React.FC<SkillsDisplayProps> = memo(
 					{skills.map((skill) => (
 						<SkillPill
 							key={skill.id}
+							id={skill.id}
 							skill={skill.name}
 							experienceRating={skill.experienceRating}
 							className="bg-slate-500"

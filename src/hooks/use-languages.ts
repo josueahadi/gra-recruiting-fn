@@ -24,9 +24,19 @@ export function useLanguages(
 	);
 	const [languagesLoading, setLanguagesLoading] = useState(false);
 
+	const MAX_LANGUAGE_LENGTH = 50;
+
 	const addLanguage = useCallback(
 		async (language: string, proficiencyLevel: number) => {
 			if (!profileData) return false;
+
+			if (language.length > MAX_LANGUAGE_LENGTH) {
+				showToast({
+					title: `Language name cannot exceed ${MAX_LANGUAGE_LENGTH} characters`,
+					variant: "error",
+				});
+				return false;
+			}
 
 			try {
 				setLanguagesLoading(true);
@@ -114,6 +124,14 @@ export function useLanguages(
 	const updateLanguage = useCallback(
 		async (languageId: number, language: string, proficiencyLevel: number) => {
 			if (!profileData) return false;
+
+			if (language.length > MAX_LANGUAGE_LENGTH) {
+				showToast({
+					title: `Language name cannot exceed ${MAX_LANGUAGE_LENGTH} characters`,
+					variant: "error",
+				});
+				return false;
+			}
 
 			const originalLanguages = profileData.languages
 				? [...profileData.languages]

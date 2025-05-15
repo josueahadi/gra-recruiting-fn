@@ -26,8 +26,14 @@ export function useProfile(options: UseProfileOptions) {
 		queryClient,
 	);
 
-	const { updateSkills, addSkill, deleteSkill, pendingSkills, skillsLoading } =
-		useSkills(profileData, setProfileData, queryClient);
+	const {
+		updateSkills,
+		addSkill,
+		deleteSkill,
+		pendingSkills,
+		skillsLoading,
+		updateSkillById,
+	} = useSkills(profileData, setProfileData, queryClient);
 
 	const {
 		addLanguage,
@@ -85,5 +91,6 @@ export function useProfile(options: UseProfileOptions) {
 		addSkill,
 		deleteSkill,
 		deleteLanguageById,
+		updateSkillById,
 	};
 }
