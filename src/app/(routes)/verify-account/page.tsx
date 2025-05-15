@@ -205,15 +205,15 @@ export default function VerifyAccountPage() {
 										</h2>
 										<p className="mt-2 text-gray-600">
 											{hasSignupData
-												? "Your profile setup is complete. You can now log in."
-												: "Your email has been successfully verified. You can now log in."}
+												? "Your profile setup is complete. You can now access your profile."
+												: "Your email has been successfully verified. You can now access your profile."}
 										</p>
 										<div className="mt-6 space-y-3">
 											<Button
-												onClick={() => router.push("/auth?mode=login")}
+												onClick={() => router.push("/applicant")}
 												className="w-full bg-primary-base hover:bg-custom-skyBlue font-bold"
 											>
-												Back to Login
+												Go to My Profile
 											</Button>
 										</div>
 									</>
