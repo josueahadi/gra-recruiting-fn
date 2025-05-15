@@ -14,7 +14,6 @@ interface ContactInfoFieldsProps {
 	password: string;
 	confirmPassword: string;
 	phoneNumber: string;
-	terms: boolean;
 	errors: Record<string, string>;
 	onInputChange: (name: string, value: string | boolean) => void;
 	showPassword: boolean;
@@ -28,7 +27,6 @@ export const ContactInfoFields = ({
 	password,
 	confirmPassword,
 	phoneNumber,
-	terms,
 	errors,
 	onInputChange,
 	showPassword,
@@ -141,26 +139,6 @@ export const ContactInfoFields = ({
 					<p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>
 				)}
 			</div>
-
-			<div className="flex items-center space-x-2">
-				<Checkbox
-					id="terms"
-					checked={terms}
-					onCheckedChange={(checked) => onInputChange("terms", checked === true)}
-				/>
-				<label
-					htmlFor="terms"
-					className={`text-sm ${errors.terms ? "text-red-500" : ""}`}
-				>
-					I agree to the{" "}
-					<Link href="/terms" className="text-primary-base hover:underline">
-						Terms and Conditions
-					</Link>
-				</label>
-			</div>
-			{errors.terms && (
-				<p className="text-red-500 text-sm mt-1">{errors.terms}</p>
-			)}
 		</div>
 	);
 };

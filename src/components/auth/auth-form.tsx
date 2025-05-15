@@ -27,7 +27,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 		password: "",
 		confirmPassword: "",
 		phoneNumber: "",
-		terms: true,
 	});
 
 	const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -221,11 +220,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 			isValid = false;
 		}
 
-		if (!formData.terms) {
-			errors.terms = "You must accept the terms and conditions";
-			isValid = false;
-		}
-
 		setFormErrors(errors);
 		return isValid;
 	};
@@ -329,7 +323,6 @@ const AuthForm = ({ mode, onSuccess, onError }: AuthFormProps) => {
 							password={formData.password}
 							confirmPassword={formData.confirmPassword}
 							phoneNumber={formData.phoneNumber}
-							terms={formData.terms}
 							errors={formErrors}
 							onInputChange={(name, value) =>
 								handleInputChange({
