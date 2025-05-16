@@ -1,11 +1,11 @@
 import type React from "react";
 import { useState } from "react";
+import { useExperience } from "@/hooks/use-experience";
+import { Button } from "@/components/ui/button";
 import ProfileSection from "@/components/profile/core/profile-section";
 import ExperienceForm from "./experience/experience-form";
 import ExperienceCard from "./experience/experience-card";
 import type { WorkExperience } from "@/types/profile";
-import { useExperience } from "@/hooks/use-experience";
-import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
 import Modal from "@/components/common/modal";
 
@@ -45,27 +45,13 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 		newExperience: Omit<WorkExperience, "id">,
 	) => {
 		try {
-			let startDate: string | undefined = undefined;
-			let endDate: string | undefined = undefined;
-			if (newExperience.duration) {
-				const durationParts = newExperience.duration
-					.split("-")
-					.map((p) => p.trim());
-				startDate = durationParts[0];
-				const endDateWithParentheses = durationParts[1];
-				if (endDateWithParentheses) {
-					const endDateStr = endDateWithParentheses.split("(")[0].trim();
-					endDate = endDateStr === "Present" ? undefined : endDateStr;
-				}
-			}
-
 			await addExperience.mutateAsync({
-				companyName: newExperience.company,
-				jobTitle: newExperience.role,
-				employmentType: newExperience.responsibilities,
+				companyName: newExperience.companyName,
+				jobTitle: newExperience.jobTitle,
+				employmentType: newExperience.employmentType,
 				country: newExperience.country,
-				startDate,
-				endDate,
+				startDate: newExperience.startDate,
+				endDate: newExperience.endDate,
 			});
 		} catch (error) {
 			console.error("Error adding experience:", error);
@@ -84,40 +70,46 @@ const ExperienceSection: React.FC<ExperienceSectionProps> = ({
 	};
 
 	const handleEditExperience = (experience: WorkExperience) => {
+		console.log(
+			"[handleEditExperience] Setting experience for edit:",
+			experience,
+		);
 		setEditExperience(experience);
 	};
 
 	const handleUpdateExperience = async (
 		updated: Omit<WorkExperience, "id">,
 	) => {
-		if (!editExperience?.id) return;
+		if (!editExperience?.id) {
+			console.error(
+				"[handleUpdateExperience] No experience ID available for update",
+			);
+			return;
+		}
+		console.log(
+			"[handleUpdateExperience] Updating experience with ID:",
+			editExperience.id,
+		);
+		console.log("[handleUpdateExperience] Update data:", updated);
 		try {
-			let startDate: string | undefined = undefined;
-			let endDate: string | undefined = undefined;
-			if (updated.duration) {
-				const durationParts = updated.duration.split("-").map((p) => p.trim());
-				startDate = durationParts[0];
-				const endDateWithParentheses = durationParts[1];
-				if (endDateWithParentheses) {
-					const endDateStr = endDateWithParentheses.split("(")[0].trim();
-					endDate = endDateStr === "Present" ? undefined : endDateStr;
-				}
-			}
-
 			await updateExperience.mutateAsync({
 				id: Number(editExperience.id),
 				data: {
-					companyName: updated.company,
-					jobTitle: updated.role,
-					employmentType: updated.responsibilities,
+					companyName: updated.companyName,
+					jobTitle: updated.jobTitle,
+					employmentType: updated.employmentType,
 					country: updated.country,
-					startDate,
-					endDate,
+					startDate: updated.startDate,
+					endDate: updated.endDate,
 				},
 			});
+			console.log("[handleUpdateExperience] Experience update successful");
 			setEditExperience(null);
 		} catch (error) {
-			console.error("Error updating experience:", error);
+			console.error(
+				"[handleUpdateExperience] Error updating experience:",
+				error,
+			);
 		}
 	};
 

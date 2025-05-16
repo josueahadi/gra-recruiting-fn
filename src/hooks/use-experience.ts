@@ -43,15 +43,30 @@ export function useExperience() {
 			id,
 			data,
 		}: { id: number; data: Omit<Experience, "id"> }) => {
+			console.log("[updateExperience] Starting update mutation with ID:", id);
+			console.log("[updateExperience] Original data:", data);
+
+			// Ensure dates are in correct ISO format
+			let startDate = data.startDate;
+			if (startDate && !startDate.includes("T")) {
+				startDate = `${startDate}T00:00:00.000Z`;
+			}
+
+			let endDate = data.endDate;
+			if (endDate && !endDate.includes("T")) {
+				endDate = `${endDate}T00:00:00.000Z`;
+			}
+
 			const apiData: AddExperienceRequest = {
 				companyName: data.companyName,
 				jobTitle: data.jobTitle,
 				employmentType: data.employmentType,
 				country: data.country,
-				startDate: data.startDate,
-				endDate: data.endDate,
+				startDate: startDate,
+				endDate: endDate,
 			};
 
+			console.log("[updateExperience] Formatted API data:", apiData);
 			return experienceService.update(id, apiData);
 		},
 		onSuccess: () => {

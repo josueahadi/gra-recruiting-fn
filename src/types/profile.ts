@@ -48,12 +48,13 @@ export interface Education {
 }
 
 export interface WorkExperience {
-	id: string;
-	company: string;
-	role: string;
-	duration: string;
-	responsibilities: string;
-	country?: string;
+	id?: string | number;
+	companyName: string;
+	jobTitle: string;
+	employmentType: string;
+	country: string;
+	startDate: string;
+	endDate?: string;
 }
 
 export interface Skill {

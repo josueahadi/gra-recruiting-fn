@@ -14,14 +14,6 @@ const EDUCATION_LEVEL_MAP: Record<string, string> = {
 	Other: "OTHER",
 };
 
-const EMPLOYMENT_TYPE_MAP: Record<string, string> = {
-	"Full-time": "FULL_TIME",
-	"Part-time": "PART_TIME",
-	Contract: "CONTRACT",
-	Internship: "INTERNSHIP",
-	Freelance: "FREELANCE",
-};
-
 export function useWorkEducation(
 	profileData: ApplicantData | null,
 	setProfileData: (data: ApplicantData | null) => void,
@@ -85,41 +77,34 @@ export function useWorkEducation(
 				const existingExperience = profileData.experience || [];
 
 				for (const exp of data.experience) {
-					const durationParts = exp.duration.split("-").map((p) => p.trim());
-					const startDate = durationParts[0];
-					const endDateWithParentheses = durationParts[1];
-					const endDate =
-						endDateWithParentheses.split("(")[0].trim() === "Present"
-							? undefined
-							: endDateWithParentheses.split("(")[0].trim();
+					const startDate = exp.startDate;
+					const endDate = exp.endDate;
 
 					const existingEntry = existingExperience.find((e) => e.id === exp.id);
 
 					if (!existingEntry) {
 						await api.post("/api/v1/applicants/add-experience", {
-							companyName: exp.company,
-							jobTitle: exp.role,
-							employmentType:
-								EMPLOYMENT_TYPE_MAP[exp.responsibilities] || "FULL_TIME",
+							companyName: exp.companyName,
+							jobTitle: exp.jobTitle,
+							employmentType: exp.employmentType || "FULL_TIME",
 							country: exp.country || "Rwanda",
-							startDate: convertUIDateToApiDate(startDate),
-							endDate: endDate ? convertUIDateToApiDate(endDate) : undefined,
+							startDate: startDate,
+							endDate: endDate,
 						});
-					} else {
-						const originalId = exp.id.includes("-edit-")
-							? exp.id.split("-edit-")[0]
+					} else if (exp.id) {
+						const originalId = exp.id.toString().includes("-edit-")
+							? exp.id.toString().split("-edit-")[0]
 							: exp.id;
 
 						await api.patch(
 							`/api/v1/applicants/updated-experience/${originalId}`,
 							{
-								companyName: exp.company,
-								jobTitle: exp.role,
-								employmentType:
-									EMPLOYMENT_TYPE_MAP[exp.responsibilities] || "FULL_TIME",
+								companyName: exp.companyName,
+								jobTitle: exp.jobTitle,
+								employmentType: exp.employmentType || "FULL_TIME",
 								country: exp.country || "Rwanda",
-								startDate: convertUIDateToApiDate(startDate),
-								endDate: endDate ? convertUIDateToApiDate(endDate) : undefined,
+								startDate: startDate,
+								endDate: endDate,
 							},
 						);
 					}
