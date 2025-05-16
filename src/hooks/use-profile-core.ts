@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import type { ApplicantData, UseProfileOptions } from "@/types/profile";
 import { useBasicProfile } from "./use-basic-profile";
 import { useDetailedProfile } from "./use-detailed-profile";
-import { formatDateString, formatDateRange } from "@/lib/utils/date-utils";
 import { useProfileCompletion } from "./use-profile-completion";
 
 export function useProfileCore(options: UseProfileOptions) {
@@ -81,21 +80,14 @@ export function useProfileCore(options: UseProfileOptions) {
 							: [],
 						experience: Array.isArray(detailedProfile.experiences)
 							? detailedProfile.experiences.map((exp) => {
-									const startDate = formatDateString(exp.startDate);
-									const endDate = exp.endDate
-										? formatDateString(exp.endDate)
-										: "Present";
-									const duration = formatDateRange(startDate, endDate);
-
 									return {
 										id: String(exp.id),
-										company: exp.companyName,
-										role: exp.jobTitle,
-										duration: duration,
-										responsibilities: mapEmploymentTypeFromApi(
-											exp.employmentType,
-										),
-										country: exp.country,
+										companyName: exp.companyName,
+										jobTitle: exp.jobTitle,
+										employmentType: exp.employmentType,
+										country: exp.country || "",
+										startDate: exp.startDate,
+										endDate: exp.endDate,
 									};
 								})
 							: [],
@@ -180,11 +172,11 @@ export function useProfileCore(options: UseProfileOptions) {
 						experience: [
 							{
 								id: "1",
-								company: "Tesla",
-								role: "Web Developer",
-								duration: "Jun 2021 - Present (3 yrs 4 mos)",
-								responsibilities: "Full-time",
+								companyName: "Tesla",
+								jobTitle: "Web Developer",
+								employmentType: "FULL_TIME",
 								country: "USA",
+								startDate: "2021-06-01",
 							},
 						],
 						documents: {
@@ -270,17 +262,6 @@ export function useProfileCore(options: UseProfileOptions) {
 			NATIVE: 9,
 		};
 		return REVERSE_LANGUAGE_LEVEL_MAP[level] || 5;
-	}
-
-	function mapEmploymentTypeFromApi(type: string): string {
-		const REVERSE_EMPLOYMENT_TYPE_MAP: Record<string, string> = {
-			FULL_TIME: "Full-time",
-			PART_TIME: "Part-time",
-			CONTRACT: "Contract",
-			INTERNSHIP: "Internship",
-			FREELANCE: "Freelance",
-		};
-		return REVERSE_EMPLOYMENT_TYPE_MAP[type] || type;
 	}
 
 	return {

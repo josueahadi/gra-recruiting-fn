@@ -139,7 +139,7 @@ const EducationSection: React.FC<EducationSectionProps> = ({
 
 			<div className="mt-4 flex justify-end">
 				{!isEditing && canEdit && (
-					<Button onClick={handleEdit} variant="outline" className="mr-2">
+					<Button onClick={handleEdit} variant="outline">
 						Add Education
 					</Button>
 				)}

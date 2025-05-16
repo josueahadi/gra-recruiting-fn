@@ -56,7 +56,7 @@ const EducationCard: React.FC<EducationCardProps> = ({
 		<div className="p-4 bg-blue-50 rounded-md mb-4 relative">
 			<div className="flex justify-between items-start">
 				<div>
-					<h3 className="font-semibold text-lg">
+					<h3 className="font-bold text-lg">
 						{education.institutionName} -{" "}
 						{formatEducationLevel(education.educationLevel)}
 					</h3>

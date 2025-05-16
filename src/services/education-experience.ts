@@ -61,11 +61,19 @@ export const experienceService = {
 		id: number,
 		data: AddExperienceRequest,
 	): Promise<ApiResponse<ExperienceResponse>> {
-		const response = await api.patch(
-			`/api/v1/applicants/updated-experience/${id}`,
-			data,
-		);
-		return response.data;
+		console.log("[experienceService] Updating experience with ID:", id);
+		console.log("[experienceService] Update data:", data);
+		try {
+			const response = await api.patch(
+				`/api/v1/applicants/updated-experience/${id}`,
+				data,
+			);
+			console.log("[experienceService] Update response:", response.data);
+			return response.data;
+		} catch (error) {
+			console.error("[experienceService] Update error:", error);
+			throw error;
+		}
 	},
 
 	async delete(id: number): Promise<{ message: string }> {

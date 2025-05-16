@@ -11,8 +11,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import DateRangePicker from "@/components/common/date-range-picker";
-import { convertUIDateToApiDate } from "@/lib/utils/date-utils";
 
 interface EducationFormProps {
 	onAddEducation: (education: Omit<Education, "id">) => void;
@@ -26,6 +24,24 @@ const EDUCATION_LEVELS: EducationLevel[] = [
 	"MASTER",
 	"DOCTORATE",
 ];
+
+const months = [
+	"January",
+	"February",
+	"March",
+	"April",
+	"May",
+	"June",
+	"July",
+	"August",
+	"September",
+	"October",
+	"November",
+	"December",
+];
+const days = Array.from({ length: 31 }, (_, i) => i + 1);
+const currentYear = new Date().getFullYear();
+const years = Array.from({ length: 80 }, (_, i) => currentYear - i);
 
 // Format the education level for display
 const formatEducationLevel = (level: string) => {
@@ -68,33 +84,69 @@ const EducationForm: React.FC<
 			: "",
 	);
 	const [program, setProgram] = useState(initialData?.program || "");
-	const [dateJoined, setDateJoined] = useState<Date | undefined>(
-		initialData?.dateJoined ? new Date(initialData.dateJoined) : undefined,
+	const [startDay, setStartDay] = useState(
+		initialData?.dateJoined
+			? String(new Date(initialData.dateJoined).getDate())
+			: "",
 	);
-	const [dateGraduated, setDateGraduated] = useState<Date | undefined>(
+	const [startMonth, setStartMonth] = useState(
+		initialData?.dateJoined
+			? String(new Date(initialData.dateJoined).getMonth() + 1)
+			: "",
+	);
+	const [startYear, setStartYear] = useState(
+		initialData?.dateJoined
+			? String(new Date(initialData.dateJoined).getFullYear())
+			: "",
+	);
+	const [endDay, setEndDay] = useState(
 		initialData?.dateGraduated
-			? new Date(initialData.dateGraduated)
-			: undefined,
+			? String(new Date(initialData.dateGraduated).getDate())
+			: "",
+	);
+	const [endMonth, setEndMonth] = useState(
+		initialData?.dateGraduated
+			? String(new Date(initialData.dateGraduated).getMonth() + 1)
+			: "",
+	);
+	const [endYear, setEndYear] = useState(
+		initialData?.dateGraduated
+			? String(new Date(initialData.dateGraduated).getFullYear())
+			: "",
 	);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
-
-		if (institution && level && program && dateJoined && dateGraduated) {
+		if (
+			institution &&
+			level &&
+			program &&
+			startDay &&
+			startMonth &&
+			startYear &&
+			endDay &&
+			endMonth &&
+			endYear
+		) {
+			const pad = (n: string) => n.padStart(2, "0");
+			const dateJoined = `${startYear}-${pad(startMonth)}-${pad(startDay)}`;
+			const dateGraduated = `${endYear}-${pad(endMonth)}-${pad(endDay)}`;
 			onAddEducation({
 				institutionName: institution,
 				educationLevel: level as EducationLevel,
 				program,
-				dateJoined: convertUIDateToApiDate(dateJoined.toISOString()),
-				dateGraduated: convertUIDateToApiDate(dateGraduated.toISOString()),
+				dateJoined,
+				dateGraduated,
 			});
-
-			// Reset form
 			setInstitution("");
 			setLevel("");
 			setProgram("");
-			setDateJoined(undefined);
-			setDateGraduated(undefined);
+			setStartDay("");
+			setStartMonth("");
+			setStartYear("");
+			setEndDay("");
+			setEndMonth("");
+			setEndYear("");
 		}
 	};
 
@@ -144,24 +196,94 @@ const EducationForm: React.FC<
 				/>
 			</div>
 
-			<DateRangePicker
-				fromDate={dateJoined}
-				toDate={dateGraduated}
-				onFromDateChange={setDateJoined}
-				onToDateChange={setDateGraduated}
-				label="Education Period"
-				fromPlaceholder="Start date (DD/MM/YYYY)"
-				toPlaceholder="End date (DD/MM/YYYY)"
-			/>
+			<div>
+				<Label className="block text-sm font-medium mb-1">Start Date</Label>
+				<div className="flex gap-2">
+					<Select value={startDay} onValueChange={setStartDay}>
+						<SelectTrigger>
+							<SelectValue placeholder="Day" />
+						</SelectTrigger>
+						<SelectContent>
+							{days.map((d) => (
+								<SelectItem key={d} value={String(d)}>
+									{d}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+					<Select value={startMonth} onValueChange={setStartMonth}>
+						<SelectTrigger>
+							<SelectValue placeholder="Month" />
+						</SelectTrigger>
+						<SelectContent>
+							{months.map((m, i) => (
+								<SelectItem key={m} value={String(i + 1)}>
+									{m}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+					<Select value={startYear} onValueChange={setStartYear}>
+						<SelectTrigger>
+							<SelectValue placeholder="Year" />
+						</SelectTrigger>
+						<SelectContent>
+							{years.map((y) => (
+								<SelectItem key={y} value={String(y)}>
+									{y}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
+			</div>
 
-			<p className="text-xs text-gray-500 -mt-2">
-				If you are currently enrolled, leave the end date field empty.
-			</p>
+			<div>
+				<Label className="block text-sm font-medium mb-1">End Date</Label>
+				<div className="flex gap-2">
+					<Select value={endDay} onValueChange={setEndDay}>
+						<SelectTrigger>
+							<SelectValue placeholder="Day" />
+						</SelectTrigger>
+						<SelectContent>
+							{days.map((d) => (
+								<SelectItem key={d} value={String(d)}>
+									{d}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+					<Select value={endMonth} onValueChange={setEndMonth}>
+						<SelectTrigger>
+							<SelectValue placeholder="Month" />
+						</SelectTrigger>
+						<SelectContent>
+							{months.map((m, i) => (
+								<SelectItem key={m} value={String(i + 1)}>
+									{m}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+					<Select value={endYear} onValueChange={setEndYear}>
+						<SelectTrigger>
+							<SelectValue placeholder="Year" />
+						</SelectTrigger>
+						<SelectContent>
+							{years.map((y) => (
+								<SelectItem key={y} value={String(y)}>
+									{y}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
+			</div>
 
-			<div className="flex gap-2">
+			<div className="flex gap-2 justify-end">
 				<Button
 					type="submit"
-					className="bg-primary-base hover:bg-custom-skyBlue text-white"
+					className="bg-primary-base hover:bg-custom-skyBlue text-white font-semibold"
 					disabled={isSubmitting}
 				>
 					{isEdit ? "Save Changes" : "Add Education"}

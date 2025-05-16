@@ -1,4 +1,3 @@
-import { formatDateString, formatDateRange } from "@/lib/utils/date-utils";
 import type {
 	BasicProfileResponse,
 	DetailedProfileResponse,
@@ -118,19 +117,14 @@ export function useDataTransformer() {
 				: [],
 			experience: Array.isArray(detailedProfile.experiences)
 				? detailedProfile.experiences.map((exp) => {
-						const startDate = formatDateString(exp.startDate);
-						const endDate = exp.endDate
-							? formatDateString(exp.endDate)
-							: "Present";
-						const duration = formatDateRange(startDate, endDate);
-
 						return {
 							id: String(exp.id || Date.now()),
-							company: exp.companyName,
-							role: exp.jobTitle,
-							duration: duration,
-							responsibilities: mapEmploymentTypeFromApi(exp.employmentType),
-							country: exp.country,
+							companyName: exp.companyName,
+							jobTitle: exp.jobTitle,
+							employmentType: exp.employmentType,
+							country: exp.country || "",
+							startDate: exp.startDate,
+							endDate: exp.endDate,
 						};
 					})
 				: [],
