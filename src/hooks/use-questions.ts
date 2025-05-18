@@ -8,6 +8,29 @@ import type {
 	//   PaginatedQuestions,
 	QuestionFilterParams,
 } from "@/types";
+import { useState, useCallback } from "react";
+import { questionsService } from "@/services/questions";
+import { showToast } from "@/services/toast";
+import type {
+	QuestionOption,
+	AddQuestionReqDto,
+	EditQuestionReqDto,
+	QuestionOptionReqDto,
+	EditQuestionOptionReqDto,
+	QuestionSection,
+} from "@/types/questions";
+
+interface UseQuestionsOptions {
+	onSuccess?: () => void;
+	onError?: (error: Error) => void;
+}
+
+interface QuestionQueryOptions {
+	page?: number;
+	take?: number;
+	searchTerm?: string;
+	careerId?: number;
+}
 
 const MOCK_QUESTIONS: Question[] = [
 	{
@@ -254,254 +277,319 @@ export const getQuestionsBySection = () => {
 	return sections;
 };
 
-export function useQuestions(filterParams: QuestionFilterParams = {}) {
+export function useQuestions(options?: UseQuestionsOptions) {
 	const queryClient = useQueryClient();
+	const [isLoading, setIsLoading] = useState(false);
 
-	const page = filterParams.page || 1;
-	const limit = filterParams.limit || 10;
+	// Fetch questions with pagination
+	const getQuestions = (queryOptions: QuestionQueryOptions = {}) => {
+		const { page = 1, take = 10, searchTerm = "", careerId } = queryOptions;
 
-	const fetchQuestions = async () => {
-		try {
-			const filteredQuestions = MOCK_QUESTIONS.filter((question) => {
-				const matchesSearch =
-					!filterParams.search ||
-					question.text
-						.toLowerCase()
-						.includes(filterParams.search.toLowerCase()) ||
-					question.excerpt
-						.toLowerCase()
-						.includes(filterParams.search.toLowerCase()) ||
-					question.type
-						.toLowerCase()
-						.includes(filterParams.search.toLowerCase());
+		return useQuery({
+			queryKey: ["questions", page, take, searchTerm, careerId],
+			queryFn: () =>
+				questionsService.getAllQuestions(page, take, searchTerm, careerId),
+		});
+	};
 
-				const matchesSection =
-					!filterParams.section ||
-					filterParams.section === "all" ||
-					question.section === filterParams.section;
+	// Fetch a single question by ID
+	const getQuestionById = (questionId: number) => {
+		return useQuery({
+			queryKey: ["question", questionId],
+			queryFn: () => questionsService.getQuestionById(questionId),
+			enabled: !!questionId,
+		});
+	};
 
-				const matchesType =
-					!filterParams.type ||
-					filterParams.type === "all" ||
-					question.type.toLowerCase().replace(" ", "-") === filterParams.type;
-
-				return matchesSearch && matchesSection && matchesType;
+	// Add a new question
+	const addQuestionMutation = useMutation({
+		mutationFn: (questionData: AddQuestionReqDto) => {
+			setIsLoading(true);
+			return questionsService.addQuestion(questionData);
+		},
+		onSuccess: () => {
+			setIsLoading(false);
+			queryClient.invalidateQueries({ queryKey: ["questions"] });
+			showToast({
+				title: "Question added successfully",
+				variant: "success",
 			});
+			if (options?.onSuccess) {
+				options.onSuccess();
+			}
+		},
+		onError: (error: Error) => {
+			setIsLoading(false);
+			showToast({
+				title: "Failed to add question",
+				description: error.message,
+				variant: "error",
+			});
+			if (options?.onError) {
+				options.onError(error);
+			}
+		},
+	});
 
-			const startIndex = (page - 1) * limit;
-			const endIndex = startIndex + limit;
-			const paginatedQuestions = filteredQuestions.slice(startIndex, endIndex);
+	// Update an existing question
+	const updateQuestionMutation = useMutation({
+		mutationFn: ({
+			questionId,
+			questionData,
+		}: {
+			questionId: number;
+			questionData: EditQuestionReqDto;
+		}) => {
+			setIsLoading(true);
+			return questionsService.updateQuestion(questionId, questionData);
+		},
+		onSuccess: (_, variables) => {
+			setIsLoading(false);
+			queryClient.invalidateQueries({ queryKey: ["questions"] });
+			queryClient.invalidateQueries({
+				queryKey: ["question", variables.questionId],
+			});
+			showToast({
+				title: "Question updated successfully",
+				variant: "success",
+			});
+			if (options?.onSuccess) {
+				options.onSuccess();
+			}
+		},
+		onError: (error: Error) => {
+			setIsLoading(false);
+			showToast({
+				title: "Failed to update question",
+				description: error.message,
+				variant: "error",
+			});
+			if (options?.onError) {
+				options.onError(error);
+			}
+		},
+	});
 
-			return {
-				data: paginatedQuestions,
-				meta: {
-					total: filteredQuestions.length,
-					page,
-					limit,
-					totalPages: Math.ceil(filteredQuestions.length / limit),
-				},
-			};
+	// Delete a question
+	const deleteQuestionMutation = useMutation({
+		mutationFn: (questionId: number) => {
+			setIsLoading(true);
+			return questionsService.deleteQuestion(questionId);
+		},
+		onSuccess: () => {
+			setIsLoading(false);
+			queryClient.invalidateQueries({ queryKey: ["questions"] });
+			showToast({
+				title: "Question deleted successfully",
+				variant: "success",
+			});
+			if (options?.onSuccess) {
+				options.onSuccess();
+			}
+		},
+		onError: (error: Error) => {
+			setIsLoading(false);
+			showToast({
+				title: "Failed to delete question",
+				description: error.message,
+				variant: "error",
+			});
+			if (options?.onError) {
+				options.onError(error);
+			}
+		},
+	});
+
+	// Add a question option
+	const addQuestionOptionMutation = useMutation({
+		mutationFn: ({
+			questionId,
+			optionData,
+		}: {
+			questionId: number;
+			optionData: QuestionOptionReqDto;
+		}) => {
+			setIsLoading(true);
+			return questionsService.addQuestionOption(questionId, optionData);
+		},
+		onSuccess: (_, variables) => {
+			setIsLoading(false);
+			queryClient.invalidateQueries({
+				queryKey: ["question", variables.questionId],
+			});
+			showToast({
+				title: "Option added successfully",
+				variant: "success",
+			});
+			if (options?.onSuccess) {
+				options.onSuccess();
+			}
+		},
+		onError: (error: Error) => {
+			setIsLoading(false);
+			showToast({
+				title: "Failed to add option",
+				description: error.message,
+				variant: "error",
+			});
+			if (options?.onError) {
+				options.onError(error);
+			}
+		},
+	});
+
+	// Update a question option
+	const updateQuestionOptionMutation = useMutation({
+		mutationFn: ({
+			optionId,
+			optionData,
+			questionId,
+		}: {
+			optionId: number;
+			optionData: EditQuestionOptionReqDto;
+			questionId: number;
+		}) => {
+			setIsLoading(true);
+			return questionsService.updateQuestionOption(optionId, optionData);
+		},
+		onSuccess: (_, variables) => {
+			setIsLoading(false);
+			queryClient.invalidateQueries({
+				queryKey: ["question", variables.questionId],
+			});
+			showToast({
+				title: "Option updated successfully",
+				variant: "success",
+			});
+			if (options?.onSuccess) {
+				options.onSuccess();
+			}
+		},
+		onError: (error: Error) => {
+			setIsLoading(false);
+			showToast({
+				title: "Failed to update option",
+				description: error.message,
+				variant: "error",
+			});
+			if (options?.onError) {
+				options.onError(error);
+			}
+		},
+	});
+
+	// Delete a question option
+	const deleteQuestionOptionMutation = useMutation({
+		mutationFn: ({
+			optionId,
+			questionId,
+		}: {
+			optionId: number;
+			questionId: number;
+		}) => {
+			setIsLoading(true);
+			return questionsService.deleteQuestionOption(optionId);
+		},
+		onSuccess: (_, variables) => {
+			setIsLoading(false);
+			queryClient.invalidateQueries({
+				queryKey: ["question", variables.questionId],
+			});
+			showToast({
+				title: "Option deleted successfully",
+				variant: "success",
+			});
+			if (options?.onSuccess) {
+				options.onSuccess();
+			}
+		},
+		onError: (error: Error) => {
+			setIsLoading(false);
+			showToast({
+				title: "Failed to delete option",
+				description: error.message,
+				variant: "error",
+			});
+			if (options?.onError) {
+				options.onError(error);
+			}
+		},
+	});
+
+	// Upload a question image
+	const uploadQuestionImage = useCallback(
+		async (file: File): Promise<string> => {
+			try {
+				setIsLoading(true);
+				const result = await questionsService.uploadQuestionImage(file);
+				return result.fileUrl;
+			} catch (error) {
+				showToast({
+					title: "Failed to upload image",
+					description: error instanceof Error ? error.message : "Unknown error",
+					variant: "error",
+				});
+				throw error;
+			} finally {
+				setIsLoading(false);
+			}
+		},
+		[],
+	);
+
+	// Upload an option image
+	const uploadOptionImage = useCallback(async (file: File): Promise<string> => {
+		try {
+			setIsLoading(true);
+			const result = await questionsService.uploadOptionImage(file);
+			return result.fileUrl;
 		} catch (error) {
-			console.error("Error fetching questions:", error);
+			showToast({
+				title: "Failed to upload image",
+				description: error instanceof Error ? error.message : "Unknown error",
+				variant: "error",
+			});
 			throw error;
+		} finally {
+			setIsLoading(false);
+		}
+	}, []);
+
+	const questionSections: QuestionSection[] = [
+		"MATH",
+		"COMPUTER_LITERACY",
+		"GENERAL_PROBLEM_SOLVING",
+		"GENERAL_QUESTIONS",
+	];
+
+	const getQuestionSectionLabel = (section: QuestionSection): string => {
+		switch (section) {
+			case "MATH":
+				return "Mathematics";
+			case "COMPUTER_LITERACY":
+				return "Computer Literacy";
+			case "GENERAL_PROBLEM_SOLVING":
+				return "General Problem Solving";
+			case "GENERAL_QUESTIONS":
+				return "General Questions";
+			default:
+				return section;
 		}
 	};
 
-	const getQuestionMetadata = () => {
-		const sections = [...new Set(MOCK_QUESTIONS.map((q) => q.section))];
-		const types = [...new Set(MOCK_QUESTIONS.map((q) => q.type))];
-
-		const typeCounts = MOCK_QUESTIONS.reduce(
-			(acc, curr) => {
-				acc[curr.type] = (acc[curr.type] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		const sectionCounts = MOCK_QUESTIONS.reduce(
-			(acc, curr) => {
-				acc[curr.section] = (acc[curr.section] || 0) + 1;
-				return acc;
-			},
-			{} as Record<string, number>,
-		);
-
-		return {
-			sections,
-			types,
-			typeCounts,
-			sectionCounts,
-			total: MOCK_QUESTIONS.length,
-			active: MOCK_QUESTIONS.filter((q) => q.active).length,
-			multipleChoice: MOCK_QUESTIONS.filter(
-				(q) => q.section === "Multiple Choice",
-			).length,
-			essay: MOCK_QUESTIONS.filter((q) => q.section === "Essay").length,
-		};
-	};
-
-	const fetchQuestionById = async (id: string) => {
-		const question = MOCK_QUESTIONS.find((q) => q.id === id);
-		if (!question) throw new Error(`Question with ID ${id} not found`);
-		return question;
-	};
-
-	const createQuestion = useMutation({
-		mutationFn: async (newQuestion: Partial<Question>) => {
-			await new Promise((resolve) => setTimeout(resolve, 500));
-
-			const newId = `${Math.floor(Math.random() * 900) + 100}`;
-
-			if (newQuestion.section === "Essay" || newQuestion.type === "essay") {
-				const createdQuestion: EssayQuestion = {
-					...newQuestion,
-					id: newId,
-					section: "Essay",
-					type: "essay",
-					text: newQuestion.text || "New Essay Question",
-					excerpt:
-						newQuestion.excerpt ||
-						(newQuestion.text
-							? `${newQuestion.text.substring(0, 50)}...`
-							: "New essay question..."),
-					active: true,
-					createdAt: new Date().toLocaleDateString(),
-					maxScore: (newQuestion as Partial<EssayQuestion>).maxScore || 10,
-				};
-
-				MOCK_QUESTIONS.push(createdQuestion);
-				return createdQuestion;
-				// biome-ignore lint/style/noUselessElse: <explanation>
-			} else {
-				const mcType =
-					(newQuestion.type as MultipleChoiceQuestion["type"]) ||
-					"multiple-choice";
-
-				const createdQuestion: MultipleChoiceQuestion = {
-					...newQuestion,
-					id: newId,
-					section: "Multiple Choice",
-					type: mcType,
-					text: newQuestion.text || "New Multiple Choice Question",
-					excerpt:
-						newQuestion.excerpt ||
-						(newQuestion.text
-							? `${newQuestion.text.substring(0, 50)}...`
-							: "New multiple choice question..."),
-					active: true,
-					createdAt: new Date().toLocaleDateString(),
-					choices: (newQuestion as Partial<MultipleChoiceQuestion>).choices || [
-						{ id: "a", text: "Option A", isCorrect: true },
-						{ id: "b", text: "Option B", isCorrect: false },
-						{ id: "c", text: "Option C", isCorrect: false },
-						{ id: "d", text: "Option D", isCorrect: false },
-					],
-				};
-
-				MOCK_QUESTIONS.push(createdQuestion);
-				return createdQuestion;
-			}
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["questions"] });
-			toast.success("Question created successfully");
-		},
-		onError: (error) => {
-			toast.error(`Failed to create question: ${error.message}`);
-		},
-	});
-
-	const updateQuestion = useMutation({
-		mutationFn: async ({
-			id,
-			data,
-		}: { id: string; data: Partial<Question> }) => {
-			await new Promise((resolve) => setTimeout(resolve, 500));
-
-			const questionIndex = MOCK_QUESTIONS.findIndex((q) => q.id === id);
-			if (questionIndex === -1)
-				throw new Error(`Question with ID ${id} not found`);
-
-			const originalQuestion = MOCK_QUESTIONS[questionIndex];
-
-			if (
-				originalQuestion.section === "Essay" ||
-				data.section === "Essay" ||
-				originalQuestion.type === "essay" ||
-				data.type === "essay"
-			) {
-				const updatedEssayQuestion: EssayQuestion = {
-					...(originalQuestion as EssayQuestion),
-					...data,
-					section: "Essay",
-					type: "essay",
-					updatedAt: new Date().toLocaleDateString(),
-				};
-
-				MOCK_QUESTIONS[questionIndex] = updatedEssayQuestion;
-				return updatedEssayQuestion;
-			}
-			// biome-ignore lint/style/noUselessElse: <explanation>
-			else {
-				const mcType =
-					(data.type as MultipleChoiceQuestion["type"]) ||
-					(originalQuestion as MultipleChoiceQuestion).type;
-
-				const updatedMCQuestion: MultipleChoiceQuestion = {
-					...(originalQuestion as MultipleChoiceQuestion),
-					...data,
-					section: "Multiple Choice",
-					type: mcType,
-					choices:
-						(data as Partial<MultipleChoiceQuestion>).choices ||
-						(originalQuestion as MultipleChoiceQuestion).choices,
-					updatedAt: new Date().toLocaleDateString(),
-				};
-
-				MOCK_QUESTIONS[questionIndex] = updatedMCQuestion;
-				return updatedMCQuestion;
-			}
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["questions"] });
-			toast.success("Question updated successfully");
-		},
-		onError: (error) => {
-			toast.error(`Failed to update question: ${error.message}`);
-		},
-	});
-
-	const deleteQuestion = useMutation({
-		mutationFn: async (id: string) => {
-			await new Promise((resolve) => setTimeout(resolve, 500));
-
-			const index = MOCK_QUESTIONS.findIndex((q) => q.id === id);
-			if (index !== -1) {
-				MOCK_QUESTIONS.splice(index, 1);
-			}
-
-			return id;
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["questions"] });
-			toast.success("Question deleted successfully");
-		},
-		onError: (error) => {
-			toast.error(`Failed to delete question: ${error.message}`);
-		},
-	});
-
 	return {
-		questions: useQuery({
-			queryKey: ["questions", page, limit, filterParams],
-			queryFn: fetchQuestions,
-		}),
-		metadata: getQuestionMetadata(),
-		getQuestionById: (id: string) => fetchQuestionById(id),
-		createQuestion,
-		updateQuestion,
-		deleteQuestion,
-		getQuestionsBySection,
+		isLoading,
+		getQuestions,
+		getQuestionById,
+		addQuestion: addQuestionMutation.mutate,
+		updateQuestion: updateQuestionMutation.mutate,
+		deleteQuestion: deleteQuestionMutation.mutate,
+		addQuestionOption: addQuestionOptionMutation.mutate,
+		updateQuestionOption: updateQuestionOptionMutation.mutate,
+		deleteQuestionOption: deleteQuestionOptionMutation.mutate,
+		uploadQuestionImage,
+		uploadOptionImage,
+		questionSections,
+		getQuestionSectionLabel,
 	};
 }
