@@ -26,13 +26,13 @@ const AssessmentIntro: React.FC<AssessmentIntroProps> = ({
 		{
 			title: "section 1",
 			description: "Multiple Choice",
-			timeInMinutes: 20,
-			questionCount: 20,
+			timeInMinutes: 65,
+			questionCount: 30,
 		},
 		{
 			title: "section 2",
 			description: "Short Essay",
-			timeInMinutes: 10,
+			timeInMinutes: 45,
 			questionCount: 5,
 		},
 	],

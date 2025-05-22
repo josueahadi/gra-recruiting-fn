@@ -26,7 +26,12 @@ export function useExam(options?: UseExamOptions) {
 
 	const getExam = useQuery({
 		queryKey: ["applicant-exam"],
-		queryFn: () => questionsService.getExamQuestions(),
+		queryFn: async () => {
+			console.log("Fetching exam questions...");
+			const response = await questionsService.getExamQuestions();
+			console.log("Exam API Response:", response);
+			return response;
+		},
 		staleTime: 5 * 60 * 1000,
 	});
 
@@ -94,6 +99,24 @@ export function useExam(options?: UseExamOptions) {
 		};
 	}, [currentAnswers]);
 
+	// Check if the exam is complete and can be submitted
+	const canSubmitExam = useCallback(() => {
+		const exam = getExam.data;
+		if (!exam) return false;
+
+		// Count total questions
+		const totalQuestions = [
+			...(exam.section1?.questions || []),
+			...(exam.section2?.questions || []),
+		].length;
+
+		// Count answered questions
+		const answeredQuestions = currentAnswers.length;
+
+		// Basic validation: check if all questions have been answered
+		return answeredQuestions >= totalQuestions;
+	}, [currentAnswers, getExam.data]);
+
 	const submitExamMutation = useMutation({
 		mutationFn: () => {
 			setIsLoading(true);
@@ -125,24 +148,6 @@ export function useExam(options?: UseExamOptions) {
 			}
 		},
 	});
-
-	// Check if the exam is complete and can be submitted
-	const canSubmitExam = useCallback(() => {
-		const exam = getExam.data;
-		if (!exam) return false;
-
-		// Count total questions
-		const totalQuestions = [
-			...(exam.section1?.questions || []),
-			...(exam.section2?.questions || []),
-		].length;
-
-		// Count answered questions
-		const answeredQuestions = currentAnswers.length;
-
-		// Basic validation: check if all questions have been answered
-		return answeredQuestions >= totalQuestions;
-	}, [currentAnswers, getExam.data]);
 
 	return {
 		isLoading: isLoading || getExam.isLoading,

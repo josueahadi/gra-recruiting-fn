@@ -114,8 +114,8 @@ const ApplicantSettingsSection = () => {
 			<div className="space-y-8">
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
-						<Lock className="h-5 w-5 text-primary-500" />
-						<CardTitle className="text-xl text-primary-500">
+						<Lock className="h-5 w-5 text-primary-shades-500" />
+						<CardTitle className="text-xl text-primary-shades-500">
 							Change Password
 						</CardTitle>
 					</CardHeader>
@@ -234,8 +234,8 @@ const ApplicantSettingsSection = () => {
 
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
-						<Bell className="h-5 w-5 text-primary-500" />
-						<CardTitle className="text-xl text-primary-500">
+						<Bell className="h-5 w-5 text-primary-shades-500" />
+						<CardTitle className="text-xl text-primary-shades-500">
 							Notifications
 						</CardTitle>
 					</CardHeader>
@@ -316,8 +316,10 @@ const ApplicantSettingsSection = () => {
 
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
-						<Shield className="h-5 w-5 text-primary-500" />
-						<CardTitle className="text-xl text-primary-500">Privacy</CardTitle>
+						<Shield className="h-5 w-5 text-primary-shades-500" />
+						<CardTitle className="text-xl text-primary-shades-500">
+							Privacy
+						</CardTitle>
 					</CardHeader>
 
 					<Separator className="mb-4" />

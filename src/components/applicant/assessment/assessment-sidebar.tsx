@@ -9,7 +9,7 @@ import type React from "react";
 interface AssessmentSidebarProps {
 	currentSectionId?: number;
 	currentQuestionNumber?: number;
-	answeredQuestions?: number[];
+	answeredQuestions?: Record<string, number[]>;
 	timeLeft: string;
 	onQuestionSelect?: (questionNumber: number) => void;
 	sections: Array<{
@@ -27,7 +27,7 @@ interface AssessmentSidebarProps {
 export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 	currentSectionId = 1,
 	currentQuestionNumber = 1,
-	answeredQuestions = [],
+	answeredQuestions = {},
 	timeLeft,
 	onQuestionSelect,
 	sections,
@@ -73,40 +73,91 @@ export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 					</div>
 				</div>
 
-				{sections.map((section) => (
-					<div key={section.id} className="mb-6">
-						<h2 className="text-base font-medium mb-3">
-							Section {section.title} - {section.description}
-						</h2>
-						<div className="grid grid-cols-5 gap-2 mb-4">
-							{Array.from(
-								{ length: section.questionCount },
-								(_, i) => i + 1,
-							).map((num) => (
-								<button
-									key={`section${section.id}-${num}`}
-									type="button"
-									onClick={() => {
-										onQuestionSelect?.(num);
-										if (mobile) onMobileMenuClose();
-									}}
-									className={cn(
-										"h-8 w-8 rounded-md text-sm font-medium flex items-center justify-center",
-										currentSectionId === section.id &&
-											num === currentQuestionNumber
-											? "bg-[#4A90B9] text-white"
-											: answeredQuestions.includes(num) &&
-													currentSectionId === section.id
-												? "bg-gray-200 text-gray-800"
-												: "bg-white border border-gray-300 text-gray-600 hover:bg-gray-100",
-									)}
-								>
-									{num}
-								</button>
-							))}
+				{sections.map((section) => {
+					const sectionIdStr = section.id.toString();
+					const sectionAnsweredQuestions = Array.isArray(
+						answeredQuestions?.[sectionIdStr],
+					)
+						? answeredQuestions[sectionIdStr]
+						: [];
+					const isSectionComplete =
+						sectionAnsweredQuestions.length === section.questionCount;
+					const isPreviousSection = section.id < currentSectionId;
+					const isNextSection = section.id > currentSectionId;
+					const isCurrentSection = section.id === currentSectionId;
+
+					// Disable section if it's not the current section and previous section is not complete
+					const isSectionDisabled = isNextSection && !isSectionComplete;
+
+					return (
+						<div
+							key={section.id}
+							className={cn("mb-6", isSectionDisabled && "opacity-50")}
+						>
+							<h2 className="text-base font-medium mb-3">
+								Section {section.title} - {section.description}
+								{isSectionComplete && (
+									<span className="ml-2 text-sm text-green-600">
+										(Completed)
+									</span>
+								)}
+							</h2>
+							<div className="grid grid-cols-5 gap-2 mb-4">
+								{Array.from(
+									{ length: section.questionCount },
+									(_, i) => i + 1,
+								).map((num) => {
+									const isAnswered = sectionAnsweredQuestions.includes(num);
+									const isCurrentQuestion =
+										isCurrentSection && num === currentQuestionNumber;
+									const isPreviousSectionQuestion = isPreviousSection;
+									const isNextSectionQuestion = isNextSection;
+
+									// Only allow navigation to:
+									// - The current question
+									// - The next unanswered question (if previous is answered)
+									// All previous questions (answered) and future questions are disabled
+									const maxAnswered = Math.max(...sectionAnsweredQuestions, 0);
+									const isQuestionDisabled =
+										isPreviousSectionQuestion ||
+										(isNextSectionQuestion && !isSectionComplete) ||
+										// Disable if it's a previous question (already answered and not current)
+										(isAnswered && !isCurrentQuestion) ||
+										// Disable if it's a future question (not current and not the next in sequence)
+										(!isAnswered &&
+											!isCurrentQuestion &&
+											num > maxAnswered + 1);
+
+									return (
+										<button
+											key={`section${section.id}-${num}`}
+											type="button"
+											onClick={() => {
+												if (!isQuestionDisabled) {
+													onQuestionSelect?.(num);
+													if (mobile) onMobileMenuClose();
+												}
+											}}
+											className={cn(
+												"h-8 w-8 rounded-md text-sm font-medium flex items-center justify-center",
+												isCurrentQuestion
+													? "bg-[#4A90B9] text-white"
+													: isAnswered
+														? "bg-gray-200 text-gray-800"
+														: isQuestionDisabled
+															? "bg-gray-100 text-gray-400 cursor-not-allowed"
+															: "bg-white border border-gray-300 text-gray-600 hover:bg-gray-100",
+											)}
+											disabled={isQuestionDisabled}
+										>
+											{num}
+										</button>
+									);
+								})}
+							</div>
 						</div>
-					</div>
-				))}
+					);
+				})}
 			</div>
 		</aside>
 	);

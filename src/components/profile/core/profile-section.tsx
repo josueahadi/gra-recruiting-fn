@@ -49,7 +49,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 					<button
 						type="button"
 						className={cn(
-							"text-primary-500 hover:text-primary-600",
+							"text-primary-shades-500 hover:text-primary-shades-600",
 							(isSubmitting || (isEditing && !onCancel)) &&
 								"opacity-50 cursor-not-allowed",
 						)}

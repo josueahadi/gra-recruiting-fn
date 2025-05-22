@@ -29,6 +29,11 @@ interface QuestionQueryOptions {
 	page?: number;
 	take?: number;
 	searchTerm?: string;
+	section?: QuestionSection;
+	fromDate?: string;
+	toDate?: string;
+	presetTimeFrame?: string;
+	sortingOptions?: string;
 	careerId?: number;
 }
 
@@ -283,12 +288,43 @@ export function useQuestions(options?: UseQuestionsOptions) {
 
 	// Fetch questions with pagination
 	const getQuestions = (queryOptions: QuestionQueryOptions = {}) => {
-		const { page = 1, take = 10, searchTerm = "", careerId } = queryOptions;
+		const {
+			page = 1,
+			take = 10,
+			searchTerm = "",
+			section,
+			fromDate,
+			toDate,
+			presetTimeFrame,
+			sortingOptions = "DESC",
+			careerId,
+		} = queryOptions;
 
 		return useQuery({
-			queryKey: ["questions", page, take, searchTerm, careerId],
+			queryKey: [
+				"questions",
+				page,
+				take,
+				searchTerm,
+				section,
+				fromDate,
+				toDate,
+				presetTimeFrame,
+				sortingOptions,
+				careerId,
+			],
 			queryFn: () =>
-				questionsService.getAllQuestions(page, take, searchTerm, careerId),
+				questionsService.getAllQuestions(
+					page,
+					take,
+					searchTerm,
+					section,
+					fromDate,
+					toDate,
+					presetTimeFrame,
+					sortingOptions,
+					careerId,
+				),
 		});
 	};
 

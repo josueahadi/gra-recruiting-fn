@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
 				protocol: "https",
 				hostname: "**.growrwanda.com",
 			},
+			{
+				protocol: "https",
+				hostname: "placeholder.pics",
+			},
 		],
 	},
 	typescript: {

@@ -124,8 +124,10 @@ const AdminSettingsSection = () => {
 			<div className="space-y-8">
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
-						<Lock className="h-5 w-5 text-primary-500" />
-						<CardTitle className="text-xl text-primary-500">Security</CardTitle>
+						<Lock className="h-5 w-5 text-primary-shades-500" />
+						<CardTitle className="text-xl text-primary-shades-500">
+							Security
+						</CardTitle>
 					</CardHeader>
 
 					<Separator className="mb-4" />
@@ -242,8 +244,8 @@ const AdminSettingsSection = () => {
 
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
-						<Bell className="h-5 w-5 text-primary-500" />
-						<CardTitle className="text-xl text-primary-500">
+						<Bell className="h-5 w-5 text-primary-shades-500" />
+						<CardTitle className="text-xl text-primary-shades-500">
 							Admin Notifications
 						</CardTitle>
 					</CardHeader>
@@ -321,8 +323,8 @@ const AdminSettingsSection = () => {
 
 				<Card>
 					<CardHeader className="flex flex-row items-center space-x-2">
-						<UserCog className="h-5 w-5 text-primary-500" />
-						<CardTitle className="text-xl text-primary-500">
+						<UserCog className="h-5 w-5 text-primary-shades-500" />
+						<CardTitle className="text-xl text-primary-shades-500">
 							System Settings
 						</CardTitle>
 					</CardHeader>
