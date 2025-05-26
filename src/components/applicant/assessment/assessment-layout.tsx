@@ -37,7 +37,7 @@ const AssessmentLayoutInner: React.FC<AssessmentLayoutProps> = ({
 
 	useEffect(() => {
 		// Set initial time based on section
-		const sectionTime = currentSectionId === 1 ? 65 : 45; // 65 minutes for section 1, 45 minutes for section 2
+		const sectionTime = currentSectionId === 1 ? 35 : 25; // 35 minutes for section 1, 25 minutes for section 2
 		const initialTime = sectionTime * 60; // Convert to seconds
 		setTimeLeft(formatTime(initialTime));
 

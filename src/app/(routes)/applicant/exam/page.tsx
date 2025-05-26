@@ -66,13 +66,13 @@ export default function ExamPage() {
 							{
 								title: "section 1",
 								description: "Multiple Choice",
-								timeInMinutes: 20,
-								questionCount: 15,
+								timeInMinutes: 35,
+								questionCount: 30,
 							},
 							{
 								title: "section 2",
 								description: "Short Essay",
-								timeInMinutes: 10,
+								timeInMinutes: 25,
 								questionCount: 5,
 							},
 						]}
