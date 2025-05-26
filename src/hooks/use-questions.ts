@@ -18,6 +18,10 @@ interface UseQuestionsOptions {
 	type?: string;
 	page?: number;
 	take?: number;
+	fromDate?: string;
+	toDate?: string;
+	presetTimeFrame?: string;
+	sortingOptions?: string;
 }
 
 export const getQuestionsBySection = async () => {
@@ -100,10 +104,10 @@ export function useQuestions(options?: UseQuestionsOptions) {
 				take, // take
 				searchTerm,
 				section,
-				undefined, // fromDate
-				undefined, // toDate
-				undefined, // presetTimeFrame
-				"DESC", // sortingOptions
+				options?.fromDate,
+				options?.toDate,
+				options?.presetTimeFrame,
+				options?.sortingOptions || "DESC",
 				undefined, // careerId
 			);
 

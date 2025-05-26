@@ -71,3 +71,11 @@ export function useResults(filterParams: ResultsFilterParams = {}) {
 		triggerAIGrading,
 	};
 }
+
+export function useApplicantResults() {
+	return useQuery({
+		queryKey: ["applicant-results"],
+		queryFn: () => questionsService.getMyResults(),
+		staleTime: 5 * 60 * 1000,
+	});
+}

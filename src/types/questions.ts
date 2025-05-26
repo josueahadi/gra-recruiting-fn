@@ -239,3 +239,20 @@ export interface ResultsFilterParams {
 	page?: number;
 	limit?: number;
 }
+
+// Add ExamResultsResDto for applicant results API
+export interface ExamResultsResDto {
+	overallPercentage: number;
+	sectionOneScore: {
+		percentage: number;
+		totalPassedQuestions: number;
+		totalQuestions: number;
+	};
+	sectionTwoScore: {
+		percentage: number;
+		totalPassedQuestions: number;
+		totalQuestions: number;
+	};
+	passed: boolean;
+	message: string;
+}

@@ -78,6 +78,10 @@ const QuestionsManagement = () => {
 	const [typeFilter, setTypeFilter] = useState<QuestionSection | "all">("all");
 	const [page, setPage] = useState(1);
 	const [pageSize, setPageSize] = useState(10);
+	const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
+	const [toDate, setToDate] = useState<Date | undefined>(undefined);
+	const [presetTimeFrame, setPresetTimeFrame] = useState<string>("none");
+	const [sortingOptions, setSortingOptions] = useState<string>("DESC");
 
 	const [selectedQuestion, setSelectedQuestion] =
 		useState<DetailQuestion | null>(null);
@@ -92,6 +96,10 @@ const QuestionsManagement = () => {
 			type: typeFilter,
 			page,
 			take: pageSize,
+			fromDate: fromDate ? fromDate.toISOString().slice(0, 10) : undefined,
+			toDate: toDate ? toDate.toISOString().slice(0, 10) : undefined,
+			presetTimeFrame: presetTimeFrame !== "none" ? presetTimeFrame : undefined,
+			sortingOptions,
 		});
 
 	// Debounce search input
@@ -101,6 +109,18 @@ const QuestionsManagement = () => {
 		}, 300);
 		return () => clearTimeout(handler);
 	}, [searchInput]);
+
+	// eslint-disable-next-line react-hooks/exhaustive-deps
+	useEffect(() => {
+		setPage(1);
+	}, [
+		searchValue,
+		typeFilter,
+		fromDate,
+		toDate,
+		presetTimeFrame,
+		sortingOptions,
+	]);
 
 	const handleSearch = (value: string) => {
 		setSearchInput(value);
@@ -113,6 +133,10 @@ const QuestionsManagement = () => {
 	const handleClearFilters = () => {
 		setSearchInput("");
 		setTypeFilter("all");
+		setFromDate(undefined);
+		setToDate(undefined);
+		setPresetTimeFrame("none");
+		setSortingOptions("DESC");
 	};
 
 	const handleViewQuestion = (id: string) => {
@@ -198,6 +222,49 @@ const QuestionsManagement = () => {
 				],
 				value: typeFilter,
 				onChange: handleTypeChange,
+			},
+			width: "w-full md:w-1/5",
+		},
+		{
+			type: "dateRange",
+			props: {
+				fromDate,
+				toDate,
+				onFromDateChange: setFromDate,
+				onToDateChange: setToDate,
+				fromPlaceholder: "From Date",
+				toPlaceholder: "To Date",
+			},
+			width: "w-full md:w-1/4",
+		},
+		{
+			type: "dropdown",
+			props: {
+				options: [
+					{ value: "none", label: "Timeframe - All" },
+					{ value: "Today", label: "Today" },
+					{ value: "Yesterday", label: "Yesterday" },
+					{ value: "ThisWeek", label: "This Week" },
+					{ value: "LastWeek", label: "Last Week" },
+					{ value: "ThisMonth", label: "This Month" },
+					{ value: "LastMonth", label: "Last Month" },
+					{ value: "ThisYear", label: "This Year" },
+					{ value: "LastYear", label: "Last Year" },
+				],
+				value: presetTimeFrame,
+				onChange: setPresetTimeFrame,
+			},
+			width: "w-full md:w-1/5",
+		},
+		{
+			type: "dropdown",
+			props: {
+				options: [
+					{ value: "DESC", label: "Newest to Oldest (DESC)" },
+					{ value: "ASC", label: "Oldest to Newest (ASC)" },
+				],
+				value: sortingOptions,
+				onChange: setSortingOptions,
 			},
 			width: "w-full md:w-1/5",
 		},

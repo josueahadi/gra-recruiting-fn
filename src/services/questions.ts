@@ -16,6 +16,7 @@ import type {
 	ResultsFilterParams,
 	PaginatedResults,
 	TestResult,
+	ExamResultsResDto,
 } from "@/types/questions";
 
 interface AdminNotification {
@@ -106,7 +107,10 @@ export const questionsService = {
 	async addQuestion(
 		questionData: AddQuestionReqDto,
 	): Promise<AddQuestionResDto> {
-		const response = await api.post("/api/v1/admin/add-question", questionData);
+		const response = await api.post(
+			"/api/v1/questions/add-question",
+			questionData,
+		);
 		return response.data;
 	},
 
@@ -140,18 +144,15 @@ export const questionsService = {
 	},
 
 	/**
-	 * Add a new option to a question
+	 * Update a question option
 	 *
-	 * @param questionId - The ID of the question to add an option to
-	 * @param optionData - Option data including text, image URL, and correct answer flag
+	 * @param optionId
 	 */
 	async addQuestionOption(
-		questionId: number,
-		optionData: QuestionOptionReqDto,
+		optionId: number,
 	): Promise<ApiResponse<QuestionOptionResDto>> {
-		const response = await api.post(
-			`/api/v1/admin/add-question-option/${questionId}`,
-			optionData,
+		const response = await api.patch(
+			`/api/v1/questions/add-question-option/${optionId}`,
 		);
 		return response.data;
 	},
@@ -290,6 +291,14 @@ export const questionsService = {
 		const response = await api.post(
 			`/api/v1/admin/trigger-ai-grading/${resultId}`,
 		);
+		return response.data;
+	},
+
+	/**
+	 * Get applicant's own exam results
+	 */
+	async getMyResults(): Promise<ExamResultsResDto> {
+		const response = await api.get("/api/v1/questions/get-my-results");
 		return response.data;
 	},
 };
