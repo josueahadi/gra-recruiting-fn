@@ -9,18 +9,6 @@ import React, { useState, useEffect } from "react";
 import { useProfile } from "@/hooks/use-profile";
 import { useApplicantResults } from "@/hooks/use-results";
 
-interface ResultData {
-	sectionOne: {
-		score: number;
-		completed: boolean;
-	};
-	sectionTwo: {
-		score: number | null;
-		completed: boolean;
-	};
-	assessmentCompleted: boolean;
-}
-
 const ApplicantDashboard = () => {
 	const router = useRouter();
 	const {
@@ -33,11 +21,7 @@ const ApplicantDashboard = () => {
 
 	const [completionPercentage, setCompletionPercentage] = useState(0);
 	const [showResults, setShowResults] = useState(false);
-	const {
-		data: backendResults,
-		isLoading: resultsLoading,
-		error: resultsError,
-	} = useApplicantResults();
+	const { data: backendResults } = useApplicantResults();
 	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {

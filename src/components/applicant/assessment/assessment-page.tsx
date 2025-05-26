@@ -25,6 +25,8 @@ import {
 	DialogTitle,
 	DialogFooter,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import { Timer } from "lucide-react";
 
 interface MappedQuestion extends QuestionResDto {
 	displayId: number;
@@ -49,6 +51,47 @@ const REQUIRED_QUESTIONS = {
 	section2: 5, // Essay questions
 };
 
+// Add this function before the TimerDisplay component
+function isTimeWarning(timeLeft: string) {
+	const [h, m, s] = timeLeft.split(":").map(Number);
+	return h === 0 && (m < 5 || (m === 5 && s === 0));
+}
+
+// Update the TimerDisplay component to use the correct type
+const TimerDisplay = React.memo(({ timeLeft }: { timeLeft: string }) => {
+	return (
+		<div className="bg-[#E0F5FF] rounded-lg p-6 mb-10">
+			<div
+				className={cn(
+					isTimeWarning(timeLeft)
+						? "text-red-600 animate-pulse"
+						: "text-[#009879]",
+					"text-3xl font-bold flex items-center justify-center",
+				)}
+			>
+				<Timer className="mr-2" />
+				{timeLeft}
+			</div>
+		</div>
+	);
+});
+
+TimerDisplay.displayName = "TimerDisplay";
+
+// Update the AssessmentLayout props type to accept ReactNode for timeLeft
+// interface AssessmentLayoutProps {
+// 	children: React.ReactNode;
+// 	userName?: string;
+// 	avatarSrc?: string;
+// 	currentSectionId?: number;
+// 	currentQuestionNumber?: number;
+// 	answeredQuestions?: Record<string, number[]>;
+// 	onQuestionSelect?: (questionNumber: number) => void;
+// 	showNavigation?: boolean;
+// 	pageTitle?: string;
+// 	timeLeft?: React.ReactNode;
+// }
+
 export default function AssessmentPage({ params }: AssessmentPageProps) {
 	const router = useRouter();
 	const { examData } = useExam();
@@ -67,6 +110,13 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 	const [timerRunning, setTimerRunning] = useState(false);
 	const [showSectionTransition, setShowSectionTransition] = useState(false);
 	const [showSectionIntro, setShowSectionIntro] = useState(true);
+	const [showNavWarning, setShowNavWarning] = useState(false);
+	const [pendingNavigation, setPendingNavigation] = useState<string | null>(
+		null,
+	);
+	const [popStateEvent, setPopStateEvent] = useState<PopStateEvent | null>(
+		null,
+	);
 
 	const [questionMapping, setQuestionMapping] = useState<{
 		[key: string]: MappedQuestion[];
@@ -91,7 +141,6 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 	const totalQuestions =
 		questionMapping[currentSectionId.toString()]?.length || 0;
 
-	const timerRef = useRef<NodeJS.Timeout | null>(null);
 	const remainingSecondsRef = useRef<number>(0);
 
 	const validateQuestions = useCallback(async (data: ExamResDto) => {
@@ -390,20 +439,52 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		}
 	}, [questionMapping]);
 
-	// Navigation/refresh warning and auto-submit
+	// Robust beforeunload for refresh/close/tab close
 	useEffect(() => {
 		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-			e.preventDefault();
-			e.returnValue =
+			const message =
 				"If you leave, your assessment will auto-submit with your current progress and this action cannot be undone.";
+			e.preventDefault();
+			e.returnValue = message;
 			completeExam();
-			return e.returnValue;
+			return message;
 		};
 		window.addEventListener("beforeunload", handleBeforeUnload);
 		return () => {
 			window.removeEventListener("beforeunload", handleBeforeUnload);
 		};
 	}, [completeExam]);
+
+	// Intercept browser back/forward navigation
+	useEffect(() => {
+		const handlePopState = (event: PopStateEvent) => {
+			setPopStateEvent(event);
+			setShowNavWarning(true);
+		};
+		window.addEventListener("popstate", handlePopState);
+		return () => {
+			window.removeEventListener("popstate", handlePopState);
+		};
+	}, []);
+
+	const handleConfirmNav = async () => {
+		await completeExam();
+		setShowNavWarning(false);
+		if (pendingNavigation) {
+			window.location.href = pendingNavigation;
+		} else if (popStateEvent) {
+			// Allow the popstate navigation
+			window.history.go(-1);
+		}
+	};
+
+	const handleCancelNav = () => {
+		setShowNavWarning(false);
+		setPendingNavigation(null);
+		setPopStateEvent(null);
+		// Push the current state back to prevent navigation
+		window.history.pushState(null, "", window.location.href);
+	};
 
 	useEffect(() => {
 		if (!isLoading) {
@@ -528,7 +609,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		}
 	}, [examCompleted]);
 
-	// Show section intro modal on section change
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	useEffect(() => {
 		setShowSectionIntro(true);
 	}, [currentSectionId]);
@@ -541,36 +622,37 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		setTimerRunning(true);
 	};
 
-	// Timer logic (only reset on section change or section start)
+	// Update the timer logic in the main component
+	const formatTime = useCallback((totalSeconds: number) => {
+		const hours = Math.floor(totalSeconds / 3600);
+		const minutes = Math.floor((totalSeconds % 3600) / 60);
+		const seconds = totalSeconds % 60;
+		return `${hours.toString().padStart(2, "0")}:${minutes
+			.toString()
+			.padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+	}, []);
+
+	// Update the timer effect
 	useEffect(() => {
-		if (!timerRunning) return;
-
-		// Clear any existing timer
-		if (timerRef.current) clearInterval(timerRef.current);
-
-		// Start timer
-		timerRef.current = setInterval(() => {
-			if (remainingSecondsRef.current <= 1) {
-				if (timerRef.current) clearInterval(timerRef.current);
-				setTimeLeft("00:00:00");
-				setTimerRunning(false);
-				if (currentSectionId === 1) {
-					setShowSectionTransition(true);
+		if (timerRunning) {
+			const interval = setInterval(() => {
+				if (remainingSecondsRef.current > 0) {
+					remainingSecondsRef.current -= 1;
+					setTimeLeft(formatTime(remainingSecondsRef.current));
 				} else {
-					completeExam();
+					clearInterval(interval);
+					setTimerRunning(false);
+					if (currentSectionId === 1) {
+						setShowSectionTransition(true);
+					} else {
+						completeExam();
+					}
 				}
-				return;
-			}
-			remainingSecondsRef.current -= 1;
-			setTimeLeft(formatTime(remainingSecondsRef.current));
-		}, 1000);
+			}, 1000);
 
-		return () => {
-			if (timerRef.current) clearInterval(timerRef.current);
-		};
-		// Only rerun when timerRunning, section, or completeExam changes
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [timerRunning, currentSectionId, completeExam]);
+			return () => clearInterval(interval);
+		}
+	}, [timerRunning, currentSectionId, completeExam, formatTime]);
 
 	// On section change, reset timer state
 	useEffect(() => {
@@ -578,16 +660,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		const sectionTime = currentSectionId === 1 ? 35 * 60 : 25 * 60;
 		remainingSecondsRef.current = sectionTime;
 		setTimeLeft(formatTime(sectionTime));
-	}, [currentSectionId]);
-
-	function formatTime(totalSeconds: number) {
-		const hours = Math.floor(totalSeconds / 3600);
-		const minutes = Math.floor((totalSeconds % 3600) / 60);
-		const seconds = totalSeconds % 60;
-		return `${hours.toString().padStart(2, "0")}:${minutes
-			.toString()
-			.padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-	}
+	}, [currentSectionId, formatTime]);
 
 	// Section transition modal handler
 	const handleContinueToSection2 = () => {
@@ -596,6 +669,14 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		setCurrentQuestionNum(1);
 		setTimerRunning(true);
 	};
+
+	// const handleSectionComplete = () => {
+	// 	setShowSectionTransition(true);
+	// };
+
+	// const handleExamComplete = () => {
+	// 	completeExam();
+	// };
 
 	if (isLoading) {
 		return (
@@ -739,6 +820,36 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 							onClick={handleContinueToSection2}
 						>
 							Continue to Section 2
+						</button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Navigation warning modal */}
+			<Dialog open={showNavWarning}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Leave Assessment?</DialogTitle>
+					</DialogHeader>
+					<p>
+						If you leave, your assessment will auto-submit with your current
+						progress and this action cannot be undone. Are you sure you want to
+						proceed?
+					</p>
+					<DialogFooter>
+						<button
+							type="button"
+							className="bg-primary-base text-white px-4 py-2 rounded"
+							onClick={handleConfirmNav}
+						>
+							Yes, Submit & Leave
+						</button>
+						<button
+							type="button"
+							className="bg-gray-200 text-gray-800 px-4 py-2 rounded ml-2"
+							onClick={handleCancelNav}
+						>
+							Cancel
 						</button>
 					</DialogFooter>
 				</DialogContent>

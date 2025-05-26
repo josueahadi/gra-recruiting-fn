@@ -238,7 +238,7 @@ export function useQuestions(options?: UseQuestionsOptions) {
 			optionData: QuestionOptionReqDto;
 		}) => {
 			setIsLoading(true);
-			return questionsService.addQuestionOption(questionId, optionData);
+			return questionsService.updateQuestionOption(questionId, optionData);
 		},
 		onSuccess: (_, variables) => {
 			setIsLoading(false);

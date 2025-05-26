@@ -10,7 +10,6 @@ import type {
 	EditQuestionResDto,
 	ExamResDto,
 	QuestionDetailsResDto,
-	QuestionOptionReqDto,
 	SubmitExamReqDto,
 	QuestionOptionResDto,
 	ResultsFilterParams,

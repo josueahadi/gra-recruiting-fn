@@ -5,7 +5,6 @@ import BackgroundPattern from "@/components/layout/background-pattern";
 import { LayoutProvider, useLayout } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type React from "react";
-import { useEffect, useState } from "react";
 import AssessmentSidebar from "./assessment-sidebar";
 
 interface AssessmentLayoutProps {

@@ -97,8 +97,6 @@ export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 					const isPreviousSection = section.id < currentSectionId;
 					const isNextSection = section.id > currentSectionId;
 					const isCurrentSection = section.id === currentSectionId;
-
-					// Disable section if it's not the current section and previous section is not complete
 					const isSectionDisabled = isNextSection && !isSectionComplete;
 
 					return (
@@ -133,9 +131,7 @@ export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 									const isQuestionDisabled =
 										isPreviousSectionQuestion ||
 										(isNextSectionQuestion && !isSectionComplete) ||
-										// Disable if it's a previous question (already answered and not current)
 										(isAnswered && !isCurrentQuestion) ||
-										// Disable if it's a future question (not current and not the next in sequence)
 										(!isAnswered &&
 											!isCurrentQuestion &&
 											num > maxAnswered + 1);
@@ -176,10 +172,8 @@ export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 
 	return (
 		<>
-			{/* Desktop sidebar */}
 			{renderSidebar(false)}
 
-			{/* Mobile sidebar overlay */}
 			{isMobileMenuOpen && (
 				<div className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden">
 					{renderSidebar(true)}

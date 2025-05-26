@@ -287,7 +287,7 @@ export default function AddQuestionPage() {
 				Object.entries(backendErrors).forEach(([field, messages]) => {
 					const typedField = field as BackendErrorField;
 					if (typedField.startsWith("options.")) {
-						const [_, index, subfield] = typedField.split(".");
+						const [, index, subfield] = typedField.split(".");
 						if (!newFieldErrors.choices) {
 							newFieldErrors.choices = {};
 						}
