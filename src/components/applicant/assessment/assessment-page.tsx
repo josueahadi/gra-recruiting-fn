@@ -91,6 +91,9 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 	const totalQuestions =
 		questionMapping[currentSectionId.toString()]?.length || 0;
 
+	const timerRef = useRef<NodeJS.Timeout | null>(null);
+	const remainingSecondsRef = useRef<number>(0);
+
 	const validateQuestions = useCallback(async (data: ExamResDto) => {
 		const section1Questions = data.section1?.questions || [];
 		const section2Questions = data.section2?.questions || [];
@@ -532,40 +535,50 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 
 	const handleStartSection = () => {
 		setShowSectionIntro(false);
+		const sectionTime = currentSectionId === 1 ? 35 * 60 : 25 * 60;
+		remainingSecondsRef.current = sectionTime;
+		setTimeLeft(formatTime(sectionTime));
 		setTimerRunning(true);
 	};
 
-	// Timer logic
+	// Timer logic (only reset on section change or section start)
 	useEffect(() => {
-		const sectionTime = currentSectionId === 1 ? 35 * 60 : 25 * 60;
-		setTimeLeft(formatTime(sectionTime));
-		setTimerRunning(false); // Don't start timer until user clicks start
+		if (!timerRunning) return;
 
-		const timer = timerRunning
-			? setInterval(() => {
-					setTimeLeft((prev) => {
-						const [h, m, s] = prev.split(":").map(Number);
-						const total = h * 3600 + m * 60 + s;
-						if (total <= 1) {
-							if (timer) clearInterval(timer);
-							if (currentSectionId === 1) {
-								setTimerRunning(false);
-								setShowSectionTransition(true);
-							} else {
-								setTimerRunning(false);
-								completeExam();
-							}
-							return "00:00:00";
-						}
-						return formatTime(total - 1);
-					});
-				}, 1000)
-			: undefined;
+		// Clear any existing timer
+		if (timerRef.current) clearInterval(timerRef.current);
+
+		// Start timer
+		timerRef.current = setInterval(() => {
+			if (remainingSecondsRef.current <= 1) {
+				if (timerRef.current) clearInterval(timerRef.current);
+				setTimeLeft("00:00:00");
+				setTimerRunning(false);
+				if (currentSectionId === 1) {
+					setShowSectionTransition(true);
+				} else {
+					completeExam();
+				}
+				return;
+			}
+			remainingSecondsRef.current -= 1;
+			setTimeLeft(formatTime(remainingSecondsRef.current));
+		}, 1000);
+
 		return () => {
-			if (timer) clearInterval(timer);
+			if (timerRef.current) clearInterval(timerRef.current);
 		};
+		// Only rerun when timerRunning, section, or completeExam changes
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [currentSectionId, timerRunning, completeExam]);
+	}, [timerRunning, currentSectionId, completeExam]);
+
+	// On section change, reset timer state
+	useEffect(() => {
+		setTimerRunning(false);
+		const sectionTime = currentSectionId === 1 ? 35 * 60 : 25 * 60;
+		remainingSecondsRef.current = sectionTime;
+		setTimeLeft(formatTime(sectionTime));
+	}, [currentSectionId]);
 
 	function formatTime(totalSeconds: number) {
 		const hours = Math.floor(totalSeconds / 3600);
