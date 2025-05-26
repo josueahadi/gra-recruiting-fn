@@ -5,7 +5,7 @@ import AssessmentUnavailable from "@/components/applicant/assessment/assessment-
 import EssayQuestion from "@/components/applicant/assessment/questions/essay";
 import MultipleChoiceQuestion from "@/components/applicant/assessment/questions/multiple-choice";
 import { useRouter } from "next/navigation";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import AssessmentLayout from "./assessment-layout";
 import { useExam } from "@/hooks/use-exam";
 import {
@@ -51,6 +51,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 	const [examCompleted, setExamCompleted] = useState(false);
 	const [currentSectionId, setCurrentSectionId] = useState(1);
 	const [currentQuestionNum, setCurrentQuestionNum] = useState(1);
+	const prevQuestionNumRef = useRef(1);
 	const [answeredQuestions, setAnsweredQuestions] = useState<
 		Record<string, number[]>
 	>({});
@@ -359,6 +360,12 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		};
 	}, []);
 
+	useEffect(() => {
+		if (!isLoading) {
+			prevQuestionNumRef.current = currentQuestionNum;
+		}
+	}, [isLoading, currentQuestionNum]);
+
 	const handleSelectOption = (optionId: string | number) => {
 		console.log("Selected option:", optionId); // Debug log
 		setSelectedOptionId(optionId.toString());
@@ -368,23 +375,20 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		);
 
 		// Update answered questions
-		const updatedAnsweredQuestions = { ...answeredQuestions };
 		const sectionIdStr = currentSectionId.toString();
-
-		if (!updatedAnsweredQuestions[sectionIdStr]?.includes(currentQuestionNum)) {
-			if (!updatedAnsweredQuestions[sectionIdStr]) {
-				updatedAnsweredQuestions[sectionIdStr] = [];
-			}
-			updatedAnsweredQuestions[sectionIdStr] = [
-				...updatedAnsweredQuestions[sectionIdStr],
-				currentQuestionNum,
-			];
-			setAnsweredQuestions(updatedAnsweredQuestions);
-			localStorage.setItem(
-				EXAM_SECTION_ANSWERS_KEY,
-				JSON.stringify(updatedAnsweredQuestions),
-			);
-		}
+		const prev = answeredQuestions[sectionIdStr] || [];
+		const updated = prev.includes(currentQuestionNum)
+			? prev
+			: [...prev, currentQuestionNum];
+		const updatedAnsweredQuestions = {
+			...answeredQuestions,
+			[sectionIdStr]: updated,
+		};
+		setAnsweredQuestions(updatedAnsweredQuestions);
+		localStorage.setItem(
+			EXAM_SECTION_ANSWERS_KEY,
+			JSON.stringify(updatedAnsweredQuestions),
+		);
 	};
 
 	const handleEssayChange = (text: string) => {
@@ -453,19 +457,15 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 			return;
 		}
 
-		const updatedAnsweredQuestions = { ...answeredQuestions };
 		const sectionIdStr = currentSectionId.toString();
-
-		if (!updatedAnsweredQuestions[sectionIdStr]?.includes(currentQuestionNum)) {
-			if (!updatedAnsweredQuestions[sectionIdStr]) {
-				updatedAnsweredQuestions[sectionIdStr] = [];
-			}
-			updatedAnsweredQuestions[sectionIdStr] = [
-				...updatedAnsweredQuestions[sectionIdStr],
-				currentQuestionNum,
-			];
-		}
-
+		const prev = answeredQuestions[sectionIdStr] || [];
+		const updated = prev.includes(currentQuestionNum)
+			? prev
+			: [...prev, currentQuestionNum];
+		const updatedAnsweredQuestions = {
+			...answeredQuestions,
+			[sectionIdStr]: updated,
+		};
 		setAnsweredQuestions(updatedAnsweredQuestions);
 		localStorage.setItem(
 			EXAM_SECTION_ANSWERS_KEY,
@@ -527,7 +527,12 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 
 	if (isLoading) {
 		return (
-			<AssessmentLayout showNavigation={true}>
+			<AssessmentLayout
+				showNavigation={true}
+				currentSectionId={currentSectionId}
+				currentQuestionNumber={prevQuestionNumRef.current}
+				answeredQuestions={answeredQuestions[currentSectionId.toString()] || []}
+			>
 				<div className="flex items-center justify-center h-64">
 					<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base" />
 				</div>
