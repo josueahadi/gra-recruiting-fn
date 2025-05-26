@@ -36,7 +36,10 @@ const EssayQuestion: React.FC<EssayQuestionProps> = ({
 			<div className="mb-8">
 				<h3 className="text-2xl mb-4">Q: {questionNumber}</h3>
 				<div className="p-6 bg-white rounded-lg border">
-					<p className="text-lg">{questionText}</p>
+					<p
+						className="text-lg"
+						dangerouslySetInnerHTML={{ __html: questionText }}
+					/>
 
 					{questionImageUrl && (
 						<div className="mt-4 flex justify-center">

@@ -41,7 +41,10 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 				<h2 className="text-xl font-semibold mb-4">
 					Question {questionNumber}
 				</h2>
-				<p className="text-gray-700 mb-4">{questionText}</p>
+				<p
+					className="text-gray-700 mb-4"
+					dangerouslySetInnerHTML={{ __html: questionText }}
+				/>
 				{questionImageUrl && (
 					<div className="mb-4">
 						<Image
@@ -81,7 +84,10 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 							</div>
 							<div className="flex-1">
 								{option.optionText && (
-									<p className="text-gray-700">{option.optionText}</p>
+									<p
+										className="text-gray-700"
+										dangerouslySetInnerHTML={{ __html: option.optionText }}
+									/>
 								)}
 								{option.optionImageUrl && (
 									<div className="mt-2">
