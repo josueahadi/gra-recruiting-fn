@@ -18,6 +18,13 @@ import { questionsService } from "@/services/questions";
 import ExitExamDialog from "./exit-exam-dialog";
 import { showToast } from "@/services/toast";
 import AppLayoutWrapper from "@/components/layout/app-layout-wrapper";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogFooter,
+} from "@/components/ui/dialog";
 
 interface MappedQuestion extends QuestionResDto {
 	displayId: number;
@@ -56,6 +63,9 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		Record<string, number[]>
 	>({});
 	const [showExitDialog, setShowExitDialog] = useState(false);
+	const [timeLeft, setTimeLeft] = useState("00:00:00");
+	const [timerRunning, setTimerRunning] = useState(false);
+	const [showSectionTransition, setShowSectionTransition] = useState(false);
 
 	const [questionMapping, setQuestionMapping] = useState<{
 		[key: string]: MappedQuestion[];
@@ -399,7 +409,8 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		);
 	};
 
-	const completeExam = async () => {
+	// Memoize completeExam for useEffect dependency
+	const completeExam = useCallback(async () => {
 		try {
 			// Format answers for submission
 			const multipleChoiceAnswers = [];
@@ -439,7 +450,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 			console.error("Error submitting exam:", error);
 			// Show error toast or handle error appropriately
 		}
-	};
+	}, [questionMapping]);
 
 	const handleNextQuestion = () => {
 		// Check if current question is answered
@@ -525,6 +536,56 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		}
 	}, [examCompleted]);
 
+	// Timer logic
+	useEffect(() => {
+		let sectionTime = currentSectionId === 1 ? 35 * 60 : 25 * 60;
+		setTimeLeft(formatTime(sectionTime));
+		setTimerRunning(true);
+
+		const timer = timerRunning
+			? setInterval(() => {
+					setTimeLeft((prev) => {
+						const [h, m, s] = prev.split(":").map(Number);
+						const total = h * 3600 + m * 60 + s;
+						if (total <= 1) {
+							if (timer) clearInterval(timer);
+							if (currentSectionId === 1) {
+								setTimerRunning(false);
+								setShowSectionTransition(true);
+							} else {
+								setTimerRunning(false);
+								completeExam();
+							}
+							return "00:00:00";
+						}
+						return formatTime(total - 1);
+					});
+				}, 1000)
+			: undefined;
+
+		return () => {
+			if (timer) clearInterval(timer);
+		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [currentSectionId, timerRunning, completeExam]);
+
+	function formatTime(totalSeconds: number) {
+		const hours = Math.floor(totalSeconds / 3600);
+		const minutes = Math.floor((totalSeconds % 3600) / 60);
+		const seconds = totalSeconds % 60;
+		return `${hours.toString().padStart(2, "0")}:${minutes
+			.toString()
+			.padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+	}
+
+	// Section transition modal handler
+	const handleContinueToSection2 = () => {
+		setShowSectionTransition(false);
+		setCurrentSectionId(2);
+		setCurrentQuestionNum(1);
+		setTimerRunning(true);
+	};
+
 	if (isLoading) {
 		return (
 			<AssessmentLayout
@@ -583,6 +644,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 				answeredQuestions={answeredQuestions}
 				onQuestionSelect={handleQuestionSelect}
 				showNavigation={true}
+				timeLeft={timeLeft}
 			>
 				{sectionType === "multiple-choice" ? (
 					<MultipleChoiceQuestion
@@ -621,6 +683,28 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 				onClose={() => setShowExitDialog(false)}
 				onConfirm={handleExitExam}
 			/>
+
+			{/* Section transition modal */}
+			<Dialog open={showSectionTransition}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Section 1 Complete</DialogTitle>
+					</DialogHeader>
+					<p>
+						Your time for section 1 is up. Click below to continue to section 2
+						(Essay).
+					</p>
+					<DialogFooter>
+						<button
+							type="button"
+							className="bg-primary-base text-white px-4 py-2 rounded"
+							onClick={handleContinueToSection2}
+						>
+							Continue to Section 2
+						</button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</>
 	);
 }
