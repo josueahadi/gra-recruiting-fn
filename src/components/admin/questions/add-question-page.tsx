@@ -16,11 +16,11 @@ import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Upload, ArrowLeft } from "lucide-react";
 import { useQuestions } from "@/hooks/use-questions";
-import type { Question } from "@/types";
+import type { QuestionSection, AddQuestionReqDto } from "@/types/questions";
 
 export default function AddQuestionPage() {
 	const router = useRouter();
-	const { createQuestion } = useQuestions();
+	const { addQuestion } = useQuestions();
 	const [isPublishing, setIsPublishing] = useState(false);
 
 	const [questionType, setQuestionType] = useState<string>("Problem Solving");
@@ -69,41 +69,36 @@ export default function AddQuestionPage() {
 		try {
 			const tempDiv = document.createElement("div");
 			tempDiv.innerHTML = questionText;
-			const textContent = tempDiv.textContent || tempDiv.innerText || "";
-			const excerpt =
-				textContent.substring(0, 97) + (textContent.length > 97 ? "..." : "");
 
-			let questionData: Partial<Question>;
+			let questionData: AddQuestionReqDto;
 
 			if (questionType === "Essay") {
 				questionData = {
-					type: "essay",
-					section: "Essay" as const,
-					text: questionText,
-					excerpt,
-					difficulty: "Medium",
-					active: true,
-					maxScore: 10,
+					section: "GENERAL_QUESTIONS" as QuestionSection,
+					careerId: 1, // Default career ID
+					description: questionText,
+					options: [], // Essay questions don't need options
 				};
 			} else {
 				questionData = {
-					type: questionType as "Problem Solving" | "Computer Skills" | "Math" | "Business" | "multiple-choice" | "essay",
-					section: "Multiple Choice" as const,
-					text: questionText,
-					excerpt,
-					difficulty: "Medium",
-					active: true,
-					choices,
+					section: "GENERAL_QUESTIONS" as QuestionSection,
+					careerId: 1, // Default career ID
+					description: questionText,
+					options: choices.map((choice) => ({
+						optionText: choice.text,
+						isCorrectAnswer: choice.isCorrect,
+					})),
 				};
 			}
 
-			await createQuestion.mutateAsync(questionData);
+			await addQuestion(questionData);
 
 			toast.success("Question published successfully");
 
 			router.push("/admin/questions");
 		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+			const errorMessage =
+				error instanceof Error ? error.message : "An unknown error occurred";
 			toast.error(`Failed to publish question: ${errorMessage}`);
 		} finally {
 			setIsPublishing(false);

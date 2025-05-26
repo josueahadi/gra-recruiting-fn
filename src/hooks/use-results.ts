@@ -3,7 +3,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { showToast } from "@/services/toast";
 import { questionsService } from "@/services/questions";
-import type { TestResult } from "@/types/questions";
 
 export interface ResultsFilterParams {
 	search?: string;

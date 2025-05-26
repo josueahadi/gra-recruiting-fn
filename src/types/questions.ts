@@ -20,12 +20,23 @@ export type QuestionSection =
 	| "GENERAL_QUESTIONS";
 
 export interface Question {
-	id?: number;
+	id: number;
+	text: string;
 	description: string;
-	imageUrl?: string | null;
 	section: QuestionSection;
-	careerId: number;
-	options: QuestionOption[];
+	type: QuestionSection;
+	excerpt?: string;
+	difficulty: "Easy" | "Medium" | "Hard";
+	active: boolean;
+	createdAt?: string;
+	updatedAt?: string;
+	imageUrl?: string | null;
+	choices?: Array<{
+		id: string;
+		text: string;
+		isCorrect: boolean;
+		imageUrl?: string;
+	}>;
 }
 
 export interface MultipleChoiceQuestion extends Question {
