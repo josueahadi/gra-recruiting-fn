@@ -7,18 +7,7 @@ import { MoveRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
 import { useProfile } from "@/hooks/use-profile";
-
-interface ResultData {
-	sectionOne: {
-		score: number;
-		completed: boolean;
-	};
-	sectionTwo: {
-		score: number | null;
-		completed: boolean;
-	};
-	assessmentCompleted: boolean;
-}
+import { useApplicantResults } from "@/hooks/use-results";
 
 const ApplicantDashboard = () => {
 	const router = useRouter();
@@ -32,17 +21,7 @@ const ApplicantDashboard = () => {
 
 	const [completionPercentage, setCompletionPercentage] = useState(0);
 	const [showResults, setShowResults] = useState(false);
-	const [resultsData, setResultsData] = useState<ResultData>({
-		sectionOne: {
-			score: 75,
-			completed: true,
-		},
-		sectionTwo: {
-			score: null,
-			completed: false,
-		},
-		assessmentCompleted: false,
-	});
+	const { data: backendResults } = useApplicantResults();
 	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
@@ -76,29 +55,29 @@ const ApplicantDashboard = () => {
 
 					const resultState = urlParams.get("resultState") || "section1";
 					if (resultState === "section1") {
-						setResultsData({
-							sectionOne: {
-								score: 75,
-								completed: true,
-							},
-							sectionTwo: {
-								score: null,
-								completed: false,
-							},
-							assessmentCompleted: false,
-						});
+						// setResultsData({
+						// 	sectionOne: {
+						// 		score: 75,
+						// 		completed: true,
+						// 	},
+						// 	sectionTwo: {
+						// 		score: null,
+						// 		completed: false,
+						// 	},
+						// 	assessmentCompleted: false,
+						// });
 					} else if (resultState === "complete") {
-						setResultsData({
-							sectionOne: {
-								score: 75,
-								completed: true,
-							},
-							sectionTwo: {
-								score: 85,
-								completed: true,
-							},
-							assessmentCompleted: true,
-						});
+						// setResultsData({
+						// 	sectionOne: {
+						// 		score: 75,
+						// 		completed: true,
+						// 	},
+						// 	sectionTwo: {
+						// 		score: 85,
+						// 		completed: true,
+						// 	},
+						// 	assessmentCompleted: true,
+						// });
 					}
 				} else {
 					const hasCompletedAssessment = localStorage.getItem(
@@ -121,7 +100,7 @@ const ApplicantDashboard = () => {
 
 	const getActionButtonLabel = () => {
 		if (showResults) {
-			return resultsData.assessmentCompleted
+			return backendResults?.passed
 				? "View Full Results"
 				: "Continue Assessment";
 		}
@@ -132,7 +111,7 @@ const ApplicantDashboard = () => {
 
 	const handleActionButtonClick = () => {
 		if (showResults) {
-			if (resultsData.assessmentCompleted) {
+			if (backendResults?.passed) {
 				router.push("/applicant/results");
 			} else {
 				router.push("/applicant/exam");
@@ -151,20 +130,21 @@ const ApplicantDashboard = () => {
 	};
 
 	const formatResultsForDisplay = () => {
+		if (!backendResults) return [];
 		return [
 			{
 				section: "one",
 				sectionTitle: "Section One",
 				sectionDescription: "Multiple Choice",
-				score: resultsData.sectionOne.score,
-				completed: resultsData.sectionOne.completed,
+				score: backendResults.sectionOneScore.percentage,
+				completed: backendResults.sectionOneScore.totalQuestions > 0,
 			},
 			{
 				section: "two",
 				sectionTitle: "Section Two",
 				sectionDescription: "Short Essay",
-				score: resultsData.sectionTwo.score,
-				completed: resultsData.sectionTwo.completed,
+				score: backendResults.sectionTwoScore.percentage,
+				completed: backendResults.sectionTwoScore.totalQuestions > 0,
 			},
 		];
 	};
@@ -243,7 +223,7 @@ const ApplicantDashboard = () => {
 			{showResults ? (
 				<ResultsDisplay
 					sectionResults={formatResultsForDisplay()}
-					assessmentCompleted={resultsData.assessmentCompleted}
+					assessmentCompleted={backendResults?.passed}
 					detailedResultsPath="/applicant/results"
 				/>
 			) : (

@@ -5,11 +5,21 @@ import ProfileBlockMessage from "@/components/applicant/exam/profile-block-messa
 import AppLayoutWrapper from "@/components/layout/app-layout-wrapper";
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect } from "react";
+import { questionsService } from "@/services/questions";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+	DialogFooter,
+} from "@/components/ui/dialog";
 
 export default function ExamPage() {
 	const router = useRouter();
 	const [isProfileComplete, setIsProfileComplete] = useState(false);
 	const [isLoading, setIsLoading] = useState(true);
+	const [isFetchingQuestions, setIsFetchingQuestions] = useState(false);
+	const [fetchError, setFetchError] = useState<string | null>(null);
 
 	useEffect(() => {
 		const checkProfileStatus = async () => {
@@ -39,8 +49,25 @@ export default function ExamPage() {
 		checkProfileStatus();
 	}, []);
 
-	const handleStartExam = () => {
-		router.push("/applicant/assessment");
+	const handleStartExam = async () => {
+		setIsFetchingQuestions(true);
+		setFetchError(null);
+		try {
+			await questionsService.getExamQuestions();
+			router.push("/applicant/assessment");
+		} catch (error: unknown) {
+			let message = "Failed to fetch exam questions.";
+			if (typeof error === "object" && error !== null) {
+				const err = error as {
+					response?: { data?: { message?: string } };
+					message?: string;
+				};
+				message = err.response?.data?.message || err.message || message;
+			}
+			setFetchError(message);
+		} finally {
+			setIsFetchingQuestions(false);
+		}
 	};
 
 	if (isLoading) {
@@ -66,13 +93,13 @@ export default function ExamPage() {
 							{
 								title: "section 1",
 								description: "Multiple Choice",
-								timeInMinutes: 20,
-								questionCount: 15,
+								timeInMinutes: 35,
+								questionCount: 30,
 							},
 							{
 								title: "section 2",
 								description: "Short Essay",
-								timeInMinutes: 10,
+								timeInMinutes: 25,
 								questionCount: 5,
 							},
 						]}
@@ -90,6 +117,35 @@ export default function ExamPage() {
 						showImage={true}
 					/>
 				)}
+
+				{/* Loading spinner for fetching questions */}
+				{isFetchingQuestions && (
+					<div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+						<div className="bg-white rounded-lg p-8 flex flex-col items-center shadow-lg">
+							<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base mb-4" />
+							<p className="text-lg font-semibold">Preparing your exam...</p>
+						</div>
+					</div>
+				)}
+
+				{/* Error modal if fetching questions fails */}
+				<Dialog open={!!fetchError}>
+					<DialogContent>
+						<DialogHeader>
+							<DialogTitle>Unable to Start Exam</DialogTitle>
+						</DialogHeader>
+						<p>{fetchError}</p>
+						<DialogFooter>
+							<button
+								type="button"
+								className="bg-primary-base text-white px-4 py-2 rounded"
+								onClick={() => setFetchError(null)}
+							>
+								Close
+							</button>
+						</DialogFooter>
+					</DialogContent>
+				</Dialog>
 			</div>
 		</AppLayoutWrapper>
 	);

@@ -9,7 +9,6 @@ export * from "./use-languages";
 export * from "./use-documents";
 export * from "./use-personal-info";
 export * from "./use-password";
-// export * from './use-scroll'; // Commented out as the file doesn't have exports
 export * from "./use-mobile";
 export * from "./use-optimistic-update";
 export * from "./use-applicants";
@@ -21,3 +20,4 @@ export * from "./use-basic-profile";
 export * from "./use-detailed-profile";
 export * from "./use-data-transformer";
 export * from "./use-work-education";
+export * from "./use-exam";

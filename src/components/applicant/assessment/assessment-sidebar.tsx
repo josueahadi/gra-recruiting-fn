@@ -9,7 +9,7 @@ import type React from "react";
 interface AssessmentSidebarProps {
 	currentSectionId?: number;
 	currentQuestionNumber?: number;
-	answeredQuestions?: number[];
+	answeredQuestions?: Record<string, number[]>;
 	timeLeft: string;
 	onQuestionSelect?: (questionNumber: number) => void;
 	sections: Array<{
@@ -24,10 +24,15 @@ interface AssessmentSidebarProps {
 	mobileClassName?: string;
 }
 
+function isTimeWarning(timeLeft: string) {
+	const [h, m, s] = timeLeft.split(":").map(Number);
+	return h === 0 && (m < 5 || (m === 5 && s === 0));
+}
+
 export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 	currentSectionId = 1,
 	currentQuestionNumber = 1,
-	answeredQuestions = [],
+	answeredQuestions = {},
 	timeLeft,
 	onQuestionSelect,
 	sections,
@@ -67,56 +72,108 @@ export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 				</div>
 
 				<div className="bg-[#E0F5FF] rounded-lg p-6 mb-10">
-					<div className="text-[#009879] text-3xl font-bold flex items-center justify-center">
+					<div
+						className={cn(
+							isTimeWarning(timeLeft)
+								? "text-red-600 animate-pulse"
+								: "text-[#009879]",
+							"text-3xl font-bold flex items-center justify-center",
+						)}
+					>
 						<Timer className="mr-2" />
 						{timeLeft}
 					</div>
 				</div>
 
-				{sections.map((section) => (
-					<div key={section.id} className="mb-6">
-						<h2 className="text-base font-medium mb-3">
-							Section {section.title} - {section.description}
-						</h2>
-						<div className="grid grid-cols-5 gap-2 mb-4">
-							{Array.from(
-								{ length: section.questionCount },
-								(_, i) => i + 1,
-							).map((num) => (
-								<button
-									key={`section${section.id}-${num}`}
-									type="button"
-									onClick={() => {
-										onQuestionSelect?.(num);
-										if (mobile) onMobileMenuClose();
-									}}
-									className={cn(
-										"h-8 w-8 rounded-md text-sm font-medium flex items-center justify-center",
-										currentSectionId === section.id &&
-											num === currentQuestionNumber
-											? "bg-[#4A90B9] text-white"
-											: answeredQuestions.includes(num) &&
-													currentSectionId === section.id
-												? "bg-gray-200 text-gray-800"
-												: "bg-white border border-gray-300 text-gray-600 hover:bg-gray-100",
-									)}
-								>
-									{num}
-								</button>
-							))}
+				{sections.map((section) => {
+					const sectionIdStr = section.id.toString();
+					const sectionAnsweredQuestions = Array.isArray(
+						answeredQuestions?.[sectionIdStr],
+					)
+						? answeredQuestions[sectionIdStr]
+						: [];
+					const isSectionComplete =
+						sectionAnsweredQuestions.length === section.questionCount;
+					const isPreviousSection = section.id < currentSectionId;
+					const isNextSection = section.id > currentSectionId;
+					const isCurrentSection = section.id === currentSectionId;
+					const isSectionDisabled = isNextSection && !isSectionComplete;
+
+					return (
+						<div
+							key={section.id}
+							className={cn("mb-6", isSectionDisabled && "opacity-50")}
+						>
+							<h2 className="text-base font-medium mb-3">
+								Section {section.title} - {section.description}
+								{isSectionComplete && (
+									<span className="ml-2 text-sm text-green-600">
+										(Completed)
+									</span>
+								)}
+							</h2>
+							<div className="grid grid-cols-5 gap-2 mb-4">
+								{Array.from(
+									{ length: section.questionCount },
+									(_, i) => i + 1,
+								).map((num) => {
+									const isAnswered = sectionAnsweredQuestions.includes(num);
+									const isCurrentQuestion =
+										isCurrentSection && num === currentQuestionNumber;
+									const isPreviousSectionQuestion = isPreviousSection;
+									const isNextSectionQuestion = isNextSection;
+
+									// Only allow navigation to:
+									// - The current question
+									// - The next unanswered question (if previous is answered)
+									// All previous questions (answered) and future questions are disabled
+									const maxAnswered = Math.max(...sectionAnsweredQuestions, 0);
+									const isQuestionDisabled =
+										isPreviousSectionQuestion ||
+										(isNextSectionQuestion && !isSectionComplete) ||
+										(isAnswered && !isCurrentQuestion) ||
+										(!isAnswered &&
+											!isCurrentQuestion &&
+											num > maxAnswered + 1);
+
+									return (
+										<button
+											key={`section${section.id}-${num}`}
+											type="button"
+											onClick={() => {
+												if (!isQuestionDisabled) {
+													onQuestionSelect?.(num);
+													if (mobile) onMobileMenuClose();
+												}
+											}}
+											className={cn(
+												"h-8 w-8 rounded-md text-sm font-medium flex items-center justify-center",
+												isCurrentQuestion
+													? "bg-[#4A90B9] text-white"
+													: isQuestionDisabled
+														? "bg-gray-100 text-gray-400 cursor-not-allowed"
+														: isAnswered
+															? "bg-gray-200 text-gray-800"
+															: "bg-white border border-gray-300 text-gray-600 hover:bg-gray-100",
+											)}
+											disabled={isQuestionDisabled}
+										>
+											{num}
+										</button>
+									);
+								})}
+							</div>
 						</div>
-					</div>
-				))}
+					);
+				})}
 			</div>
 		</aside>
 	);
 
 	return (
 		<>
-			{/* Desktop sidebar */}
 			{renderSidebar(false)}
 
-			{/* Mobile sidebar overlay */}
 			{isMobileMenuOpen && (
 				<div className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden">
 					{renderSidebar(true)}

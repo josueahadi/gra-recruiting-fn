@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import AppLayoutWrapper from "@/components/layout/app-layout-wrapper";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,22 +16,151 @@ import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Upload, ArrowLeft } from "lucide-react";
 import { useQuestions } from "@/hooks/use-questions";
-import type { Question } from "@/types";
+import { useCareers } from "@/hooks";
+import type { QuestionSection, AddQuestionReqDto } from "@/types/questions";
+import type { CareerResponse } from "@/types/profile";
+import { Input } from "@/components/ui/input";
+
+type Choice = {
+	id: string;
+	text: string;
+	isCorrect: boolean;
+	imageUrl: string | undefined;
+};
+
+interface FieldErrors {
+	career?: string;
+	questionType?: string;
+	questionText?: string;
+	questionImageUrl?: string;
+	choices?: {
+		[id: string]: {
+			text?: string;
+			imageUrl?: string;
+		};
+	};
+}
+
+interface BackendError {
+	response?: {
+		data?: {
+			errors?: Record<string, string[]>;
+		};
+	};
+	message?: string;
+}
+
+type BackendErrorField =
+	| keyof FieldErrors
+	| `options.${number}.${"text" | "imageUrl"}`;
 
 export default function AddQuestionPage() {
 	const router = useRouter();
-	const { createQuestion } = useQuestions();
+	const {
+		addQuestion,
+		questionSections,
+		getQuestionSectionLabel,
+		// uploadQuestionImage,
+		// uploadOptionImage,
+	} = useQuestions();
+	const { data: careers, isLoading: isLoadingCareers } = useCareers();
 	const [isPublishing, setIsPublishing] = useState(false);
+	const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
-	const [questionType, setQuestionType] = useState<string>("Problem Solving");
+	const [questionType, setQuestionType] =
+		useState<QuestionSection>("GENERAL_QUESTIONS");
 	const [questionText, setQuestionText] = useState("");
+	const [questionImageUrl, setQuestionImageUrl] = useState<string>("");
+	const [selectedCareer, setSelectedCareer] = useState<CareerResponse | null>(
+		null,
+	);
 
-	const [choices, setChoices] = useState([
-		{ id: "1", text: "", isCorrect: true },
-		{ id: "2", text: "", isCorrect: false },
-		{ id: "3", text: "", isCorrect: false },
-		{ id: "4", text: "", isCorrect: false },
+	const [choices, setChoices] = useState<Choice[]>([
+		{ id: "1", text: "", isCorrect: true, imageUrl: "" },
+		{ id: "2", text: "", isCorrect: false, imageUrl: "" },
+		{ id: "3", text: "", isCorrect: false, imageUrl: "" },
+		{ id: "4", text: "", isCorrect: false, imageUrl: "" },
 	]);
+
+	const validateFields = (): boolean => {
+		const errors: FieldErrors = {};
+		let isValid = true;
+
+		// Validate career selection
+		if (!selectedCareer) {
+			errors.career = "Please select a career";
+			isValid = false;
+		}
+
+		// Validate question type
+		if (!questionType) {
+			errors.questionType = "Please select a question type";
+			isValid = false;
+		}
+
+		// Validate question text
+		if (!questionText.trim()) {
+			errors.questionText = "Please enter a question";
+			isValid = false;
+		}
+
+		// Validate question image URL if provided
+		if (questionImageUrl.trim() && !isValidImageUrl(questionImageUrl)) {
+			errors.questionImageUrl = "Please enter a valid image URL";
+			isValid = false;
+		}
+
+		// Validate choices for multiple choice questions
+		if (questionType !== "GENERAL_QUESTIONS") {
+			const choiceErrors: FieldErrors["choices"] = {};
+			let hasValidChoice = false;
+
+			choices.forEach((choice) => {
+				const choiceError: { text?: string; imageUrl?: string } = {};
+
+				// Check if choice has either text or image
+				if (!choice.text.trim() && !choice.imageUrl?.trim()) {
+					choiceError.text = "Choice must have either text or image";
+					isValid = false;
+				}
+
+				// Validate image URL if provided
+				if (choice.imageUrl?.trim() && !isValidImageUrl(choice.imageUrl)) {
+					choiceError.imageUrl = "Please enter a valid image URL";
+					isValid = false;
+				}
+
+				if (choice.text.trim() || choice.imageUrl?.trim()) {
+					hasValidChoice = true;
+				}
+
+				if (Object.keys(choiceError).length > 0) {
+					choiceErrors[choice.id] = choiceError;
+				}
+			});
+
+			if (!hasValidChoice) {
+				errors.choices = {
+					"1": { text: "At least one choice must be provided" },
+				};
+				isValid = false;
+			} else if (Object.keys(choiceErrors).length > 0) {
+				errors.choices = choiceErrors;
+			}
+		}
+
+		setFieldErrors(errors);
+		return isValid;
+	};
+
+	const isValidImageUrl = (url: string): boolean => {
+		try {
+			new URL(url);
+			return true;
+		} catch {
+			return false;
+		}
+	};
 
 	const handleChoiceChange = (id: string, value: string) => {
 		setChoices(
@@ -39,6 +168,16 @@ export default function AddQuestionPage() {
 				choice.id === id ? { ...choice, text: value } : choice,
 			),
 		);
+		// Clear error for this choice when user makes changes
+		if (fieldErrors.choices?.[id]) {
+			setFieldErrors({
+				...fieldErrors,
+				choices: {
+					...fieldErrors.choices,
+					[id]: { ...fieldErrors.choices[id], text: undefined },
+				},
+			});
+		}
 	};
 
 	const handleCorrectAnswerChange = (id: string) => {
@@ -50,18 +189,51 @@ export default function AddQuestionPage() {
 		);
 	};
 
+	// Comment out image upload handlers
+	/*
+	const handleQuestionImageUpload = async (
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		try {
+			const result = await uploadQuestionImage(file);
+			setQuestionImageUrl(result);
+		} catch (error) {
+			toast.error("Failed to upload question image");
+		}
+	};
+
+	const handleChoiceImageUpload = async (
+		id: string,
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+
+		try {
+			const result = await uploadOptionImage(file);
+			setChoices(
+				choices.map((choice) =>
+					choice.id === id ? { ...choice, imageUrl: result } : choice,
+				),
+			);
+		} catch (error) {
+			toast.error("Failed to upload choice image");
+		}
+	};
+	*/
+
 	const handlePublish = async () => {
-		if (!questionText.trim()) {
-			toast.error("Please enter a question text");
+		if (!validateFields()) {
+			toast.error("Please fix the errors before publishing");
 			return;
 		}
 
-		if (questionType !== "Essay") {
-			const hasChoices = choices.some((choice) => choice.text.trim() !== "");
-			if (!hasChoices) {
-				toast.error("Please add at least one answer choice");
-				return;
-			}
+		if (!selectedCareer) {
+			toast.error("Please select a career");
+			return;
 		}
 
 		setIsPublishing(true);
@@ -69,42 +241,73 @@ export default function AddQuestionPage() {
 		try {
 			const tempDiv = document.createElement("div");
 			tempDiv.innerHTML = questionText;
-			const textContent = tempDiv.textContent || tempDiv.innerText || "";
-			const excerpt =
-				textContent.substring(0, 97) + (textContent.length > 97 ? "..." : "");
 
-			let questionData: Partial<Question>;
+			let questionData: AddQuestionReqDto;
 
-			if (questionType === "Essay") {
+			if (questionType === "GENERAL_QUESTIONS") {
 				questionData = {
-					type: "essay",
-					section: "Essay" as const,
-					text: questionText,
-					excerpt,
-					difficulty: "Medium",
-					active: true,
-					maxScore: 10,
+					section: questionType,
+					careerId: selectedCareer.id,
+					description: questionText,
+					...(questionImageUrl.trim() && { imageUrl: questionImageUrl.trim() }),
+					options: [],
 				};
 			} else {
 				questionData = {
-					type: questionType as "Problem Solving" | "Computer Skills" | "Math" | "Business" | "multiple-choice" | "essay",
-					section: "Multiple Choice" as const,
-					text: questionText,
-					excerpt,
-					difficulty: "Medium",
-					active: true,
-					choices,
+					section: questionType,
+					careerId: selectedCareer.id,
+					description: questionText,
+					...(questionImageUrl.trim() && { imageUrl: questionImageUrl.trim() }),
+					options: choices
+						.filter(
+							(choice) =>
+								choice.text.trim() !== "" || choice.imageUrl?.trim() !== "",
+						)
+						.map((choice) => ({
+							optionText: choice.text.trim(),
+							...(choice.imageUrl?.trim() && {
+								optionImageUrl: choice.imageUrl.trim(),
+							}),
+							isCorrectAnswer: choice.isCorrect,
+						})),
 				};
 			}
 
-			await createQuestion.mutateAsync(questionData);
-
+			await addQuestion(questionData);
 			toast.success("Question published successfully");
-
 			router.push("/admin/questions");
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
-			toast.error(`Failed to publish question: ${errorMessage}`);
+		} catch (error: unknown) {
+			const backendError = error as BackendError;
+			// Handle backend validation errors
+			if (backendError.response?.data?.errors) {
+				const backendErrors = backendError.response.data.errors;
+				const newFieldErrors: FieldErrors = {};
+
+				// Map backend errors to field errors
+				Object.entries(backendErrors).forEach(([field, messages]) => {
+					const typedField = field as BackendErrorField;
+					if (typedField.startsWith("options.")) {
+						const [, index, subfield] = typedField.split(".");
+						if (!newFieldErrors.choices) {
+							newFieldErrors.choices = {};
+						}
+						const choiceIndex = Number.parseInt(index, 10);
+						if (!newFieldErrors.choices[choices[choiceIndex].id]) {
+							newFieldErrors.choices[choices[choiceIndex].id] = {};
+						}
+						const subfieldType = subfield as "text" | "imageUrl";
+						newFieldErrors.choices[choices[choiceIndex].id][subfieldType] =
+							messages[0];
+					} else {
+						const fieldKey = typedField as keyof Omit<FieldErrors, "choices">;
+						newFieldErrors[fieldKey] = messages[0];
+					}
+				});
+
+				setFieldErrors(newFieldErrors);
+			} else {
+				toast.error(backendError.message || "Failed to publish question");
+			}
 		} finally {
 			setIsPublishing(false);
 		}
@@ -131,29 +334,77 @@ export default function AddQuestionPage() {
 					<div className="space-y-6">
 						<div>
 							<Label className="block text-base font-semibold text-black mb-2">
+								Career
+							</Label>
+							<Select
+								value={selectedCareer?.id.toString()}
+								onValueChange={(value) => {
+									const career = careers?.find(
+										(c) => c.id.toString() === value,
+									);
+									setSelectedCareer(career || null);
+									if (fieldErrors.career) {
+										setFieldErrors({ ...fieldErrors, career: undefined });
+									}
+								}}
+							>
+								<SelectTrigger
+									className={`w-full border-gray-300 ${fieldErrors.career ? "border-red-500" : ""}`}
+								>
+									<SelectValue placeholder="Select a career" />
+								</SelectTrigger>
+								<SelectContent>
+									{isLoadingCareers ? (
+										<SelectItem value="loading" disabled>
+											Loading careers...
+										</SelectItem>
+									) : (
+										careers?.map((career) => (
+											<SelectItem key={career.id} value={career.id.toString()}>
+												{career.name}
+											</SelectItem>
+										))
+									)}
+								</SelectContent>
+							</Select>
+							{fieldErrors.career && (
+								<p className="text-red-500 text-sm mt-1">
+									{fieldErrors.career}
+								</p>
+							)}
+						</div>
+
+						<div>
+							<Label className="block text-base font-semibold text-black mb-2">
 								Question Type
 							</Label>
 							<Select
 								value={questionType}
-								onValueChange={(value) => setQuestionType(value)}
+								onValueChange={(value) => {
+									setQuestionType(value as QuestionSection);
+									if (fieldErrors.questionType) {
+										setFieldErrors({ ...fieldErrors, questionType: undefined });
+									}
+								}}
 							>
-								<SelectTrigger className="w-full border-gray-300">
+								<SelectTrigger
+									className={`w-full border-gray-300 ${fieldErrors.questionType ? "border-red-500" : ""}`}
+								>
 									<SelectValue placeholder="Select question type" />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="Essay">Essay</SelectItem>
-									<SelectItem value="Problem Solving">
-										Problem Solving
-									</SelectItem>
-									<SelectItem value="Multiple Choice">
-										Multiple Choice
-									</SelectItem>
-									<SelectItem value="Computer Skills">
-										Computer Skills
-									</SelectItem>
-									<SelectItem value="Math">Math</SelectItem>
+									{questionSections.map((section) => (
+										<SelectItem key={section} value={section}>
+											{getQuestionSectionLabel(section)}
+										</SelectItem>
+									))}
 								</SelectContent>
 							</Select>
+							{fieldErrors.questionType && (
+								<p className="text-red-500 text-sm mt-1">
+									{fieldErrors.questionType}
+								</p>
+							)}
 						</div>
 
 						<div>
@@ -161,16 +412,63 @@ export default function AddQuestionPage() {
 								Question
 							</Label>
 
-							<TextEditor
-								value={questionText}
-								onChange={setQuestionText}
-								placeholder="Enter your question here..."
-								minHeight="200px"
-								enableImageUpload={true}
-							/>
+							<div
+								className={
+									fieldErrors.questionText
+										? "border border-red-500 rounded-md"
+										: ""
+								}
+							>
+								<TextEditor
+									value={questionText}
+									onChange={(value) => {
+										setQuestionText(value);
+										if (fieldErrors.questionText) {
+											setFieldErrors({
+												...fieldErrors,
+												questionText: undefined,
+											});
+										}
+									}}
+									placeholder="Enter your question here..."
+									minHeight="200px"
+									enableImageUpload={true}
+								/>
+							</div>
+							{fieldErrors.questionText && (
+								<p className="text-red-500 text-sm mt-1">
+									{fieldErrors.questionText}
+								</p>
+							)}
+
+							<div className="mt-4">
+								<Label className="block text-sm font-medium text-gray-700 mb-2">
+									Question Image URL (Optional)
+								</Label>
+								<Input
+									type="text"
+									value={questionImageUrl}
+									onChange={(e) => {
+										setQuestionImageUrl(e.target.value);
+										if (fieldErrors.questionImageUrl) {
+											setFieldErrors({
+												...fieldErrors,
+												questionImageUrl: undefined,
+											});
+										}
+									}}
+									placeholder="Enter image URL..."
+									className={`w-full ${fieldErrors.questionImageUrl ? "border-red-500" : ""}`}
+								/>
+								{fieldErrors.questionImageUrl && (
+									<p className="text-red-500 text-sm mt-1">
+										{fieldErrors.questionImageUrl}
+									</p>
+								)}
+							</div>
 						</div>
 
-						{questionType !== "Essay" && (
+						{questionType !== "GENERAL_QUESTIONS" && (
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 								{choices.map((choice, index) => (
 									<div key={choice.id}>
@@ -191,13 +489,65 @@ export default function AddQuestionPage() {
 												{choice.isCorrect && "(Correct Answer)"}
 											</Label>
 										</div>
-										<TextEditor
-											value={choice.text}
-											onChange={(value) => handleChoiceChange(choice.id, value)}
-											placeholder={`Enter choice ${index + 1} here...`}
-											minHeight="100px"
-											enableImageUpload={true}
-										/>
+										<div
+											className={
+												fieldErrors.choices?.[choice.id]?.text
+													? "border border-red-500 rounded-md"
+													: ""
+											}
+										>
+											<TextEditor
+												value={choice.text}
+												onChange={(value) =>
+													handleChoiceChange(choice.id, value)
+												}
+												placeholder={`Enter choice ${index + 1} here...`}
+												minHeight="100px"
+												enableImageUpload={true}
+											/>
+										</div>
+										{fieldErrors.choices?.[choice.id]?.text && (
+											<p className="text-red-500 text-sm mt-1">
+												{fieldErrors.choices[choice.id].text}
+											</p>
+										)}
+										<div className="mt-2">
+											<Label className="block text-sm font-medium text-gray-700 mb-2">
+												Choice Image URL (Optional)
+											</Label>
+											<Input
+												type="text"
+												value={choice.imageUrl}
+												onChange={(e) => {
+													setChoices(
+														choices.map((c) =>
+															c.id === choice.id
+																? { ...c, imageUrl: e.target.value }
+																: c,
+														),
+													);
+													if (fieldErrors.choices?.[choice.id]?.imageUrl) {
+														setFieldErrors({
+															...fieldErrors,
+															choices: {
+																...fieldErrors.choices,
+																[choice.id]: {
+																	...fieldErrors.choices[choice.id],
+																	imageUrl: undefined,
+																},
+															},
+														});
+													}
+												}}
+												placeholder="Enter image URL..."
+												className={`w-full ${fieldErrors.choices?.[choice.id]?.imageUrl ? "border-red-500" : ""}`}
+											/>
+											{fieldErrors.choices?.[choice.id]?.imageUrl && (
+												<p className="text-red-500 text-sm mt-1">
+													{fieldErrors.choices[choice.id].imageUrl}
+												</p>
+											)}
+										</div>
 									</div>
 								))}
 							</div>

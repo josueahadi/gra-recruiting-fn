@@ -14,7 +14,8 @@ import StatsSection, { type StatCardProps } from "./common/stats-section";
 import { BarChart, CheckCircle, Clock } from "lucide-react";
 import { useState } from "react";
 import ResultDetail from "./results/result-detail";
-import { useResults, type TestResult } from "@/hooks/use-results";
+import { useResults } from "@/hooks/use-results";
+import type { TestResult } from "@/types/questions";
 
 const ResultsManagement = () => {
 	const [searchValue, setSearchValue] = useState("");
@@ -68,7 +69,7 @@ const ResultsManagement = () => {
 		},
 		{
 			title: "Passed",
-			value: stats.passed.toString(),
+			value: stats.success.toString(),
 			icon: <CheckCircle className="w-8 h-8" />,
 		},
 		{

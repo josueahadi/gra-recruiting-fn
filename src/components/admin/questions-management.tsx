@@ -5,75 +5,67 @@ import ContentCard from "@/components/admin/common/content-card";
 import FilterBar, {
 	type FilterConfig,
 } from "@/components/admin/common/filter-bar";
-import TableActions from "@/components/admin/common/table-actions";
 import QuestionDetail from "./questions/question-detail";
 import ConfirmationDialog from "@/components/common/confirm-dialog";
 import DataTable from "@/components/common/data-table";
 import StatsSection, { type StatCardProps } from "./common/stats-section";
-import { Plus, CircleHelp, FileText, Server } from "lucide-react";
-import { useState } from "react";
+import {
+	Plus,
+	CircleHelp,
+	FileText,
+	Server,
+	Eye,
+	Edit,
+	Trash,
+} from "lucide-react";
+import { useState, useEffect } from "react";
 import { useQuestions } from "@/hooks/use-questions";
-import type {
-	Question,
-	MultipleChoiceQuestion,
-	Choice as SourceChoice,
-	EssayQuestion,
-} from "@/types";
+import type { Question, QuestionSection } from "@/types/questions";
+import { Button } from "@/components/ui/button";
 
 // Define the shape that QuestionDetail expects
 interface DetailQuestion {
 	id: string;
 	text: string;
-	type: string;
+	description: string;
+	excerpt: string;
 	section: string;
-	choices?: DetailChoice[];
-	excerpt?: string;
-	difficulty?: string;
-	active?: boolean;
-	createdAt?: string;
-	updatedAt?: string;
+	type: string;
+	difficulty: string;
+	active: boolean;
 	imageUrl?: string;
-	maxScore?: number;
+	options?: DetailChoice[];
 }
 
 interface DetailChoice {
 	id: string;
-	text: string;
-	isCorrect: boolean;
-	imageUrl?: string;
+	optionText: string;
+	optionImageUrl?: string;
 }
 
 // Adapter function to convert from your Question type to what QuestionDetail expects
-const adaptQuestionForDetail = (question: Question): DetailQuestion => {
-	const baseQuestion: DetailQuestion = {
-		id: question.id,
+const adaptQuestionForDetail = (question: Question) => {
+	const baseQuestion = {
+		id: question.id.toString(),
 		text: question.text,
-		type: question.type,
+		description: question.description,
+		excerpt: question.excerpt || question.text,
 		section: question.section,
-		excerpt: question.excerpt,
+		type: question.type,
 		difficulty: question.difficulty,
 		active: question.active,
-		createdAt: question.createdAt,
-		updatedAt: question.updatedAt,
-		imageUrl: question.imageUrl,
+		imageUrl: question.imageUrl || undefined,
 	};
 
-	// Check if it's a multiple choice question
-	if (question.section === "Multiple Choice") {
-		const mcQuestion = question as MultipleChoiceQuestion;
-		if (mcQuestion.choices && Array.isArray(mcQuestion.choices)) {
-			baseQuestion.choices = mcQuestion.choices.map(
-				(choice: SourceChoice): DetailChoice => ({
-					id: choice.id,
-					text: choice.text || "", // Ensure text is never undefined
-					isCorrect: choice.isCorrect,
-					imageUrl: choice.imageUrl,
-				}),
-			);
-		}
-	} else if (question.section === "Essay") {
-		// For essay questions, you might need to add the maxScore property
-		baseQuestion.maxScore = (question as EssayQuestion).maxScore;
+	if (question.choices && question.choices.length > 0) {
+		return {
+			...baseQuestion,
+			options: question.choices.map((choice) => ({
+				id: choice.id,
+				optionText: choice.text,
+				optionImageUrl: choice.imageUrl || undefined,
+			})),
+		};
 	}
 
 	return baseQuestion;
@@ -81,8 +73,15 @@ const adaptQuestionForDetail = (question: Question): DetailQuestion => {
 
 const QuestionsManagement = () => {
 	const router = useRouter();
+	const [searchInput, setSearchInput] = useState("");
 	const [searchValue, setSearchValue] = useState("");
-	const [typeFilter, setTypeFilter] = useState("all");
+	const [typeFilter, setTypeFilter] = useState<QuestionSection | "all">("all");
+	const [page, setPage] = useState(1);
+	const [pageSize, setPageSize] = useState(10);
+	const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
+	const [toDate, setToDate] = useState<Date | undefined>(undefined);
+	const [presetTimeFrame, setPresetTimeFrame] = useState<string>("none");
+	const [sortingOptions, setSortingOptions] = useState<string>("DESC");
 
 	const [selectedQuestion, setSelectedQuestion] =
 		useState<DetailQuestion | null>(null);
@@ -91,31 +90,61 @@ const QuestionsManagement = () => {
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
 
-	const { questions, metadata, deleteQuestion } = useQuestions({
-		search: searchValue,
-		type: typeFilter,
-	});
+	const { questions, metadata, deleteQuestion, questionSections } =
+		useQuestions({
+			search: searchValue,
+			type: typeFilter,
+			page,
+			take: pageSize,
+			fromDate: fromDate ? fromDate.toISOString().slice(0, 10) : undefined,
+			toDate: toDate ? toDate.toISOString().slice(0, 10) : undefined,
+			presetTimeFrame: presetTimeFrame !== "none" ? presetTimeFrame : undefined,
+			sortingOptions,
+		});
+
+	// Debounce search input
+	useEffect(() => {
+		const handler = setTimeout(() => {
+			setSearchValue(searchInput);
+		}, 300);
+		return () => clearTimeout(handler);
+	}, [searchInput]);
+
+	useEffect(() => {
+		setPage(1);
+	}, [
+		searchValue,
+		typeFilter,
+		fromDate,
+		toDate,
+		presetTimeFrame,
+		sortingOptions,
+	]);
 
 	const handleSearch = (value: string) => {
-		setSearchValue(value);
+		setSearchInput(value);
 	};
 
 	const handleTypeChange = (value: string) => {
-		setTypeFilter(value);
+		setTypeFilter(value as QuestionSection | "all");
 	};
 
 	const handleClearFilters = () => {
-		setSearchValue("");
+		setSearchInput("");
 		setTypeFilter("all");
+		setFromDate(undefined);
+		setToDate(undefined);
+		setPresetTimeFrame("none");
+		setSortingOptions("DESC");
 	};
 
 	const handleViewQuestion = (id: string) => {
-		if (questions.data) {
-			const question = questions.data.data.find((q) => q.id === id);
-			if (question) {
-				setSelectedQuestion(adaptQuestionForDetail(question));
-				setIsQuestionDetailOpen(true);
-			}
+		const question = questions.data?.data.find(
+			(q: Question) => q.id.toString() === id,
+		);
+		if (question) {
+			setSelectedQuestion(adaptQuestionForDetail(question));
+			setIsQuestionDetailOpen(true);
 		}
 	};
 
@@ -144,6 +173,15 @@ const QuestionsManagement = () => {
 		}
 	};
 
+	const handlePageChange = (newPage: number) => {
+		setPage(newPage);
+	};
+
+	const handlePageSizeChange = (newSize: number) => {
+		setPageSize(newSize);
+		setPage(1); // Reset to first page when page size changes
+	};
+
 	const statsData: StatCardProps[] = [
 		{
 			title: "Total Questions",
@@ -168,7 +206,7 @@ const QuestionsManagement = () => {
 			props: {
 				onSearch: handleSearch,
 				placeholder: "Search questions...",
-				initialValue: searchValue,
+				initialValue: searchInput,
 			},
 		},
 		{
@@ -176,13 +214,56 @@ const QuestionsManagement = () => {
 			props: {
 				options: [
 					{ value: "all", label: "Type - All" },
-					...metadata.types.map((type) => ({
-						value: type.toLowerCase().replace(" ", "-"),
-						label: type,
+					...questionSections.map((section) => ({
+						value: section,
+						label: section.replace(/_/g, " "),
 					})),
 				],
 				value: typeFilter,
 				onChange: handleTypeChange,
+			},
+			width: "w-full md:w-1/5",
+		},
+		{
+			type: "dateRange",
+			props: {
+				fromDate,
+				toDate,
+				onFromDateChange: setFromDate,
+				onToDateChange: setToDate,
+				fromPlaceholder: "From Date",
+				toPlaceholder: "To Date",
+			},
+			width: "w-full md:w-1/4",
+		},
+		{
+			type: "dropdown",
+			props: {
+				options: [
+					{ value: "none", label: "Timeframe - All" },
+					{ value: "Today", label: "Today" },
+					{ value: "Yesterday", label: "Yesterday" },
+					{ value: "ThisWeek", label: "This Week" },
+					{ value: "LastWeek", label: "Last Week" },
+					{ value: "ThisMonth", label: "This Month" },
+					{ value: "LastMonth", label: "Last Month" },
+					{ value: "ThisYear", label: "This Year" },
+					{ value: "LastYear", label: "Last Year" },
+				],
+				value: presetTimeFrame,
+				onChange: setPresetTimeFrame,
+			},
+			width: "w-full md:w-1/5",
+		},
+		{
+			type: "dropdown",
+			props: {
+				options: [
+					{ value: "DESC", label: "Newest to Oldest (DESC)" },
+					{ value: "ASC", label: "Oldest to Newest (ASC)" },
+				],
+				value: sortingOptions,
+				onChange: setSortingOptions,
 			},
 			width: "w-full md:w-1/5",
 		},
@@ -202,32 +283,32 @@ const QuestionsManagement = () => {
 			header: "Section",
 		},
 		{
-			accessorKey: "type",
-			header: "Type",
-		},
-		{
 			id: "actions",
 			header: "Actions",
 			cell: ({ row }: { row: { original: Question } }) => (
-				<TableActions
-					actions={[
-						{
-							icon: "view",
-							onClick: () => handleViewQuestion(row.original.id),
-							tooltip: "View Details",
-						},
-						{
-							icon: "edit",
-							onClick: () => handleEditQuestion(row.original.id),
-							tooltip: "Edit",
-						},
-						{
-							icon: "delete",
-							onClick: () => handleDeleteQuestion(row.original.id),
-							tooltip: "Delete",
-						},
-					]}
-				/>
+				<div className="flex items-center gap-2">
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={() => handleViewQuestion(row.original.id.toString())}
+					>
+						<Eye className="h-4 w-4" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={() => handleEditQuestion(row.original.id.toString())}
+					>
+						<Edit className="h-4 w-4" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={() => handleDeleteQuestion(row.original.id.toString())}
+					>
+						<Trash className="h-4 w-4" />
+					</Button>
+				</div>
 			),
 		},
 	];
@@ -246,7 +327,7 @@ const QuestionsManagement = () => {
 						icon: <Plus className="h-4 w-4 mr-2" />,
 					}}
 					onClear={handleClearFilters}
-					clearDisabled={!searchValue && typeFilter === "all"}
+					clearDisabled={!searchInput && typeFilter === "all"}
 				/>
 
 				{questions.isLoading ? (
@@ -263,6 +344,11 @@ const QuestionsManagement = () => {
 						data={questions.data?.data || []}
 						searchColumn="excerpt"
 						showSearch={false}
+						page={page}
+						pageSize={pageSize}
+						totalPages={questions.data?.meta?.pageCount || 1}
+						onPageChange={handlePageChange}
+						onPageSizeChange={handlePageSizeChange}
 					/>
 				)}
 			</ContentCard>

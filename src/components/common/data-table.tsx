@@ -42,6 +42,13 @@ interface DataTableProps<TData, TValue> {
 	defaultPageSize?: number;
 	className?: string;
 	showSearch?: boolean;
+	// Backend pagination support
+	page?: number;
+	pageSize?: number;
+	totalItems?: number;
+	totalPages?: number;
+	onPageChange?: (page: number) => void;
+	onPageSizeChange?: (size: number) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -53,6 +60,11 @@ export function DataTable<TData, TValue>({
 	defaultPageSize = 10,
 	className,
 	showSearch = true,
+	page,
+	pageSize,
+	totalPages,
+	onPageChange,
+	onPageSizeChange,
 }: DataTableProps<TData, TValue>) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -62,11 +74,21 @@ export function DataTable<TData, TValue>({
 	const tableData = React.useMemo(() => data || [], [data]);
 	const tableColumns = React.useMemo(() => columns || [], [columns]);
 
+	const isBackendPaginated =
+		typeof page === "number" &&
+		typeof pageSize === "number" &&
+		typeof totalPages === "number" &&
+		onPageChange &&
+		onPageSizeChange;
+
 	const table = useReactTable({
 		data: tableData,
 		columns: tableColumns,
 		getCoreRowModel: getCoreRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
+		// Only use client-side pagination if not backend paginated
+		...(isBackendPaginated
+			? {}
+			: { getPaginationRowModel: getPaginationRowModel() }),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
 		onSortingChange: setSorting,
@@ -80,8 +102,10 @@ export function DataTable<TData, TValue>({
 	});
 
 	React.useEffect(() => {
-		table.setPageSize(defaultPageSize);
-	}, [defaultPageSize, table]);
+		if (!isBackendPaginated) {
+			table.setPageSize(defaultPageSize);
+		}
+	}, [defaultPageSize, table, isBackendPaginated]);
 
 	React.useEffect(() => {
 		if (searchColumn && searchValue) {
@@ -188,57 +212,96 @@ export function DataTable<TData, TValue>({
 				</Table>
 			</div>
 
-			<div className="flex items-center justify-between">
-				<div className="flex-1 text-sm text-muted-foreground">
-					{table.getFilteredSelectedRowModel().rows.length} of{" "}
-					{table.getFilteredRowModel().rows.length} row(s) selected.
-				</div>
-
-				<div className="flex items-center space-x-6 lg:space-x-8">
+			{/* Backend Pagination Controls */}
+			{isBackendPaginated ? (
+				<div className="flex items-center justify-between mt-4">
 					<div className="flex items-center space-x-2">
 						<p className="text-sm font-medium">Rows per page</p>
 						<select
-							value={table.getState().pagination.pageSize}
-							onChange={(e) => {
-								table.setPageSize(Number(e.target.value));
-							}}
+							value={pageSize}
+							onChange={(e) => onPageSizeChange?.(Number(e.target.value))}
 							className="h-8 w-16 rounded-md border border-input bg-transparent px-2 py-1 text-sm"
 						>
-							{pageSizeOptions.map((pageSize) => (
-								<option key={pageSize} value={pageSize}>
-									{pageSize}
+							{pageSizeOptions.map((size) => (
+								<option key={size} value={size}>
+									{size}
 								</option>
 							))}
 						</select>
 					</div>
-
 					<div className="flex w-[100px] items-center justify-center text-sm font-medium">
-						Page {table.getState().pagination.pageIndex + 1} of{" "}
-						{table.getPageCount()}
+						Page {page || 1} of {totalPages || 1}
 					</div>
-
 					<div className="flex items-center space-x-2">
 						<Button
 							variant="outline"
 							size="sm"
-							onClick={() => table.previousPage()}
-							disabled={!table.getCanPreviousPage()}
+							onClick={() => onPageChange?.((page || 1) - 1)}
+							disabled={!onPageChange || (page || 1) <= 1}
 						>
-							<ChevronLeft className="h-4 w-4" />
-							<span className="sr-only">Previous page</span>
+							Previous
 						</Button>
 						<Button
 							variant="outline"
 							size="sm"
-							onClick={() => table.nextPage()}
-							disabled={!table.getCanNextPage()}
+							onClick={() => onPageChange?.((page || 1) + 1)}
+							disabled={!onPageChange || (page || 1) >= (totalPages || 1)}
 						>
-							<ChevronRight className="h-4 w-4" />
-							<span className="sr-only">Next page</span>
+							Next
 						</Button>
 					</div>
 				</div>
-			</div>
+			) : (
+				// Fallback to client-side pagination
+				<div className="flex items-center justify-between">
+					<div className="flex-1 text-sm text-muted-foreground">
+						{table.getFilteredSelectedRowModel().rows.length} of{" "}
+						{table.getFilteredRowModel().rows.length} row(s) selected.
+					</div>
+					<div className="flex items-center space-x-6 lg:space-x-8">
+						<div className="flex items-center space-x-2">
+							<p className="text-sm font-medium">Rows per page</p>
+							<select
+								value={table.getState().pagination.pageSize}
+								onChange={(e) => {
+									table.setPageSize(Number(e.target.value));
+								}}
+								className="h-8 w-16 rounded-md border border-input bg-transparent px-2 py-1 text-sm"
+							>
+								{pageSizeOptions.map((pageSize) => (
+									<option key={pageSize} value={pageSize}>
+										{pageSize}
+									</option>
+								))}
+							</select>
+						</div>
+						<div className="flex w-[100px] items-center justify-center text-sm font-medium">
+							Page {table.getState().pagination.pageIndex + 1} of{" "}
+							{table.getPageCount()}
+						</div>
+						<div className="flex items-center space-x-2">
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => table.previousPage()}
+								disabled={!table.getCanPreviousPage()}
+							>
+								<ChevronLeft className="h-4 w-4" />
+								<span className="sr-only">Previous page</span>
+							</Button>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => table.nextPage()}
+								disabled={!table.getCanNextPage()}
+							>
+								<ChevronRight className="h-4 w-4" />
+								<span className="sr-only">Next page</span>
+							</Button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

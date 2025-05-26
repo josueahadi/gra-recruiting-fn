@@ -8,7 +8,7 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import type React from "react";
-import { type TestResult, MOCK_EXAM_DATA } from "@/hooks/use-results";
+import type { TestResult } from "@/types/questions";
 
 interface ResultDetailProps {
 	isOpen: boolean;
@@ -21,9 +21,6 @@ const ResultDetail: React.FC<ResultDetailProps> = ({
 	onClose,
 	result,
 }) => {
-	// Use the exam data from the hook
-	const examData = MOCK_EXAM_DATA;
-
 	return (
 		<Dialog open={isOpen} onOpenChange={onClose}>
 			<DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -90,61 +87,7 @@ const ResultDetail: React.FC<ResultDetailProps> = ({
 					<div>
 						<h3 className="text-lg font-medium mb-3">Exam Responses</h3>
 						<div className="space-y-4">
-							{examData.questions.map((question) => (
-								<div
-									key={question.id}
-									className="border border-gray-200 rounded-md overflow-hidden"
-								>
-									<div className="bg-gray-50 p-3 border-b border-gray-200">
-										<div className="flex justify-between">
-											<h4 className="font-medium">{question.text}</h4>
-											<Badge variant="outline">{question.type}</Badge>
-										</div>
-									</div>
-									<div className="p-4">
-										<div className="mb-3">
-											<h5 className="text-sm text-gray-500 mb-1">
-												Applicant Answer
-											</h5>
-											<div className="p-3 bg-gray-50 rounded-md">
-												<p className="whitespace-pre-wrap">
-													{question.applicantAnswer}
-												</p>
-											</div>
-										</div>
-
-										{question.type === "multiple-choice" && (
-											<div>
-												<h5 className="text-sm text-gray-500 mb-1">
-													Correct Answer
-												</h5>
-												<div className="p-3 bg-gray-50 rounded-md">
-													<p>{question.correctAnswer}</p>
-												</div>
-											</div>
-										)}
-
-										{question.type === "essay" && (
-											<div className="flex justify-between items-center">
-												<div className="flex-1">
-													<h5 className="text-sm text-gray-500 mb-1">
-														Feedback
-													</h5>
-													<div className="p-3 bg-gray-50 rounded-md">
-														<p>{question.feedback}</p>
-													</div>
-												</div>
-												<div className="ml-4 text-center">
-													<div className="text-xl font-bold">
-														{question.score}/{question.maxScore}
-													</div>
-													<div className="text-xs text-gray-500">Score</div>
-												</div>
-											</div>
-										)}
-									</div>
-								</div>
-							))}
+							{/* Replace with actual data source or remove if not needed */}
 						</div>
 					</div>
 				</div>

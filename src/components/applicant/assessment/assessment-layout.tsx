@@ -5,7 +5,6 @@ import BackgroundPattern from "@/components/layout/background-pattern";
 import { LayoutProvider, useLayout } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type React from "react";
-import { useEffect, useState } from "react";
 import AssessmentSidebar from "./assessment-sidebar";
 
 interface AssessmentLayoutProps {
@@ -14,10 +13,11 @@ interface AssessmentLayoutProps {
 	avatarSrc?: string;
 	currentSectionId?: number;
 	currentQuestionNumber?: number;
-	answeredQuestions?: number[];
+	answeredQuestions?: Record<string, number[]>;
 	onQuestionSelect?: (questionNumber: number) => void;
 	showNavigation?: boolean;
 	pageTitle?: string;
+	timeLeft?: string;
 }
 
 const AssessmentLayoutInner: React.FC<AssessmentLayoutProps> = ({
@@ -26,20 +26,16 @@ const AssessmentLayoutInner: React.FC<AssessmentLayoutProps> = ({
 	avatarSrc = "/images/avatar.jpg",
 	currentSectionId = 1,
 	currentQuestionNumber = 1,
-	answeredQuestions = [],
+	answeredQuestions = {},
 	onQuestionSelect,
 	showNavigation = true,
 	pageTitle = "Exam",
+	timeLeft = "00:00:00",
 }) => {
 	const { isMobileMenuOpen, toggleMobileMenu, closeMobileMenu } = useLayout();
 
-	const [timeLeft, setTimeLeft] = useState("00:15:00");
-	useEffect(() => {
-		setTimeLeft("00:15:00");
-	}, []);
-
 	const sections = [
-		{ id: 1, title: "One", description: "Multiple Choice", questionCount: 15 },
+		{ id: 1, title: "One", description: "Multiple Choice", questionCount: 30 },
 		{ id: 2, title: "Two", description: "Short Essay", questionCount: 5 },
 	];
 

@@ -10,7 +10,13 @@ const nextConfig: NextConfig = {
 				protocol: "https",
 				hostname: "**.growrwanda.com",
 			},
+			{
+				protocol: "https",
+				hostname: "placeholder.pics",
+				pathname: "/**",
+			},
 		],
+		dangerouslyAllowSVG: true,
 	},
 	typescript: {
 		ignoreBuildErrors: false,

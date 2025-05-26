@@ -73,7 +73,7 @@ export const SectionItem: React.FC<{
 			<div className="flex items-center justify-between mb-6 px-4">
 				<h2
 					className={cn(
-						"text-xl text-primary-base font-semibold",
+						"text-xl text-primary-shades-500 font-semibold",
 						titleClassName,
 					)}
 				>
@@ -82,7 +82,7 @@ export const SectionItem: React.FC<{
 				{showEditButton && (
 					<button
 						type="button"
-						className="text-primary-500 hover:text-primary-600"
+						className="text-primary-shades-500 hover:text-primary-shades-600"
 						aria-label={`Edit ${title}`}
 						onClick={onEdit}
 					>
