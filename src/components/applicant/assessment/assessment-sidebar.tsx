@@ -142,10 +142,10 @@ export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 												"h-8 w-8 rounded-md text-sm font-medium flex items-center justify-center",
 												isCurrentQuestion
 													? "bg-[#4A90B9] text-white"
-													: isAnswered
-														? "bg-gray-200 text-gray-800"
-														: isQuestionDisabled
-															? "bg-gray-100 text-gray-400 cursor-not-allowed"
+													: isQuestionDisabled
+														? "bg-gray-100 text-gray-400 cursor-not-allowed"
+														: isAnswered
+															? "bg-gray-200 text-gray-800"
 															: "bg-white border border-gray-300 text-gray-600 hover:bg-gray-100",
 											)}
 											disabled={isQuestionDisabled}

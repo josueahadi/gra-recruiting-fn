@@ -14,7 +14,7 @@ interface AssessmentLayoutProps {
 	avatarSrc?: string;
 	currentSectionId?: number;
 	currentQuestionNumber?: number;
-	answeredQuestions?: number[];
+	answeredQuestions?: Record<string, number[]>;
 	onQuestionSelect?: (questionNumber: number) => void;
 	showNavigation?: boolean;
 	pageTitle?: string;
@@ -26,7 +26,7 @@ const AssessmentLayoutInner: React.FC<AssessmentLayoutProps> = ({
 	avatarSrc = "/images/avatar.jpg",
 	currentSectionId = 1,
 	currentQuestionNumber = 1,
-	answeredQuestions = [],
+	answeredQuestions = {},
 	onQuestionSelect,
 	showNavigation = true,
 	pageTitle = "Exam",

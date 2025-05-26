@@ -531,7 +531,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 				showNavigation={true}
 				currentSectionId={currentSectionId}
 				currentQuestionNumber={prevQuestionNumRef.current}
-				answeredQuestions={answeredQuestions[currentSectionId.toString()] || []}
+				answeredQuestions={answeredQuestions}
 			>
 				<div className="flex items-center justify-center h-64">
 					<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-base" />
@@ -580,7 +580,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 				userName="John Doe"
 				currentSectionId={currentSectionId}
 				currentQuestionNumber={currentQuestionNum}
-				answeredQuestions={answeredQuestions[currentSectionId.toString()] || []}
+				answeredQuestions={answeredQuestions}
 				onQuestionSelect={handleQuestionSelect}
 				showNavigation={true}
 			>
