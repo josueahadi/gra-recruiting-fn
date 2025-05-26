@@ -66,6 +66,7 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 	const [timeLeft, setTimeLeft] = useState("00:00:00");
 	const [timerRunning, setTimerRunning] = useState(false);
 	const [showSectionTransition, setShowSectionTransition] = useState(false);
+	const [showSectionIntro, setShowSectionIntro] = useState(true);
 
 	const [questionMapping, setQuestionMapping] = useState<{
 		[key: string]: MappedQuestion[];
@@ -343,72 +344,6 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		initializeQuestionMapping();
 	}, [params, examData]);
 
-	// Handle browser navigation and refresh
-	useEffect(() => {
-		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-			e.preventDefault();
-			e.returnValue = "";
-			return "";
-		};
-
-		const handlePopState = (e: PopStateEvent) => {
-			e.preventDefault();
-			setShowExitDialog(true);
-			// Push the current state back to prevent navigation
-			window.history.pushState(null, "", window.location.href);
-		};
-
-		// Add initial state to prevent back navigation
-		window.history.pushState(null, "", window.location.href);
-
-		window.addEventListener("beforeunload", handleBeforeUnload);
-		window.addEventListener("popstate", handlePopState);
-
-		return () => {
-			window.removeEventListener("beforeunload", handleBeforeUnload);
-			window.removeEventListener("popstate", handlePopState);
-		};
-	}, []);
-
-	useEffect(() => {
-		if (!isLoading) {
-			prevQuestionNumRef.current = currentQuestionNum;
-		}
-	}, [isLoading, currentQuestionNum]);
-
-	const handleSelectOption = (optionId: string | number) => {
-		console.log("Selected option:", optionId); // Debug log
-		setSelectedOptionId(optionId.toString());
-		localStorage.setItem(
-			`s${currentSectionId}_q${currentQuestionNum}_mc`,
-			optionId.toString(),
-		);
-
-		// Update answered questions
-		const sectionIdStr = currentSectionId.toString();
-		const prev = answeredQuestions[sectionIdStr] || [];
-		const updated = prev.includes(currentQuestionNum)
-			? prev
-			: [...prev, currentQuestionNum];
-		const updatedAnsweredQuestions = {
-			...answeredQuestions,
-			[sectionIdStr]: updated,
-		};
-		setAnsweredQuestions(updatedAnsweredQuestions);
-		localStorage.setItem(
-			EXAM_SECTION_ANSWERS_KEY,
-			JSON.stringify(updatedAnsweredQuestions),
-		);
-	};
-
-	const handleEssayChange = (text: string) => {
-		setEssayAnswer(text);
-		localStorage.setItem(
-			`s${currentSectionId}_q${currentQuestionNum}_essay`,
-			text,
-		);
-	};
-
 	// Memoize completeExam for useEffect dependency
 	const completeExam = useCallback(async () => {
 		try {
@@ -451,6 +386,60 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 			// Show error toast or handle error appropriately
 		}
 	}, [questionMapping]);
+
+	// Navigation/refresh warning and auto-submit
+	useEffect(() => {
+		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+			e.preventDefault();
+			e.returnValue =
+				"If you leave, your assessment will auto-submit with your current progress and this action cannot be undone.";
+			completeExam();
+			return e.returnValue;
+		};
+		window.addEventListener("beforeunload", handleBeforeUnload);
+		return () => {
+			window.removeEventListener("beforeunload", handleBeforeUnload);
+		};
+	}, [completeExam]);
+
+	useEffect(() => {
+		if (!isLoading) {
+			prevQuestionNumRef.current = currentQuestionNum;
+		}
+	}, [isLoading, currentQuestionNum]);
+
+	const handleSelectOption = (optionId: string | number) => {
+		console.log("Selected option:", optionId); // Debug log
+		setSelectedOptionId(optionId.toString());
+		localStorage.setItem(
+			`s${currentSectionId}_q${currentQuestionNum}_mc`,
+			optionId.toString(),
+		);
+
+		// Update answered questions
+		const sectionIdStr = currentSectionId.toString();
+		const prev = answeredQuestions[sectionIdStr] || [];
+		const updated = prev.includes(currentQuestionNum)
+			? prev
+			: [...prev, currentQuestionNum];
+		const updatedAnsweredQuestions = {
+			...answeredQuestions,
+			[sectionIdStr]: updated,
+		};
+		setAnsweredQuestions(updatedAnsweredQuestions);
+		localStorage.setItem(
+			EXAM_SECTION_ANSWERS_KEY,
+			JSON.stringify(updatedAnsweredQuestions),
+		);
+	};
+
+	const handleEssayChange = (text: string) => {
+		setEssayAnswer(text);
+		localStorage.setItem(
+			`s${currentSectionId}_q${currentQuestionNum}_essay`,
+			text,
+		);
+	};
 
 	const handleNextQuestion = () => {
 		// Check if current question is answered
@@ -536,11 +525,21 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 		}
 	}, [examCompleted]);
 
+	// Show section intro modal on section change
+	useEffect(() => {
+		setShowSectionIntro(true);
+	}, [currentSectionId]);
+
+	const handleStartSection = () => {
+		setShowSectionIntro(false);
+		setTimerRunning(true);
+	};
+
 	// Timer logic
 	useEffect(() => {
-		let sectionTime = currentSectionId === 1 ? 35 * 60 : 25 * 60;
+		const sectionTime = currentSectionId === 1 ? 35 * 60 : 25 * 60;
 		setTimeLeft(formatTime(sectionTime));
-		setTimerRunning(true);
+		setTimerRunning(false); // Don't start timer until user clicks start
 
 		const timer = timerRunning
 			? setInterval(() => {
@@ -562,7 +561,6 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 					});
 				}, 1000)
 			: undefined;
-
 		return () => {
 			if (timer) clearInterval(timer);
 		};
@@ -683,6 +681,33 @@ export default function AssessmentPage({ params }: AssessmentPageProps) {
 				onClose={() => setShowExitDialog(false)}
 				onConfirm={handleExitExam}
 			/>
+
+			{/* Section intro modal */}
+			<Dialog open={showSectionIntro}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>
+							{currentSectionId === 1
+								? "Section 1: Multiple Choice"
+								: "Section 2: Essay"}
+						</DialogTitle>
+					</DialogHeader>
+					<p>
+						{currentSectionId === 1
+							? "You have 35 minutes to complete the multiple choice section. Once the timer runs out, you will be automatically moved to section 2."
+							: "You have 25 minutes to complete the essay section. Once the timer runs out, your answers will be automatically submitted."}
+					</p>
+					<DialogFooter>
+						<button
+							type="button"
+							className="bg-primary-base text-white px-4 py-2 rounded"
+							onClick={handleStartSection}
+						>
+							Start Section
+						</button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 
 			{/* Section transition modal */}
 			<Dialog open={showSectionTransition}>

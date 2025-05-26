@@ -24,6 +24,11 @@ interface AssessmentSidebarProps {
 	mobileClassName?: string;
 }
 
+function isTimeWarning(timeLeft: string) {
+	const [h, m, s] = timeLeft.split(":").map(Number);
+	return h === 0 && (m < 5 || (m === 5 && s === 0));
+}
+
 export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 	currentSectionId = 1,
 	currentQuestionNumber = 1,
@@ -67,7 +72,14 @@ export const AssessmentSidebar: React.FC<AssessmentSidebarProps> = ({
 				</div>
 
 				<div className="bg-[#E0F5FF] rounded-lg p-6 mb-10">
-					<div className="text-[#009879] text-3xl font-bold flex items-center justify-center">
+					<div
+						className={cn(
+							isTimeWarning(timeLeft)
+								? "text-red-600 animate-pulse"
+								: "text-[#009879]",
+							"text-3xl font-bold flex items-center justify-center",
+						)}
+					>
 						<Timer className="mr-2" />
 						{timeLeft}
 					</div>
