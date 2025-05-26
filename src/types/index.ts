@@ -40,4 +40,3 @@ export interface IconProps extends SVGProps<SVGSVGElement> {
 }
 
 export * from "./auth";
-export * from "./question-types";

@@ -25,6 +25,8 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
+import { useResults } from "@/hooks/use-results";
+import type { TestResult } from "@/types/questions";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -35,50 +37,19 @@ import { useState } from "react";
 interface ResultGradingProps {
 	isOpen: boolean;
 	onClose: () => void;
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	onSubmit: (values: any) => void;
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-	applicant: any;
+	onSubmit: (data: {
+		applicantId: string;
+		essays: Array<{
+			id: string;
+			score: number;
+			feedback: string;
+		}>;
+		finalScore: number;
+		status: string;
+		overallFeedback?: string;
+	}) => void;
+	applicant: TestResult;
 }
-
-const MOCK_EXAM_DATA = {
-	questions: [
-		{
-			id: "q1",
-			text: "What is the most important aspect of a well-structured resume?",
-			type: "multiple-choice",
-			applicantAnswer: "Clear formatting and organization",
-			correctAnswer: "Clear formatting and organization",
-			options: [
-				"Clear formatting and organization",
-				"Including all past jobs",
-				"Using advanced vocabulary",
-				"Adding personal hobbies",
-			],
-		},
-		{
-			id: "q2",
-			text: "Which of the following is NOT a recommended practice for technical interviews?",
-			type: "multiple-choice",
-			applicantAnswer: "Memorizing answers to common questions",
-			correctAnswer: "Memorizing answers to common questions",
-			options: [
-				"Researching the company",
-				"Practicing coding problems",
-				"Memorizing answers to common questions",
-				"Preparing questions for the interviewer",
-			],
-		},
-		{
-			id: "q3",
-			text: "Explain the difference between synchronous and asynchronous programming.",
-			type: "essay",
-			applicantAnswer:
-				"Synchronous programming executes tasks sequentially, blocking until each operation completes before moving to the next one. Asynchronous programming allows operations to be executed independently without blocking the main thread, enabling better performance and responsiveness in applications.",
-			maxScore: 10,
-		},
-	],
-};
 
 const formSchema = z.object({
 	essays: z.array(
@@ -100,62 +71,30 @@ const ResultGrading: React.FC<ResultGradingProps> = ({
 	applicant,
 }) => {
 	const [isAutoGrading, setIsAutoGrading] = useState(false);
+	const { triggerAIGrading } = useResults();
 
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
-			essays: MOCK_EXAM_DATA.questions
-				.filter((q) => q.type === "essay")
-				.map((q) => ({
-					id: q.id,
-					score: 0,
-					feedback: "",
-				})),
+			essays: [],
 			finalScore: 0,
 			status: "success",
 			overallFeedback: "",
 		},
 	});
 
-	const handleAutoGrade = () => {
+	const handleAutoGrade = async () => {
 		setIsAutoGrading(true);
-
-		setTimeout(() => {
-			const aiGradedEssays = [
-				{
-					id: "q3",
-					score: 9,
-					feedback: "Excellent explanation with good practical context.",
-				},
-			];
-
-			const multipleChoiceQuestions = MOCK_EXAM_DATA.questions.filter(
-				(q) => q.type === "multiple-choice",
-			);
-
-			const multipleChoiceScore = multipleChoiceQuestions.reduce(
-				(score, q) => score + (q.applicantAnswer === q.correctAnswer ? 1 : 0),
-				0,
-			);
-
-			const essayScore = aiGradedEssays.reduce(
-				(score, essay) => score + essay.score,
-				0,
-			);
-			const totalPossibleScore = multipleChoiceQuestions.length + 10;
-			const finalScore = Math.round(
-				((multipleChoiceScore + essayScore) / totalPossibleScore) * 100,
-			);
-
-			form.setValue("essays", aiGradedEssays);
-			form.setValue("finalScore", finalScore);
-			form.setValue(
-				"overallFeedback",
-				"The applicant demonstrated good understanding of the concepts tested.",
-			);
-
+		try {
+			const result = await triggerAIGrading.mutateAsync(applicant.id);
+			form.setValue("finalScore", result.score || 0);
+			form.setValue("status", result.status);
+			form.setValue("overallFeedback", result.feedback || "");
+		} catch (error) {
+			console.error("Error during auto-grading:", error);
+		} finally {
 			setIsAutoGrading(false);
-		}, 1500);
+		}
 	};
 
 	const handleSubmitForm = (values: z.infer<typeof formSchema>) => {
@@ -165,11 +104,9 @@ const ResultGrading: React.FC<ResultGradingProps> = ({
 		});
 	};
 
-	const essayQuestions = MOCK_EXAM_DATA.questions.filter(
-		(q) => q.type === "essay",
-	);
+	const essayQuestions = applicant.questions.filter((q) => q.type === "essay");
 
-	const multipleChoiceQuestions = MOCK_EXAM_DATA.questions.filter(
+	const multipleChoiceQuestions = applicant.questions.filter(
 		(q) => q.type === "multiple-choice",
 	);
 

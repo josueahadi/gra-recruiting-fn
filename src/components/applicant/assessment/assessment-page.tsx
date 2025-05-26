@@ -9,13 +9,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import AssessmentLayout from "./assessment-layout";
 import { useExam } from "@/hooks/use-exam";
 import {
-	type Question,
-	type MultipleChoiceQuestion as MCQuestion,
-	type Choice,
 	EXAM_COMPLETION_KEY,
 	EXAM_SECTION_ANSWERS_KEY,
 	QUESTION_MAPPING_KEY,
-} from "@/types";
+} from "@/types/questions";
 import type { ExamResDto, QuestionResDto } from "@/types/questions";
 import { questionsService } from "@/services/questions";
 import ExitExamDialog from "./exit-exam-dialog";
@@ -47,7 +44,7 @@ const REQUIRED_QUESTIONS = {
 
 export default function AssessmentPage({ params }: AssessmentPageProps) {
 	const router = useRouter();
-	const { examData, isLoading: isExamLoading } = useExam();
+	const { examData } = useExam();
 	const [isLoading, setIsLoading] = useState(true);
 	const [isAssessmentAvailable, setIsAssessmentAvailable] = useState(true);
 	const [validationError, setValidationError] = useState<string | null>(null);

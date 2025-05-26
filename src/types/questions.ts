@@ -1,4 +1,10 @@
 // Question Option Types
+
+// Storage Keys
+export const EXAM_COMPLETION_KEY = "exam_completion";
+export const EXAM_SECTION_ANSWERS_KEY = "exam_section_answers";
+export const QUESTION_MAPPING_KEY = "question_mapping";
+
 export interface QuestionOption {
 	id?: number;
 	optionText: string;
@@ -20,6 +26,22 @@ export interface Question {
 	section: QuestionSection;
 	careerId: number;
 	options: QuestionOption[];
+}
+
+export interface MultipleChoiceQuestion extends Question {
+	choices: Array<{
+		id: string;
+		text: string;
+		isCorrect: boolean;
+		imageUrl?: string;
+	}>;
+}
+
+export interface Choice {
+	id: string;
+	text: string;
+	isCorrect: boolean;
+	imageUrl?: string;
 }
 
 // Admin Flow - Request DTOs
@@ -141,11 +163,17 @@ export interface SubmitExamReqDto {
 }
 
 // Pagination for Questions
+export interface QuestionsStatsResDto {
+	totalQuestions: number;
+	totalMultipleChoiceQuestions: number;
+	totalEssayQuestions: number;
+}
+
 export interface AllQuestionsResDto {
+	stats: QuestionsStatsResDto;
 	questions: QuestionResDto[];
 	page: number;
 	take: number;
-	totalApplicants: number;
 	pageCount: number;
 	hasNextPage: boolean;
 }
@@ -154,4 +182,49 @@ export interface AllQuestionsResDto {
 export interface ApiResponse<T> {
 	message: string;
 	data: T;
+}
+
+// Exam Results Types
+export interface TestResult {
+	id: string;
+	applicantId: string;
+	applicantName: string;
+	email: string;
+	status: "success" | "fail" | "waiting";
+	score: number | null;
+	submittedAt: string;
+	gradedAt?: string;
+	gradedBy?: string;
+	feedback?: string;
+	questions: Array<{
+		id: string;
+		text: string;
+		type: "multiple-choice" | "essay";
+		applicantAnswer?: string;
+		correctAnswer?: string;
+		options?: string[];
+		maxScore?: number;
+		score?: number;
+		feedback?: string;
+	}>;
+}
+
+export interface PaginatedResults {
+	data: TestResult[];
+	meta: {
+		total: number;
+		page: number;
+		limit: number;
+		totalPages: number;
+	};
+}
+
+export interface ResultsFilterParams {
+	search?: string;
+	status?: string;
+	department?: string;
+	fromDate?: Date;
+	toDate?: Date;
+	page?: number;
+	limit?: number;
 }

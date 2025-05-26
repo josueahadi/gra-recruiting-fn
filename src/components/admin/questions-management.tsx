@@ -18,7 +18,7 @@ import type {
 	MultipleChoiceQuestion,
 	Choice as SourceChoice,
 	EssayQuestion,
-} from "@/types";
+} from "@/types/questions";
 
 // Define the shape that QuestionDetail expects
 interface DetailQuestion {

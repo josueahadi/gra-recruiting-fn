@@ -13,6 +13,9 @@ import type {
 	QuestionOptionReqDto,
 	SubmitExamReqDto,
 	QuestionOptionResDto,
+	ResultsFilterParams,
+	PaginatedResults,
+	TestResult,
 } from "@/types/questions";
 
 interface AdminNotification {
@@ -261,6 +264,32 @@ export const questionsService = {
 			},
 		);
 
+		return response.data;
+	},
+
+	/**
+	 * Get all exam results with pagination and filtering
+	 */
+	async getAllResults(params: ResultsFilterParams): Promise<PaginatedResults> {
+		const response = await api.get("/api/v1/admin/get-all-results", { params });
+		return response.data;
+	},
+
+	/**
+	 * Get exam result details by ID
+	 */
+	async getResultById(id: string): Promise<TestResult> {
+		const response = await api.get(`/api/v1/admin/get-result/${id}`);
+		return response.data;
+	},
+
+	/**
+	 * Trigger AI grading for an exam result
+	 */
+	async triggerAIGrading(resultId: string): Promise<TestResult> {
+		const response = await api.post(
+			`/api/v1/admin/trigger-ai-grading/${resultId}`,
+		);
 		return response.data;
 	},
 };
