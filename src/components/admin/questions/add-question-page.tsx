@@ -16,15 +16,23 @@ import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { Upload, ArrowLeft } from "lucide-react";
 import { useQuestions } from "@/hooks/use-questions";
+import { useCareers } from "@/hooks";
 import type { QuestionSection, AddQuestionReqDto } from "@/types/questions";
+import type { CareerResponse } from "@/types/profile";
 
 export default function AddQuestionPage() {
 	const router = useRouter();
-	const { addQuestion } = useQuestions();
+	const { addQuestion, questionSections, getQuestionSectionLabel } =
+		useQuestions();
+	const { data: careers, isLoading: isLoadingCareers } = useCareers();
 	const [isPublishing, setIsPublishing] = useState(false);
 
-	const [questionType, setQuestionType] = useState<string>("Problem Solving");
+	const [questionType, setQuestionType] =
+		useState<QuestionSection>("GENERAL_QUESTIONS");
 	const [questionText, setQuestionText] = useState("");
+	const [selectedCareer, setSelectedCareer] = useState<CareerResponse | null>(
+		null,
+	);
 
 	const [choices, setChoices] = useState([
 		{ id: "1", text: "", isCorrect: true },
@@ -56,7 +64,12 @@ export default function AddQuestionPage() {
 			return;
 		}
 
-		if (questionType !== "Essay") {
+		if (!selectedCareer) {
+			toast.error("Please select a career");
+			return;
+		}
+
+		if (questionType !== "GENERAL_QUESTIONS") {
 			const hasChoices = choices.some((choice) => choice.text.trim() !== "");
 			if (!hasChoices) {
 				toast.error("Please add at least one answer choice");
@@ -72,17 +85,17 @@ export default function AddQuestionPage() {
 
 			let questionData: AddQuestionReqDto;
 
-			if (questionType === "Essay") {
+			if (questionType === "GENERAL_QUESTIONS") {
 				questionData = {
-					section: "GENERAL_QUESTIONS" as QuestionSection,
-					careerId: 1, // Default career ID
+					section: questionType,
+					careerId: selectedCareer.id,
 					description: questionText,
 					options: [], // Essay questions don't need options
 				};
 			} else {
 				questionData = {
-					section: "GENERAL_QUESTIONS" as QuestionSection,
-					careerId: 1, // Default career ID
+					section: questionType,
+					careerId: selectedCareer.id,
 					description: questionText,
 					options: choices.map((choice) => ({
 						optionText: choice.text,
@@ -126,27 +139,55 @@ export default function AddQuestionPage() {
 					<div className="space-y-6">
 						<div>
 							<Label className="block text-base font-semibold text-black mb-2">
+								Career
+							</Label>
+							<Select
+								value={selectedCareer?.id.toString()}
+								onValueChange={(value) => {
+									const career = careers?.find(
+										(c) => c.id.toString() === value,
+									);
+									setSelectedCareer(career || null);
+								}}
+							>
+								<SelectTrigger className="w-full border-gray-300">
+									<SelectValue placeholder="Select a career" />
+								</SelectTrigger>
+								<SelectContent>
+									{isLoadingCareers ? (
+										<SelectItem value="loading" disabled>
+											Loading careers...
+										</SelectItem>
+									) : (
+										careers?.map((career) => (
+											<SelectItem key={career.id} value={career.id.toString()}>
+												{career.name}
+											</SelectItem>
+										))
+									)}
+								</SelectContent>
+							</Select>
+						</div>
+
+						<div>
+							<Label className="block text-base font-semibold text-black mb-2">
 								Question Type
 							</Label>
 							<Select
 								value={questionType}
-								onValueChange={(value) => setQuestionType(value)}
+								onValueChange={(value) =>
+									setQuestionType(value as QuestionSection)
+								}
 							>
 								<SelectTrigger className="w-full border-gray-300">
 									<SelectValue placeholder="Select question type" />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="Essay">Essay</SelectItem>
-									<SelectItem value="Problem Solving">
-										Problem Solving
-									</SelectItem>
-									<SelectItem value="Multiple Choice">
-										Multiple Choice
-									</SelectItem>
-									<SelectItem value="Computer Skills">
-										Computer Skills
-									</SelectItem>
-									<SelectItem value="Math">Math</SelectItem>
+									{questionSections.map((section) => (
+										<SelectItem key={section} value={section}>
+											{getQuestionSectionLabel(section)}
+										</SelectItem>
+									))}
 								</SelectContent>
 							</Select>
 						</div>
@@ -165,7 +206,7 @@ export default function AddQuestionPage() {
 							/>
 						</div>
 
-						{questionType !== "Essay" && (
+						{questionType !== "GENERAL_QUESTIONS" && (
 							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 								{choices.map((choice, index) => (
 									<div key={choice.id}>
