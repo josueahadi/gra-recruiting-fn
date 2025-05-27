@@ -26,6 +26,17 @@ interface DocumentsSectionProps {
 	) => Promise<boolean>;
 }
 
+// Utility to extract file name from Firebase URL
+function getFileNameFromUrl(url: string) {
+	try {
+		const decoded = decodeURIComponent(url);
+		const match = decoded.match(/resumes\/([^?]+)/);
+		return match ? match[1] : "Resume";
+	} catch {
+		return "Resume";
+	}
+}
+
 const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 	resume,
 	portfolioLinks,
@@ -292,7 +303,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 									className="text-primary-dark hover:underline inline-flex items-center gap-1 break-all"
 								>
 									<span className="break-words">
-										{resume.url.replace(/^https?:\/\/(www\.)?/i, "")}
+										{getFileNameFromUrl(resume.url)}
 									</span>
 									<ExternalLink className="h-3 w-3 flex-shrink-0 inline align-text-bottom" />
 								</a>
