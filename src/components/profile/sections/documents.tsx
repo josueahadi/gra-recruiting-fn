@@ -8,6 +8,8 @@ import type { Document, PortfolioLinks } from "@/types/profile";
 import { FaBehance, FaGithub, FaLinkedin } from "react-icons/fa";
 import { BiWorld, BiFile } from "react-icons/bi";
 import { showToast } from "@/services/toast";
+import { uploadFileToFirebase } from "@/lib/upload-file";
+
 interface DocumentsSectionProps {
 	resume: Document | null;
 	samples: Document[];
@@ -22,6 +24,17 @@ interface DocumentsSectionProps {
 		field: keyof PortfolioLinks,
 		value: string,
 	) => Promise<boolean>;
+}
+
+// Utility to extract file name from Firebase URL
+function getFileNameFromUrl(url: string) {
+	try {
+		const decoded = decodeURIComponent(url);
+		const match = decoded.match(/resumes\/([^?]+)/);
+		return match ? match[1] : "Resume";
+	} catch {
+		return "Resume";
+	}
 }
 
 const DocumentsSection: React.FC<DocumentsSectionProps> = ({
@@ -53,6 +66,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 		useState<Record<string, string>>(fieldErrors);
 	const [savingField, setSavingField] = useState<string | null>(null);
 	const [hasChanges, setHasChanges] = useState<Record<string, boolean>>({});
+	const [uploading, setUploading] = useState(false);
 
 	useEffect(() => {
 		if (Object.keys(fieldErrors).length > 0) {
@@ -144,9 +158,9 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 			}));
 		} else {
 			setLocalErrors((prev) => {
-				const newErrors = { ...prev };
-				delete newErrors[name];
-				return newErrors;
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				const { resumeUrl, ...rest } = prev;
+				return rest;
 			});
 		}
 	};
@@ -205,6 +219,35 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 		}
 	};
 
+	const handleResumeFileChange = async (
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		setUploading(true);
+		try {
+			const path = `resumes/${Date.now()}-${file.name}`;
+			const url = await uploadFileToFirebase(file, path);
+			const updatedLinks = { ...links, resumeUrl: url };
+			setLinks(updatedLinks);
+			await onLinksUpdate(updatedLinks);
+			setOriginalLinks(updatedLinks);
+			setHasChanges((prev) => ({ ...prev, resumeUrl: false }));
+			setLocalErrors((prev) => {
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
+				const { resumeUrl, ...rest } = prev;
+				return rest;
+			});
+		} catch {
+			setLocalErrors((prev) => ({
+				...prev,
+				resumeUrl: "Failed to upload file",
+			}));
+		} finally {
+			setUploading(false);
+		}
+	};
+
 	const anyChanges = Object.values(hasChanges).some(Boolean);
 	const anyErrors = Object.keys(localErrors).length > 0;
 
@@ -231,38 +274,25 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 						{isEditingLinks ? (
 							<div className="w-full relative">
 								<div className="flex items-center">
-									<Input
-										name="resumeUrl"
-										value={links.resumeUrl || ""}
-										onChange={handleLinkChange}
-										placeholder="Resume URL"
-										className={`w-full ${localErrors.resumeUrl ? "border-red-500" : hasChanges.resumeUrl ? "border-blue-500" : ""}`}
+									<input
+										type="file"
+										accept="application/pdf"
+										onChange={handleResumeFileChange}
+										disabled={uploading}
+										className="w-full"
 									/>
-									<Button
-										size="sm"
-										className="ml-2"
-										onClick={() => handleSaveField("resumeUrl")}
-										disabled={
-											!hasChanges.resumeUrl ||
-											!!localErrors.resumeUrl ||
-											savingField === "resumeUrl"
-										}
-									>
-										{savingField === "resumeUrl" ? (
-											<span className="animate-spin">⏳</span>
-										) : (
-											<CheckCircle className="h-4 w-4" />
-										)}
-									</Button>
+									{uploading && (
+										<span className="ml-2 text-blue-600">Uploading...</span>
+									)}
 								</div>
 								{localErrors.resumeUrl && (
 									<p className="text-red-500 text-xs mt-1">
 										{localErrors.resumeUrl}
 									</p>
 								)}
-								{hasChanges.resumeUrl && !localErrors.resumeUrl && (
-									<p className="text-red-500 font-medium text-xs mt-1">
-										Changes not saved (Please save changes when you are done)
+								{links.resumeUrl && !localErrors.resumeUrl && (
+									<p className="text-green-600 text-xs mt-1">
+										Resume uploaded successfully.
 									</p>
 								)}
 							</div>
@@ -275,7 +305,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 									className="text-primary-dark hover:underline inline-flex items-center gap-1 break-all"
 								>
 									<span className="break-words">
-										{resume.url.replace(/^https?:\/\/(www\.)?/i, "")}
+										{getFileNameFromUrl(resume.url)}
 									</span>
 									<ExternalLink className="h-3 w-3 flex-shrink-0 inline align-text-bottom" />
 								</a>
