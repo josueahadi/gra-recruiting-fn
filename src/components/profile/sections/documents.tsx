@@ -158,6 +158,7 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 			}));
 		} else {
 			setLocalErrors((prev) => {
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const { resumeUrl, ...rest } = prev;
 				return rest;
 			});
@@ -233,10 +234,11 @@ const DocumentsSection: React.FC<DocumentsSectionProps> = ({
 			setOriginalLinks(updatedLinks);
 			setHasChanges((prev) => ({ ...prev, resumeUrl: false }));
 			setLocalErrors((prev) => {
+				// eslint-disable-next-line @typescript-eslint/no-unused-vars
 				const { resumeUrl, ...rest } = prev;
 				return rest;
 			});
-		} catch (err) {
+		} catch {
 			setLocalErrors((prev) => ({
 				...prev,
 				resumeUrl: "Failed to upload file",
