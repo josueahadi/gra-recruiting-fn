@@ -7,14 +7,15 @@ import StatsSection, {
 } from "@/components/admin/common/stats-section";
 import TableActions from "@/components/admin/common/table-actions";
 import DataTable from "@/components/common/data-table";
-import StatusBadge from "@/components/common/status-badge";
+import StatusBadge, { type StatusType } from "@/components/common/status-badge";
 import { CircleHelp, FileText, Users } from "lucide-react";
 import { useState } from "react";
 import FilterBar, { type FilterConfig } from "./common/filter-bar";
 import { useRouter } from "next/navigation";
-import { useApplicants } from "@/hooks/use-applicants";
+import { useApplicants, type Applicant } from "@/hooks/use-applicants";
 import { useQuestions } from "@/hooks/use-questions";
 import { useResults } from "@/hooks/use-results";
+import type { ColumnDef } from "@tanstack/react-table";
 
 const AdminDashboard = () => {
 	const router = useRouter();
@@ -24,11 +25,14 @@ const AdminDashboard = () => {
 	const [toDate, setToDate] = useState<Date | undefined>(undefined);
 
 	const { applicants, stats: applicantStats } = useApplicants({
-		search: searchValue,
-		status: statusFilter,
-		fromDate,
-		toDate,
-		limit: 5,
+		searchTerm: searchValue,
+		scoreStatus:
+			statusFilter === "all"
+				? undefined
+				: (statusFilter as "PENDING" | "PASSED" | "FAILED"),
+		fromDate: fromDate?.toISOString().split("T")[0],
+		toDate: toDate?.toISOString().split("T")[0],
+		page: 1,
 	});
 
 	const { stats: resultsStats } = useResults();
@@ -59,6 +63,16 @@ const AdminDashboard = () => {
 
 	const handleDeleteApplicant = (id: string) => {
 		router.push(`/admin/applicants?delete=${id}`);
+	};
+
+	const getStatusType = (status: string | null): StatusType => {
+		if (!status) return "pending";
+		const lowerStatus = status.toLowerCase();
+		if (lowerStatus === "passed") return "success";
+		if (lowerStatus === "failed") return "fail";
+		if (lowerStatus === "active") return "waiting";
+		if (lowerStatus === "archived") return "default";
+		return "pending";
 	};
 
 	const statsData: StatCardProps[] = [
@@ -94,9 +108,9 @@ const AdminDashboard = () => {
 			props: {
 				options: [
 					{ value: "all", label: "Status - All" },
-					{ value: "success", label: "Success" },
-					{ value: "fail", label: "Fail" },
-					{ value: "waiting", label: "Waiting" },
+					{ value: "PASSED", label: "Passed" },
+					{ value: "FAILED", label: "Failed" },
+					{ value: "PENDING", label: "Pending" },
 				],
 				value: statusFilter,
 				onChange: handleStatusChange,
@@ -116,7 +130,7 @@ const AdminDashboard = () => {
 	];
 
 	// Table columns
-	const columns = [
+	const columns: ColumnDef<Applicant>[] = [
 		{
 			accessorKey: "name",
 			header: "Applicant Name",
@@ -127,10 +141,16 @@ const AdminDashboard = () => {
 		},
 		{
 			accessorKey: "status",
-			header: "Status",
-			cell: ({ row }: { row: { original: { status: string } } }) => (
-				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-				<StatusBadge status={row.original.status as any} />
+			header: "Email Status",
+			cell: ({ row }) => (
+				<StatusBadge status={getStatusType(row.original.status)} />
+			),
+		},
+		{
+			accessorKey: "examStatus",
+			header: "Exam Status",
+			cell: ({ row }) => (
+				<StatusBadge status={getStatusType(row.original.examStatus)} />
 			),
 		},
 		{
@@ -138,28 +158,39 @@ const AdminDashboard = () => {
 			header: "Department",
 		},
 		{
-			accessorKey: "dateApplied",
+			accessorKey: "appliedAt",
 			header: "Applied Date",
+			cell: ({ row }) => {
+				const date = new Date(row.original.appliedAt);
+				return date.toLocaleDateString("en-GB", {
+					day: "2-digit",
+					month: "2-digit",
+					year: "2-digit",
+				});
+			},
 		},
 		{
 			id: "actions",
 			header: "Actions",
-			cell: ({ row }: { row: { original: { id: string } } }) => (
+			cell: ({ row }) => (
 				<TableActions
 					actions={[
 						{
 							icon: "view",
-							onClick: () => handleViewApplicant(row.original.id),
+							onClick: () =>
+								handleViewApplicant(row.original.userId.toString()),
 							tooltip: "View Details",
 						},
 						{
 							icon: "edit",
-							onClick: () => handleEditApplicant(row.original.id),
+							onClick: () =>
+								handleEditApplicant(row.original.userId.toString()),
 							tooltip: "Edit",
 						},
 						{
 							icon: "delete",
-							onClick: () => handleDeleteApplicant(row.original.id),
+							onClick: () =>
+								handleDeleteApplicant(row.original.userId.toString()),
 							tooltip: "Delete",
 						},
 					]}
@@ -192,7 +223,7 @@ const AdminDashboard = () => {
 				) : (
 					<DataTable
 						columns={columns}
-						data={applicants.data?.data || []}
+						data={applicants.data?.Applicants || []}
 						searchColumn="name"
 						showSearch={false}
 					/>

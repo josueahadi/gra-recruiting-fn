@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import ContentCard from "@/components/admin/common/content-card";
@@ -8,51 +7,93 @@ import FilterBar, {
 import TableActions from "@/components/admin/common/table-actions";
 import ConfirmationDialog from "@/components/common/confirm-dialog";
 import DataTable from "@/components/common/data-table";
-import StatusBadge from "@/components/common/status-badge";
+import StatusBadge, { type StatusType } from "@/components/common/status-badge";
 import StatsSection, { type StatCardProps } from "./common/stats-section";
 import { Users, CheckCircle, XCircle, Clock } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useApplicants, type Applicant } from "@/hooks/use-applicants";
+import { useApplicants } from "@/hooks/use-applicants";
+import type { ColumnDef } from "@tanstack/react-table";
+
+type TimeFrame =
+	| "Today"
+	| "Yesterday"
+	| "ThisWeek"
+	| "LastWeek"
+	| "ThisMonth"
+	| "LastMonth"
+	| "ThisYear"
+	| "LastYear"
+	| "none";
+
+interface Applicant {
+	userId: number;
+	name: string;
+	email: string;
+	phoneNumber: string;
+	status: string | null;
+	department: string | null;
+	appliedAt: string;
+	examStatus: string | null;
+}
 
 const ApplicantsManagement = () => {
 	const router = useRouter();
+	const [searchInput, setSearchInput] = useState("");
 	const [searchValue, setSearchValue] = useState("");
-	const [statusFilter, setStatusFilter] = useState("all");
-	const [departmentFilter, setDepartmentFilter] = useState("all");
+	const [scoreStatus, setScoreStatus] = useState<
+		"PENDING" | "PASSED" | "FAILED" | "all"
+	>("all");
+	const [applicantStatus, setApplicantStatus] = useState<
+		"ACTIVE" | "ARCHIVED" | "all"
+	>("all");
+	const [page, setPage] = useState(1);
+	const [pageSize, setPageSize] = useState(10);
 	const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
 	const [toDate, setToDate] = useState<Date | undefined>(undefined);
+	const [presetTimeFrame, setPresetTimeFrame] = useState<TimeFrame>("none");
+	const [sortingOptions, setSortingOptions] = useState<"ASC" | "DESC">("DESC");
+
+	const [showAll, setShowAll] = useState(false);
+
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 	const [applicantToDelete, setApplicantToDelete] = useState<string | null>(
 		null,
 	);
 
 	const { applicants, stats, deleteApplicant } = useApplicants({
-		search: searchValue,
-		status: statusFilter,
-		department: departmentFilter,
-		fromDate,
-		toDate,
+		page: showAll ? undefined : page,
+		searchTerm: searchValue,
+		scoreStatus: scoreStatus === "all" ? undefined : scoreStatus,
+		applicantStatus: applicantStatus === "all" ? undefined : applicantStatus,
+		fromDate: fromDate ? fromDate.toISOString().slice(0, 10) : undefined,
+		toDate: toDate ? toDate.toISOString().slice(0, 10) : undefined,
+		presetTimeFrame: presetTimeFrame !== "none" ? presetTimeFrame : undefined,
+		sortingOptions,
 	});
 
 	const handleSearch = (value: string) => {
+		setSearchInput(value);
 		setSearchValue(value);
 	};
 
-	const handleStatusChange = (value: string) => {
-		setStatusFilter(value);
+	const handleScoreStatusChange = (value: string) => {
+		setScoreStatus(value as "PENDING" | "PASSED" | "FAILED" | "all");
 	};
 
-	const handleDepartmentChange = (value: string) => {
-		setDepartmentFilter(value);
+	const handleApplicantStatusChange = (value: string) => {
+		setApplicantStatus(value as "ACTIVE" | "ARCHIVED" | "all");
 	};
 
 	const handleClearFilters = () => {
+		setSearchInput("");
 		setSearchValue("");
-		setStatusFilter("all");
-		setDepartmentFilter("all");
+		setScoreStatus("all");
+		setApplicantStatus("all");
 		setFromDate(undefined);
 		setToDate(undefined);
+		setPresetTimeFrame("none");
+		setSortingOptions("DESC");
 	};
 
 	const handleViewApplicant = (id: string) => {
@@ -79,6 +120,15 @@ const ApplicantsManagement = () => {
 		}
 	};
 
+	const handlePageChange = (newPage: number) => {
+		setPage(newPage);
+	};
+
+	const handlePageSizeChange = (newSize: number) => {
+		setPageSize(newSize);
+		setPage(1);
+	};
+
 	const statsData: StatCardProps[] = [
 		{
 			title: "Total Applicants",
@@ -86,7 +136,7 @@ const ApplicantsManagement = () => {
 			icon: <Users className="w-8 h-8" />,
 		},
 		{
-			title: "Successful",
+			title: "Passed",
 			value: stats.success.toString(),
 			icon: <CheckCircle className="w-8 h-8" />,
 		},
@@ -96,7 +146,7 @@ const ApplicantsManagement = () => {
 			icon: <XCircle className="w-8 h-8" />,
 		},
 		{
-			title: "Waiting",
+			title: "Pending",
 			value: stats.waiting.toString(),
 			icon: <Clock className="w-8 h-8" />,
 		},
@@ -107,36 +157,36 @@ const ApplicantsManagement = () => {
 			type: "search",
 			props: {
 				onSearch: handleSearch,
-				placeholder: "Search name or email...",
-				initialValue: searchValue,
+				placeholder: "Search applicants...",
+				initialValue: searchInput,
 			},
+		},
+		{
+			type: "dropdown",
+			props: {
+				options: [
+					{ value: "all", label: "Score Status - All" },
+					{ value: "PENDING", label: "Pending" },
+					{ value: "PASSED", label: "Passed" },
+					{ value: "FAILED", label: "Failed" },
+				],
+				value: scoreStatus,
+				onChange: handleScoreStatusChange,
+			},
+			width: "w-full md:w-1/5",
 		},
 		{
 			type: "dropdown",
 			props: {
 				options: [
 					{ value: "all", label: "Status - All" },
-					{ value: "success", label: "Success" },
-					{ value: "fail", label: "Failed" },
-					{ value: "waiting", label: "Waiting" },
+					{ value: "ACTIVE", label: "Active" },
+					{ value: "ARCHIVED", label: "Archived" },
 				],
-				value: statusFilter,
-				onChange: handleStatusChange,
+				value: applicantStatus,
+				onChange: handleApplicantStatusChange,
 			},
-		},
-		{
-			type: "dropdown",
-			props: {
-				options: [
-					{ value: "all", label: "Department - All" },
-					{ value: "Design", label: "Design" },
-					{ value: "Development", label: "Development" },
-					{ value: "Marketing", label: "Marketing" },
-					{ value: "Accounting", label: "Accounting" },
-				],
-				value: departmentFilter,
-				onChange: handleDepartmentChange,
-			},
+			width: "w-full md:w-1/5",
 		},
 		{
 			type: "dateRange",
@@ -148,10 +198,60 @@ const ApplicantsManagement = () => {
 				fromPlaceholder: "From Date",
 				toPlaceholder: "To Date",
 			},
+			width: "w-full md:w-1/4",
+		},
+		{
+			type: "dropdown",
+			props: {
+				options: [
+					{ value: "none", label: "Timeframe - All" },
+					{ value: "Today", label: "Today" },
+					{ value: "Yesterday", label: "Yesterday" },
+					{ value: "ThisWeek", label: "This Week" },
+					{ value: "LastWeek", label: "Last Week" },
+					{ value: "ThisMonth", label: "This Month" },
+					{ value: "LastMonth", label: "Last Month" },
+					{ value: "ThisYear", label: "This Year" },
+					{ value: "LastYear", label: "Last Year" },
+				],
+				value: presetTimeFrame,
+				onChange: (value: string) => setPresetTimeFrame(value as TimeFrame),
+			},
+			width: "w-full md:w-1/5",
+		},
+		{
+			type: "dropdown",
+			props: {
+				options: [
+					{ value: "DESC", label: "Newest to Oldest (DESC)" },
+					{ value: "ASC", label: "Oldest to Newest (ASC)" },
+				],
+				value: sortingOptions,
+				onChange: setSortingOptions,
+			},
+			width: "w-full md:w-1/5",
+		},
+		{
+			type: "button",
+			props: {
+				label: showAll ? "Show Paginated" : "Show All",
+				onClick: () => setShowAll((prev) => !prev),
+				className: "ml-2",
+			},
 		},
 	];
 
-	const columns = [
+	const getStatusType = (status: string | null): StatusType => {
+		if (!status) return "pending";
+		const lowerStatus = status.toLowerCase();
+		if (lowerStatus === "passed") return "success";
+		if (lowerStatus === "failed") return "fail";
+		if (lowerStatus === "active") return "waiting";
+		if (lowerStatus === "archived") return "default";
+		return "pending";
+	};
+
+	const columns: ColumnDef<Applicant>[] = [
 		{
 			accessorKey: "name",
 			header: "Applicant Name",
@@ -162,10 +262,16 @@ const ApplicantsManagement = () => {
 		},
 		{
 			accessorKey: "status",
-			header: "Status",
-			cell: ({ row }: { row: { original: { status: string } } }) => (
-				// biome-ignore lint/suspicious/noExplicitAny: <explanation>
-				<StatusBadge status={row.original.status as any} />
+			header: "Email Status",
+			cell: ({ row }) => (
+				<StatusBadge status={getStatusType(row.original.status)} />
+			),
+		},
+		{
+			accessorKey: "examStatus",
+			header: "Exam Status",
+			cell: ({ row }) => (
+				<StatusBadge status={getStatusType(row.original.examStatus)} />
 			),
 		},
 		{
@@ -173,28 +279,39 @@ const ApplicantsManagement = () => {
 			header: "Department",
 		},
 		{
-			accessorKey: "dateApplied",
+			accessorKey: "appliedAt",
 			header: "Applied Date",
+			cell: ({ row }) => {
+				const date = new Date(row.original.appliedAt);
+				return date.toLocaleDateString("en-GB", {
+					day: "2-digit",
+					month: "2-digit",
+					year: "2-digit",
+				});
+			},
 		},
 		{
 			id: "actions",
 			header: "Actions",
-			cell: ({ row }: { row: { original: Applicant } }) => (
+			cell: ({ row }) => (
 				<TableActions
 					actions={[
 						{
 							icon: "view",
-							onClick: () => handleViewApplicant(row.original.id),
+							onClick: () =>
+								handleViewApplicant(row.original.userId.toString()),
 							tooltip: "View Details",
 						},
 						{
 							icon: "edit",
-							onClick: () => handleEditApplicant(row.original.id),
+							onClick: () =>
+								handleEditApplicant(row.original.userId.toString()),
 							tooltip: "Edit",
 						},
 						{
 							icon: "delete",
-							onClick: () => handleDeleteApplicant(row.original.id),
+							onClick: () =>
+								handleDeleteApplicant(row.original.userId.toString()),
 							tooltip: "Delete",
 						},
 					]}
@@ -205,18 +322,19 @@ const ApplicantsManagement = () => {
 
 	return (
 		<div className="space-y-6">
-			<StatsSection stats={statsData} gridClassName="md:grid-cols-4" />
+			<StatsSection stats={statsData} />
 
 			<ContentCard title="Applicants">
 				<FilterBar
 					filters={filterConfigs}
 					onClear={handleClearFilters}
 					clearDisabled={
-						!searchValue &&
-						statusFilter === "all" &&
-						departmentFilter === "all" &&
+						!searchInput &&
+						scoreStatus === "all" &&
+						applicantStatus === "all" &&
 						!fromDate &&
-						!toDate
+						!toDate &&
+						presetTimeFrame === "none"
 					}
 				/>
 
@@ -231,9 +349,16 @@ const ApplicantsManagement = () => {
 				) : (
 					<DataTable
 						columns={columns}
-						data={applicants.data?.data || []}
+						data={applicants.data?.Applicants || []}
 						searchColumn="name"
 						showSearch={false}
+						page={showAll ? 1 : page}
+						pageSize={
+							showAll ? applicants.data?.Applicants.length || 1000 : pageSize
+						}
+						totalPages={showAll ? 1 : applicants.data?.pageCount || 1}
+						onPageChange={showAll ? undefined : handlePageChange}
+						onPageSizeChange={showAll ? undefined : handlePageSizeChange}
 					/>
 				)}
 			</ContentCard>
