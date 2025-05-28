@@ -44,7 +44,8 @@ export const getQuestionsBySection = async () => {
 // Transform the API response to match the expected Question interface
 const transformApiQuestionToQuestion = (
 	apiQuestion: QuestionResDto,
-): Question => {
+): Question | null => {
+	if (apiQuestion.id == null) return null; // skip invalid question
 	return {
 		id: apiQuestion.id,
 		text: apiQuestion.description,
@@ -59,12 +60,14 @@ const transformApiQuestionToQuestion = (
 		active: true,
 		imageUrl: apiQuestion.imageUrl || undefined,
 		choices:
-			apiQuestion.options?.map((option) => ({
-				id: option.id.toString(),
-				text: option.optionText,
-				isCorrect: false, // We don't expose correct answers in the frontend
-				imageUrl: option.optionImageUrl || undefined,
-			})) || [],
+			apiQuestion.options
+				?.filter((option) => option.id != null)
+				.map((option) => ({
+					id: option.id.toString(),
+					text: option.optionText,
+					isCorrect: false, // We don't expose correct answers in the frontend
+					imageUrl: option.optionImageUrl || undefined,
+				})) || [],
 	};
 };
 
@@ -83,13 +86,7 @@ export function useQuestions(options?: UseQuestionsOptions) {
 
 	// Fetch questions with pagination
 	const questions = useQuery({
-		queryKey: [
-			"questions",
-			options?.search,
-			options?.type,
-			options?.page,
-			options?.take,
-		],
+		queryKey: ["questions", options?.search, options?.type, options?.page],
 		queryFn: async () => {
 			const searchTerm = options?.search || "";
 			const section =
@@ -97,35 +94,37 @@ export function useQuestions(options?: UseQuestionsOptions) {
 					? (options.type as QuestionSection)
 					: undefined;
 			const page = options?.page || 1;
-			const take = options?.take || 10;
 
-			const response = await questionsService.getAllQuestions(
-				page, // page
-				take, // take
-				searchTerm,
-				section,
-				options?.fromDate,
-				options?.toDate,
-				options?.presetTimeFrame,
-				options?.sortingOptions || "DESC",
-				undefined, // careerId
-			);
+			try {
+				const response = await questionsService.getAllQuestions(
+					page, // page
+					searchTerm,
+					section,
+					options?.fromDate,
+					options?.toDate,
+					options?.presetTimeFrame,
+					options?.sortingOptions || "DESC",
+					undefined, // careerId
+				);
 
-			// Use the backend response directly
-			const transformedQuestions = (response.questions || []).map(
-				transformApiQuestionToQuestion,
-			);
+				const transformedQuestions = (response.questions || [])
+					.map(transformApiQuestionToQuestion)
+					.filter((q): q is Question => q != null); // remove nulls with type guard
 
-			return {
-				data: transformedQuestions,
-				stats: response.stats,
-				meta: {
-					page: response.page,
-					take: response.take,
-					pageCount: response.pageCount,
-					hasNextPage: response.hasNextPage,
-				},
-			};
+				return {
+					data: transformedQuestions,
+					stats: response.stats,
+					meta: {
+						page: response.page,
+						take: response.take,
+						pageCount: response.pageCount,
+						hasNextPage: response.hasNextPage,
+					},
+				};
+			} catch (error) {
+				console.error("Error fetching questions:", error);
+				throw error;
+			}
 		},
 	});
 

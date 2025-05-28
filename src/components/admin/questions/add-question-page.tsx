@@ -19,7 +19,7 @@ import { useQuestions } from "@/hooks/use-questions";
 import { useCareers } from "@/hooks";
 import type { QuestionSection, AddQuestionReqDto } from "@/types/questions";
 import type { CareerResponse } from "@/types/profile";
-import { Input } from "@/components/ui/input";
+import { uploadFileToFirebase } from "@/lib/upload-file";
 
 type Choice = {
 	id: string;
@@ -189,18 +189,16 @@ export default function AddQuestionPage() {
 		);
 	};
 
-	// Comment out image upload handlers
-	/*
 	const handleQuestionImageUpload = async (
 		e: React.ChangeEvent<HTMLInputElement>,
 	) => {
 		const file = e.target.files?.[0];
 		if (!file) return;
-
 		try {
-			const result = await uploadQuestionImage(file);
-			setQuestionImageUrl(result);
-		} catch (error) {
+			const path = `questions/${Date.now()}-${file.name}`;
+			const url = await uploadFileToFirebase(file, path);
+			setQuestionImageUrl(url);
+		} catch {
 			toast.error("Failed to upload question image");
 		}
 	};
@@ -211,19 +209,16 @@ export default function AddQuestionPage() {
 	) => {
 		const file = e.target.files?.[0];
 		if (!file) return;
-
 		try {
-			const result = await uploadOptionImage(file);
+			const path = `choices/${Date.now()}-${file.name}`;
+			const url = await uploadFileToFirebase(file, path);
 			setChoices(
-				choices.map((choice) =>
-					choice.id === id ? { ...choice, imageUrl: result } : choice,
-				),
+				choices.map((c) => (c.id === id ? { ...c, imageUrl: url } : c)),
 			);
-		} catch (error) {
+		} catch {
 			toast.error("Failed to upload choice image");
 		}
 	};
-	*/
 
 	const handlePublish = async () => {
 		if (!validateFields()) {
@@ -443,27 +438,20 @@ export default function AddQuestionPage() {
 
 							<div className="mt-4">
 								<Label className="block text-sm font-medium text-gray-700 mb-2">
-									Question Image URL (Optional)
+									Question Image (Optional)
 								</Label>
-								<Input
-									type="text"
-									value={questionImageUrl}
-									onChange={(e) => {
-										setQuestionImageUrl(e.target.value);
-										if (fieldErrors.questionImageUrl) {
-											setFieldErrors({
-												...fieldErrors,
-												questionImageUrl: undefined,
-											});
-										}
-									}}
-									placeholder="Enter image URL..."
-									className={`w-full ${fieldErrors.questionImageUrl ? "border-red-500" : ""}`}
+								<input
+									type="file"
+									accept="image/*"
+									onChange={handleQuestionImageUpload}
+									className="w-full"
 								/>
-								{fieldErrors.questionImageUrl && (
-									<p className="text-red-500 text-sm mt-1">
-										{fieldErrors.questionImageUrl}
-									</p>
+								{questionImageUrl && (
+									<img
+										src={questionImageUrl}
+										alt="Question"
+										className="mt-2 max-h-32"
+									/>
 								)}
 							</div>
 						</div>
@@ -513,39 +501,20 @@ export default function AddQuestionPage() {
 										)}
 										<div className="mt-2">
 											<Label className="block text-sm font-medium text-gray-700 mb-2">
-												Choice Image URL (Optional)
+												Choice Image (Optional)
 											</Label>
-											<Input
-												type="text"
-												value={choice.imageUrl}
-												onChange={(e) => {
-													setChoices(
-														choices.map((c) =>
-															c.id === choice.id
-																? { ...c, imageUrl: e.target.value }
-																: c,
-														),
-													);
-													if (fieldErrors.choices?.[choice.id]?.imageUrl) {
-														setFieldErrors({
-															...fieldErrors,
-															choices: {
-																...fieldErrors.choices,
-																[choice.id]: {
-																	...fieldErrors.choices[choice.id],
-																	imageUrl: undefined,
-																},
-															},
-														});
-													}
-												}}
-												placeholder="Enter image URL..."
-												className={`w-full ${fieldErrors.choices?.[choice.id]?.imageUrl ? "border-red-500" : ""}`}
+											<input
+												type="file"
+												accept="image/*"
+												onChange={(e) => handleChoiceImageUpload(choice.id, e)}
+												className="w-full"
 											/>
-											{fieldErrors.choices?.[choice.id]?.imageUrl && (
-												<p className="text-red-500 text-sm mt-1">
-													{fieldErrors.choices[choice.id].imageUrl}
-												</p>
+											{choice.imageUrl && (
+												<img
+													src={choice.imageUrl}
+													alt={`Choice ${index + 1}`}
+													className="mt-2 max-h-24"
+												/>
 											)}
 										</div>
 									</div>

@@ -34,7 +34,6 @@ export const questionsService = {
 	 * Get all questions with pagination and filtering
 	 *
 	 * @param page - Current page number (default: 1)
-	 * @param take - Number of items per page (default: 10)
 	 * @param searchTerm - Search through questions
 	 * @param section - Filter by section (MATH, COMPUTER_LITERACY, GENERAL_PROBLEM_SOLVING, GENERAL_QUESTIONS)
 	 * @param fromDate - Start date filter (YYYY-MM-DD)
@@ -45,7 +44,6 @@ export const questionsService = {
 	 */
 	async getAllQuestions(
 		page = 1,
-		take = 10,
 		searchTerm = "",
 		section?: string,
 		fromDate?: string,
@@ -54,7 +52,7 @@ export const questionsService = {
 		sortingOptions = "DESC",
 		careerId?: number,
 	): Promise<AllQuestionsResDto> {
-		let url = `/api/v1/admin/get-all-questions?page=${page}&take=${take}`;
+		let url = `/api/v1/admin/get-all-questions?page=${page}`;
 
 		if (searchTerm) {
 			url += `&searchTerm=${encodeURIComponent(searchTerm)}`;
