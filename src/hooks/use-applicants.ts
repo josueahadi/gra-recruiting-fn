@@ -31,6 +31,7 @@ export interface ApplicantsResponse {
 
 export interface ApplicantFilterParams {
 	page?: number;
+	take?: number;
 	searchTerm?: string;
 	scoreStatus?: "PENDING" | "PASSED" | "FAILED";
 	applicantStatus?: "ACTIVE" | "ARCHIVED";
@@ -55,6 +56,7 @@ export function useApplicants(filterParams: ApplicantFilterParams = {}) {
 		const params = new URLSearchParams();
 
 		if (filterParams.page) params.append("page", filterParams.page.toString());
+		if (filterParams.take) params.append("take", filterParams.take.toString());
 		if (filterParams.searchTerm)
 			params.append("searchTerm", filterParams.searchTerm);
 		if (filterParams.scoreStatus)

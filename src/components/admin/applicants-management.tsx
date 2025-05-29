@@ -63,6 +63,7 @@ const ApplicantsManagement = () => {
 
 	const { applicants, stats, deleteApplicant } = useApplicants({
 		page: showAll ? undefined : page,
+		take: showAll ? undefined : pageSize,
 		searchTerm: searchValue,
 		scoreStatus: scoreStatus === "all" ? undefined : scoreStatus,
 		applicantStatus: applicantStatus === "all" ? undefined : applicantStatus,
@@ -350,15 +351,12 @@ const ApplicantsManagement = () => {
 					<DataTable
 						columns={columns}
 						data={applicants.data?.Applicants || []}
-						searchColumn="name"
-						showSearch={false}
-						page={showAll ? 1 : page}
-						pageSize={
-							showAll ? applicants.data?.Applicants.length || 1000 : pageSize
-						}
-						totalPages={showAll ? 1 : applicants.data?.pageCount || 1}
-						onPageChange={showAll ? undefined : handlePageChange}
-						onPageSizeChange={showAll ? undefined : handlePageSizeChange}
+						page={page}
+						pageSize={pageSize}
+						totalItems={applicants.data?.stats.totalApplicants || 0}
+						totalPages={applicants.data?.pageCount || 1}
+						onPageChange={handlePageChange}
+						onPageSizeChange={handlePageSizeChange}
 					/>
 				)}
 			</ContentCard>

@@ -23,6 +23,8 @@ const AdminDashboard = () => {
 	const [statusFilter, setStatusFilter] = useState("all");
 	const [fromDate, setFromDate] = useState<Date | undefined>(undefined);
 	const [toDate, setToDate] = useState<Date | undefined>(undefined);
+	const [page, setPage] = useState(1);
+	const [pageSize, setPageSize] = useState(10);
 
 	const { applicants, stats: applicantStats } = useApplicants({
 		searchTerm: searchValue,
@@ -32,7 +34,8 @@ const AdminDashboard = () => {
 				: (statusFilter as "PENDING" | "PASSED" | "FAILED"),
 		fromDate: fromDate?.toISOString().split("T")[0],
 		toDate: toDate?.toISOString().split("T")[0],
-		page: 1,
+		page,
+		take: pageSize,
 	});
 
 	const { stats: resultsStats } = useResults();
@@ -199,6 +202,15 @@ const AdminDashboard = () => {
 		},
 	];
 
+	const handlePageChange = (newPage: number) => {
+		setPage(newPage);
+	};
+
+	const handlePageSizeChange = (newSize: number) => {
+		setPageSize(newSize);
+		setPage(1); // Reset to first page when page size changes
+	};
+
 	return (
 		<div className="space-y-8">
 			<StatsSection stats={statsData} />
@@ -224,8 +236,12 @@ const AdminDashboard = () => {
 					<DataTable
 						columns={columns}
 						data={applicants.data?.Applicants || []}
-						searchColumn="name"
-						showSearch={false}
+						page={page}
+						pageSize={pageSize}
+						totalItems={applicants.data?.stats.totalApplicants || 0}
+						totalPages={applicants.data?.pageCount || 1}
+						onPageChange={handlePageChange}
+						onPageSizeChange={handlePageSizeChange}
 					/>
 				)}
 			</ContentCard>
