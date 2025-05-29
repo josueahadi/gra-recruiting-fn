@@ -19,6 +19,7 @@ interface User {
 	phoneNumber?: string;
 	isEmailVerified: boolean;
 	isTemporary?: boolean;
+	profilePictureUrl?: string | null;
 }
 
 interface AuthState {

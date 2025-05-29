@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { Menu } from "lucide-react";
 
 export interface AppHeaderProps {
-	title: string; 
+	title: string;
 	userType: "applicant" | "admin";
 	userName?: string;
 	avatarSrc?: string;

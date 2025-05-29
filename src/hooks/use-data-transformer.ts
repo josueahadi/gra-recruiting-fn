@@ -162,7 +162,7 @@ export function useDataTransformer() {
 						? detailedProfile.documents[0]?.linkedinProfileUrl || ""
 						: "",
 			},
-			avatarSrc: "/images/avatar.jpg", // Placeholder (API doesn't provide avatar)
+			avatarSrc: basicProfile.profilePictureUrl || undefined,
 		};
 	}
 
@@ -196,7 +196,7 @@ export function useDataTransformer() {
 				behance: "",
 				linkedin: "",
 			},
-			avatarSrc: "/images/avatar.jpg",
+			avatarSrc: basicProfile.profilePictureUrl || undefined,
 		};
 	}
 

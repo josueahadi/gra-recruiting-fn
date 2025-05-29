@@ -95,6 +95,8 @@ export interface BasicProfileResponse {
 	postalCode?: string;
 	street?: string;
 	careerName?: string;
+	profilePictureUrl?: string | null;
+	examStatus?: string | null;
 	createdAt?: string;
 	updatedAt?: string;
 }

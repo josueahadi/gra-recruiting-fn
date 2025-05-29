@@ -19,23 +19,23 @@ const AppLayoutWrapper: React.FC<AppLayoutWrapperProps> = ({
 	const effectiveUserType = React.useMemo(() => {
 		if (forceUserType) return forceUserType;
 		if (user?.role) {
-			const isAdmin = user.role === 'ADMIN' || user.role === 'SUPER_ADMIN';
-			return isAdmin ? 'admin' : 'applicant';
+			const isAdmin = user.role === "ADMIN" || user.role === "SUPER_ADMIN";
+			return isAdmin ? "admin" : "applicant";
 		}
 		return userType;
 	}, [forceUserType, user?.role, userType]);
 
-	console.log("[AppLayoutWrapper] Current auth state:", { 
-		userType: effectiveUserType, 
-		hasUser: !!user, 
+	console.log("[AppLayoutWrapper] Current auth state:", {
+		userType: effectiveUserType,
+		hasUser: !!user,
 		userRole: user?.role,
-		isLoading
+		isLoading,
 	});
 
 	useEffect(() => {
 		if (!user || user.isTemporary) {
 			console.log("[AppLayoutWrapper] Loading user profile...");
-			refreshProfile().catch(err => {
+			refreshProfile().catch((err) => {
 				console.error("[AppLayoutWrapper] Error loading profile:", err);
 			});
 		}
@@ -50,14 +50,14 @@ const AppLayoutWrapper: React.FC<AppLayoutWrapperProps> = ({
 	}
 
 	const userName = formatUserName(user?.firstName, user?.lastName);
-	
+
 	console.log("[AppLayoutWrapper] Using userType:", effectiveUserType);
 
 	return (
 		<AppLayout
 			userType={effectiveUserType}
 			userName={userName}
-			avatarSrc="/images/avatar.jpg" 
+			avatarSrc={user?.profilePictureUrl || undefined}
 		>
 			{children}
 		</AppLayout>

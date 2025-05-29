@@ -106,7 +106,7 @@ export function useProfileCore(options: UseProfileOptions) {
 							behance: detailedProfile.documents?.behanceProfileUrl || "",
 							linkedin: detailedProfile.documents?.linkedinProfileUrl || "",
 						},
-						avatarSrc: "/images/avatar.jpg", // Placeholder (API doesn't provide avatar)
+						avatarSrc: basicProfile.profilePictureUrl || undefined,
 					};
 
 					setProfileData(transformed);
@@ -189,7 +189,7 @@ export function useProfileCore(options: UseProfileOptions) {
 							behance: "https://behance.net/yourprofile",
 							linkedin: "https://linkedin.com/in/yourprofile",
 						},
-						avatarSrc: "/images/avatar.jpg",
+						avatarSrc: basicProfileData?.profilePictureUrl || undefined,
 					};
 
 					setProfileData(mockData);
@@ -228,7 +228,7 @@ export function useProfileCore(options: UseProfileOptions) {
 							behance: "",
 							linkedin: "",
 						},
-						avatarSrc: "/images/avatar.jpg",
+						avatarSrc: basicProfile.profilePictureUrl || undefined,
 					};
 
 					setProfileData(fallbackData);
