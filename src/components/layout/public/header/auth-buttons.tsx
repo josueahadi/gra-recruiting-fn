@@ -17,6 +17,12 @@ export const AuthButtons = ({
 	const { handleAuth } = useAuth();
 	return (
 		<div className={cn("flex items-center gap-4", className)}>
+			<PrimaryCTAButton
+				className={cn(buttonClassName)}
+				onClick={() => handleAuth("signup")}
+			>
+				Apply
+			</PrimaryCTAButton>
 			<Button
 				variant="ghost"
 				className={cn(
@@ -27,13 +33,6 @@ export const AuthButtons = ({
 			>
 				Sign In
 			</Button>
-
-			<PrimaryCTAButton
-				className={cn(buttonClassName)}
-				onClick={() => handleAuth("signup")}
-			>
-				Apply
-			</PrimaryCTAButton>
 		</div>
 	);
 };

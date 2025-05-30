@@ -9,7 +9,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 // import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect } from "react";
@@ -87,6 +87,11 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 	};
 
 	const defaultMenuItems = [
+		{
+			icon: <LayoutDashboard className="mr-2 h-4 w-4" />,
+			label: "Dashboard",
+			href: userType === "admin" ? "/admin/dashboard" : "/applicant/dashboard",
+		},
 		{
 			icon: <User className="mr-2 h-4 w-4" />,
 			label: "Account",
