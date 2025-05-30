@@ -9,19 +9,11 @@ import QuestionDetail from "./questions/question-detail";
 import ConfirmationDialog from "@/components/common/confirm-dialog";
 import DataTable from "@/components/common/data-table";
 import StatsSection, { type StatCardProps } from "./common/stats-section";
-import {
-	Plus,
-	CircleHelp,
-	FileText,
-	Server,
-	Eye,
-	Edit,
-	Trash,
-} from "lucide-react";
+import { Plus, CircleHelp, FileText, Server } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuestions } from "@/hooks/use-questions";
 import type { Question, QuestionSection } from "@/types/questions";
-import { Button } from "@/components/ui/button";
+import TableActions from "@/components/admin/common/table-actions";
 
 // Define the shape that QuestionDetail expects
 interface DetailQuestion {
@@ -83,6 +75,8 @@ const QuestionsManagement = () => {
 	const [presetTimeFrame, setPresetTimeFrame] = useState<string>("none");
 	const [sortingOptions, setSortingOptions] = useState<string>("DESC");
 
+	const [showAll, setShowAll] = useState(false);
+
 	const [selectedQuestion, setSelectedQuestion] =
 		useState<DetailQuestion | null>(null);
 	const [isQuestionDetailOpen, setIsQuestionDetailOpen] = useState(false);
@@ -94,8 +88,8 @@ const QuestionsManagement = () => {
 		useQuestions({
 			search: searchValue,
 			type: typeFilter,
-			page,
-			take: pageSize,
+			page: showAll ? undefined : page,
+			take: showAll ? 1000 : pageSize,
 			fromDate: fromDate ? fromDate.toISOString().slice(0, 10) : undefined,
 			toDate: toDate ? toDate.toISOString().slice(0, 10) : undefined,
 			presetTimeFrame: presetTimeFrame !== "none" ? presetTimeFrame : undefined,
@@ -110,6 +104,8 @@ const QuestionsManagement = () => {
 		return () => clearTimeout(handler);
 	}, [searchInput]);
 
+	// Suppress the useEffect dependency warning if intentional
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	useEffect(() => {
 		setPage(1);
 	}, [
@@ -267,6 +263,14 @@ const QuestionsManagement = () => {
 			},
 			width: "w-full md:w-1/5",
 		},
+		{
+			type: "button",
+			props: {
+				label: showAll ? "Show Paginated" : "Show All",
+				onClick: () => setShowAll((prev) => !prev),
+				className: "ml-2",
+			},
+		},
 	];
 
 	const columns = [
@@ -277,6 +281,12 @@ const QuestionsManagement = () => {
 		{
 			accessorKey: "excerpt",
 			header: "Excerpt",
+			cell: ({ row }: { row: { original: Question } }) => (
+				// eslint-disable-next-line react/no-danger
+				<span
+					dangerouslySetInnerHTML={{ __html: row.original.excerpt || "" }}
+				/>
+			),
 		},
 		{
 			accessorKey: "section",
@@ -286,32 +296,33 @@ const QuestionsManagement = () => {
 			id: "actions",
 			header: "Actions",
 			cell: ({ row }: { row: { original: Question } }) => (
-				<div className="flex items-center gap-2">
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={() => handleViewQuestion(row.original.id.toString())}
-					>
-						<Eye className="h-4 w-4" />
-					</Button>
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={() => handleEditQuestion(row.original.id.toString())}
-					>
-						<Edit className="h-4 w-4" />
-					</Button>
-					<Button
-						variant="ghost"
-						size="icon"
-						onClick={() => handleDeleteQuestion(row.original.id.toString())}
-					>
-						<Trash className="h-4 w-4" />
-					</Button>
-				</div>
+				<TableActions
+					actions={[
+						{
+							icon: "view",
+							onClick: () => handleViewQuestion(row.original.id.toString()),
+							tooltip: "View Details",
+						},
+						{
+							icon: "edit",
+							onClick: () => handleEditQuestion(row.original.id.toString()),
+							tooltip: "Edit",
+						},
+						{
+							icon: "delete",
+							onClick: () => handleDeleteQuestion(row.original.id.toString()),
+							tooltip: "Delete",
+						},
+					]}
+				/>
 			),
 		},
 	];
+
+	// Log error outside of JSX to avoid linter/JSX issues
+	if (questions.error) {
+		console.error("Questions error:", questions.error);
+	}
 
 	return (
 		<div className="space-y-6">
@@ -341,14 +352,14 @@ const QuestionsManagement = () => {
 				) : (
 					<DataTable
 						columns={columns}
-						data={questions.data?.data || []}
+						data={(questions.data?.data as Question[]) || []}
 						searchColumn="excerpt"
 						showSearch={false}
-						page={page}
-						pageSize={pageSize}
-						totalPages={questions.data?.meta?.pageCount || 1}
-						onPageChange={handlePageChange}
-						onPageSizeChange={handlePageSizeChange}
+						page={showAll ? 1 : page}
+						pageSize={showAll ? questions.data?.data.length || 1000 : pageSize}
+						totalPages={showAll ? 1 : questions.data?.meta?.pageCount || 1}
+						onPageChange={showAll ? undefined : handlePageChange}
+						onPageSizeChange={showAll ? undefined : handlePageSizeChange}
 					/>
 				)}
 			</ContentCard>

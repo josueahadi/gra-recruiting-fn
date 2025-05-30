@@ -23,7 +23,7 @@ interface AssessmentLayoutProps {
 const AssessmentLayoutInner: React.FC<AssessmentLayoutProps> = ({
 	children,
 	userName = "John Doe",
-	avatarSrc = "/images/avatar.jpg",
+	avatarSrc,
 	currentSectionId = 1,
 	currentQuestionNumber = 1,
 	answeredQuestions = {},

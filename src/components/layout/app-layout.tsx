@@ -22,7 +22,7 @@ const AppLayoutInner: React.FC<AppLayoutProps> = ({
 	children,
 	userType,
 	userName = "John Doe",
-	avatarSrc = "/images/avatar.jpg",
+	avatarSrc,
 }) => {
 	const pathname = usePathname();
 	const { isMobileMenuOpen, toggleMobileMenu, closeMobileMenu } = useLayout();

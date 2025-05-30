@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Edit1 } from "@/components/icons/edit-1";
 import type { ProfileInfo } from "@/types/profile";
 import { Separator } from "@/components/ui/separator";
+import { useProfilePicture } from "@/hooks/use-profile-picture";
 
 interface PersonalInfoSectionProps {
 	personalInfo: ProfileInfo;
@@ -14,7 +15,7 @@ interface PersonalInfoSectionProps {
 	locationLabel?: string;
 	canEdit: boolean;
 	onInfoUpdate: (info: ProfileInfo) => void;
-	onAvatarChange?: (file: File) => void;
+	onAvatarChange: (file: File) => void;
 }
 
 const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
@@ -26,9 +27,10 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 	onAvatarChange,
 }) => {
 	const [isEditing, setIsEditing] = useState(false);
-	const [isUploading, setIsUploading] = useState(false);
 	const [personalInfo, setPersonalInfo] = useState<ProfileInfo>(initialInfo);
 	const fileInputRef = React.useRef<HTMLInputElement>(null);
+	const { uploadProfilePicture, isUploading, uploadProgress } =
+		useProfilePicture();
 
 	const handleInfoChange = (
 		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -61,14 +63,11 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 		}
 	};
 
-	const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		// biome-ignore lint/complexity/useOptionalChain: <explanation>
-		if (e.target.files && e.target.files[0] && onAvatarChange) {
-			setIsUploading(true);
-			const file = e.target.files[0];
-
+	const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const file = e.target.files?.[0];
+		if (file) {
+			await uploadProfilePicture(file);
 			onAvatarChange(file);
-			setTimeout(() => setIsUploading(false), 1000);
 		}
 	};
 
@@ -80,10 +79,11 @@ const PersonalInfoSection: React.FC<PersonalInfoSectionProps> = ({
 						<AvatarImage
 							src={avatarSrc}
 							alt={`${personalInfo.firstName} ${personalInfo.lastName}`}
+							className="object-cover"
 						/>
 						<AvatarFallback className="text-xl">
 							{isUploading
-								? "..."
+								? `${Math.round(uploadProgress)}%`
 								: personalInfo.firstName[0] + personalInfo.lastName[0]}
 						</AvatarFallback>
 					</Avatar>

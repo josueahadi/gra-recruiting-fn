@@ -62,7 +62,10 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({
 					<div>
 						<h3 className="text-sm font-medium text-gray-500 mb-1">Question</h3>
 						<div className="p-4 bg-gray-50 rounded-md">
-							<p className="whitespace-pre-wrap">{question.text}</p>
+							<p
+								className="whitespace-pre-wrap"
+								dangerouslySetInnerHTML={{ __html: question.text }}
+							/>
 						</div>
 					</div>
 
@@ -97,7 +100,10 @@ const QuestionDetail: React.FC<QuestionDetailProps> = ({
 											>
 												{String.fromCharCode(65 + index)}
 											</div>
-											<p className="flex-1">{choice.text}</p>
+											<p
+												className="flex-1"
+												dangerouslySetInnerHTML={{ __html: choice.text }}
+											/>
 											{choice.isCorrect && (
 												<Badge className="bg-green-500">Correct</Badge>
 											)}

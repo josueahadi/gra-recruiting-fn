@@ -34,7 +34,7 @@ export interface UserAvatarProps {
 export const UserAvatar: React.FC<UserAvatarProps> = ({
 	userType,
 	userName = "",
-	avatarSrc = "/images/avatar.jpg",
+	avatarSrc,
 	menuItems,
 	onLogout,
 }) => {
@@ -106,7 +106,10 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 			<DropdownMenuTrigger asChild>
 				<Button variant="ghost" className="p-0 h-auto">
 					<Avatar className="h-10 w-10 border-2 border-primary-light cursor-pointer">
-						<AvatarImage src={avatarSrc} alt={actualUserName || "User"} />
+						<AvatarImage
+							src={avatarSrc || user?.profilePictureUrl || undefined}
+							alt={actualUserName || "User"}
+						/>
 						<AvatarFallback>{getInitials()}</AvatarFallback>
 					</Avatar>
 				</Button>
