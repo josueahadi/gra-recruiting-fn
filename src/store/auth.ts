@@ -20,6 +20,7 @@ interface User {
 	isEmailVerified: boolean;
 	isTemporary?: boolean;
 	profilePictureUrl?: string | null;
+	examStatus?: string | null;
 }
 
 interface AuthState {
