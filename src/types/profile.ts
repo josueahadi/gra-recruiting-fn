@@ -218,3 +218,32 @@ export interface ExperienceResponse {
 	startDate: string;
 	endDate?: string;
 }
+
+// Admin API response types for applicant profile
+export interface AdminSkill {
+	id: number;
+	skillName: string;
+	experienceRating: string;
+}
+export interface AdminLang {
+	id: number;
+	languageName: string;
+	proficiencyLevel: string;
+}
+export interface AdminEdu {
+	id: number;
+	institutionName: string;
+	educationLevel: string;
+	program: string;
+	dateJoined: string | null;
+	dateGraduated: string | null;
+}
+export interface AdminExp {
+	id: number;
+	companyName: string;
+	jobTitle: string;
+	employmentType: string;
+	country: string;
+	startDate: string;
+	endDate?: string;
+}

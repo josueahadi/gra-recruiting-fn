@@ -3,6 +3,7 @@ import type { ApplicantData, UseProfileOptions } from "@/types/profile";
 import { useBasicProfile } from "./use-basic-profile";
 import { useDetailedProfile } from "./use-detailed-profile";
 import { useProfileCompletion } from "./use-profile-completion";
+import { useAdminApplicantProfile } from "./use-admin-applicant-profile";
 
 export function useProfileCore(options: UseProfileOptions) {
 	const { id, userType } = options;
@@ -26,13 +27,22 @@ export function useProfileCore(options: UseProfileOptions) {
 
 	const { getProfileCompletion } = useProfileCompletion(profileData);
 
+	const isAdmin = userType === "admin" && !!id;
+	const {
+		data: adminProfileData,
+		isLoading: isAdminProfileLoading,
+		error: adminProfileError,
+	} = useAdminApplicantProfile(isAdmin ? id : undefined);
+
 	useEffect(() => {
 		const fetchAndTransformData = async () => {
 			setIsLoading(true);
 			setError(null);
 
 			try {
-				if (basicProfileData && detailedProfileData) {
+				if (isAdmin && adminProfileData) {
+					setProfileData(adminProfileData);
+				} else if (basicProfileData && detailedProfileData) {
 					const basicProfile = basicProfileData;
 					const detailedProfile = detailedProfileData;
 
@@ -110,136 +120,17 @@ export function useProfileCore(options: UseProfileOptions) {
 					};
 
 					setProfileData(transformed);
-				} else if (id) {
-					// For admin viewing a specific user, (simulating with mock data for now)
-					await new Promise((resolve) => setTimeout(resolve, 500));
-
-					const mockData: ApplicantData = {
-						id: id,
-						name: "John Doe",
-						personalInfo: {
-							firstName: "John",
-							lastName: "Doe",
-							email: "johndoe01@gmail.com",
-							phone: "+250 787 435 382",
-						},
-						addressInfo: {
-							country: "Rwanda",
-							city: "Kigali",
-							postalCode: "00000",
-							address: "KN 21 Ave",
-						},
-						department: "Software Development",
-						skills: [
-							{ id: 1, name: "Software Engineering", experienceRating: "FIVE" },
-							{ id: 2, name: "Frontend Development", experienceRating: "FIVE" },
-							{ id: 3, name: "Backend Development", experienceRating: "FIVE" },
-							{ id: 4, name: "Data Analysis", experienceRating: "FIVE" },
-						],
-						languages: [
-							{
-								id: 1,
-								languageId: 1,
-								language: "Kinyarwanda",
-								level: 10,
-								proficiencyLevel: "NATIVE",
-							},
-							{
-								id: 2,
-								languageId: 2,
-								language: "French",
-								level: 5,
-								proficiencyLevel: "BEGINNER",
-							},
-							{
-								id: 3,
-								languageId: 3,
-								language: "English",
-								level: 6,
-								proficiencyLevel: "INTERMEDIATE",
-							},
-						],
-						education: [
-							{
-								id: "1",
-								institutionName: "UR- Nyarugenge",
-								educationLevel: "BACHELOR",
-								program: "Software Engineering",
-								dateJoined: "2016-09-01",
-								dateGraduated: "2021-07-01",
-							},
-						],
-						experience: [
-							{
-								id: "1",
-								companyName: "Tesla",
-								jobTitle: "Web Developer",
-								employmentType: "FULL_TIME",
-								country: "USA",
-								startDate: "2021-06-01",
-							},
-						],
-						documents: {
-							resume: null,
-							samples: [],
-						},
-						portfolioLinks: {
-							portfolio: "",
-							github: "https://github.com/yourusername",
-							behance: "https://behance.net/yourprofile",
-							linkedin: "https://linkedin.com/in/yourprofile",
-						},
-						avatarSrc: basicProfileData?.profilePictureUrl || undefined,
-					};
-
-					setProfileData(mockData);
 				}
 			} catch (err) {
 				console.error("Error transforming profile data:", err);
 				setError("Failed to load profile data");
-
-				if (basicProfileData) {
-					const basicProfile = basicProfileData;
-
-					const fallbackData: ApplicantData = {
-						id: basicProfile.id.toString(),
-						name: `${basicProfile.firstName} ${basicProfile.lastName}`,
-						personalInfo: {
-							firstName: basicProfile.firstName || "",
-							lastName: basicProfile.lastName || "",
-							email: basicProfile.email || "",
-							phone: basicProfile.phoneNumber || "",
-						},
-						addressInfo: {
-							country: basicProfile.country || "",
-							city: basicProfile.city || "",
-							postalCode: basicProfile.postalCode || "",
-							address: basicProfile.street || "",
-						},
-						department: basicProfile.careerName || undefined,
-						skills: [],
-						languages: [],
-						education: [],
-						experience: [],
-						documents: { resume: null, samples: [] },
-						portfolioLinks: {
-							portfolio: "",
-							github: "",
-							behance: "",
-							linkedin: "",
-						},
-						avatarSrc: basicProfile.profilePictureUrl || undefined,
-					};
-
-					setProfileData(fallbackData);
-				}
 			} finally {
 				setIsLoading(false);
 			}
 		};
 
 		fetchAndTransformData();
-	}, [basicProfileData, detailedProfileData, id]);
+	}, [basicProfileData, detailedProfileData, id, isAdmin, adminProfileData]);
 
 	useEffect(() => {
 		if (!profileData) return;
@@ -267,8 +158,13 @@ export function useProfileCore(options: UseProfileOptions) {
 	return {
 		profileData,
 		setProfileData,
-		isLoading: isLoading || isBasicProfileLoading || isDetailedProfileLoading,
-		error: error || basicProfileError || detailedProfileError,
+		isLoading:
+			isLoading ||
+			isBasicProfileLoading ||
+			isDetailedProfileLoading ||
+			isAdminProfileLoading,
+		error:
+			error || basicProfileError || detailedProfileError || adminProfileError,
 		canEdit,
 		getProfileCompletion,
 	};

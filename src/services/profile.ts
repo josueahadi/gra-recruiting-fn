@@ -21,4 +21,11 @@ export const profileService = {
 		// Return the download URL from Firebase
 		return downloadUrl;
 	},
+
+	async getAdminApplicantProfile(userId: string) {
+		const { data } = await import("@/services/api").then((m) =>
+			m.api.get(`/api/v1/admin/get-applicant-profile/${userId}`),
+		);
+		return data;
+	},
 };
